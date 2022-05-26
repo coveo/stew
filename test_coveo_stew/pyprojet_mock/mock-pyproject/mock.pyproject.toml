@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "mock-pyproject"
+version = "0.1.1"
+description = "an internal mock for stew's tests"
+authors = ["Jonathan piché <tools@coveo.com>"]
+
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+mock-pyproject-dependency = "*"
+requests = "*"
+
+
+[tool.poetry.dev-dependencies]
+mock-pyproject-dependency = { path = "../mock-pyproject-dependency/", develop = true }
+mypy = "*"
+
+
+[tool.stew]
+pydev = false
+
+
+[tool.stew.ci]
+mypy = {}
+
+
+[tool.stew.build-dependencies]
+setuptools = ">=42"
+wheel = "*"
+
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
