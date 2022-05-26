@@ -1,0 +1,7 @@
+.idea
+.ci
+.pytest_cache
+dist
+__pycache__
+.vscode/
+*.code-workspace
