@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "coveo-stew"
-version = "2.2.0"
+version = "3.0.0"
 description = "Opinionated python packaging and development utilities"
 license = "Apache-2.0"
 readme = "README.md"
@@ -14,30 +14,29 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
-black = "22.3"
 click = ">=8.1"
 coveo-functools = "^2.0.0"
 coveo-itertools = "^2.0.0"
 coveo-systools = "^2.0.0"
 coveo-styles = "^2.0.0"
 junit-xml = "*"
-mypy = "0.950"  # required for 3.10 support
-poetry = "^1.1.13"
+poetry = ">1.2"
 toml = "*"
-typing_extensions = "*"
 
 
 [tool.poetry.dev-dependencies]
+black = "22.3"
 coveo-testing = "^2.0.0"
 flake8 = "*"
+mypy = "0.950"  # required for 3.10 support
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
 
 
 [tool.poetry.scripts]
-pyproject = "coveo_stew.commands:stew"
 stew = "coveo_stew.commands:stew"
+
 
 [tool.stew.ci]
 pytest = true
