@@ -40,7 +40,7 @@ jobs:
 
       - name: Setup global packages
         shell: bash
-        run: python -m pip install --upgrade pip wheel setuptools poetry<1.2 --user --no-warn-script-location
+        run: python -m pip install --upgrade pip wheel setuptools "poetry<1.2" --user --no-warn-script-location
 
       - name: Run stew ci
         uses: ./.github/workflows/actions/stew-ci
