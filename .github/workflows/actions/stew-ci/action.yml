@@ -1,0 +1,13 @@
+name: stew ci
+description: Installs stew from the current source, and use it to test itself.
+
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Run stew ci
+      shell: bash
+      run: |
+        python -m poetry install
+        python -m poetry run stew ci coveo-stew --exact-match
