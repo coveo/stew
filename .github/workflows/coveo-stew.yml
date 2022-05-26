@@ -66,6 +66,6 @@ jobs:
       - name: Publish to pypi
         uses: ./.github/workflows/actions/publish-to-pypi
         with:
-          pypi-token: ${{ secrets.PYPI_TOKEN_COVEO_STEW }}
+          pypi-token: ${{ secrets.PYPI_TOKEN }}
           pre-release: ${{ github.ref != 'refs/heads/main' }}
           dry-run: ${{ github.ref != 'refs/heads/main' && github.event.inputs.publish != 'true' }}
