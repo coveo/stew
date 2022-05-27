@@ -140,7 +140,7 @@ Returns the path to a project:
 
 ```
 $ stew locate coveo-stew
-/home/jonapich/code/coveo-python-oss/coveo-stew
+/home/jonapich/code/stew/coveo-stew
 ```
 
 # Configuration
@@ -215,7 +215,7 @@ Black supports the `pyproject.toml` file natively:
 line-length = 100
 ```
 
-See https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file
+Ref: [black documentation](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file)
 
 
 ### poetry-check

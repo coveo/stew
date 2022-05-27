@@ -10,7 +10,8 @@ To combine multiple projects in a repository, you need to adhere to the followin
 1. At a defined root, such as the root of your repository or a folder within, create a new `pyproject.toml` file. It will be the dev environment; we will come back to this soon.
 2. Python libraries should then exist within that folder's hierarchy, each of them in a dedicated folder. The dedicated folder doesn't need to be in the root.
 
-[The current repository](https://github.com/coveooss/coveo-python-oss) is a good example. The `pydev` environment is in the root's `pyproject.toml`, and subfolders contain the python libraries
+[The coveo-python-oss repository](https://github.com/coveooss/coveo-python-oss) can be used as reference.
+The `pydev` environment is in the root's `pyproject.toml`, and subfolders contain the python libraries
 
 
 ## Python libraries structure
@@ -26,6 +27,8 @@ The expected setup is also defined as the "sub-folder" setup (Option 2!) in [the
 
 
 ## Developer environment's `pyproject.toml`
+
+At the root of the repository, a dev-only `pyproject.toml` will be created that ties all libraries together.
 
 The root `pyproject.toml` needs to be designed so that:
 
@@ -65,7 +68,7 @@ $ poetry update
 
 The pydev environment has some caveats:
 
-- It cannot be packaged, published or even pip-installed.
+- It cannot be packaged, published or even pip-installed. It's dev only, meant to be use with `poetry install`. 
 - `stew ci` will skip it.
 - the `tool.poetry.dev-dependencies` section is reserved, can be generated and updated through stew's `pull-dev-requirements` and `fix-outdated` commands.
 
