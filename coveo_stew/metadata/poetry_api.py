@@ -1,37 +1,11 @@
 from pathlib import Path
 from typing import Dict, Any, Optional, Union, Mapping, List, Type, TypeVar, Iterable
-from typing_extensions import Protocol, Literal, Final
+from typing_extensions import Final
 
 from coveo_functools.casing import flexfactory
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
 
 
 T = TypeVar("T")
-
-
-class MarkerAPI(Protocol):
-    def validate(self, properties: Dict[str, Any]) -> bool:
-        """Return True if the properties indicate that the package should be installed."""
-
-
-class VersionAPI(Protocol):
-    def __str__(self) -> str:
-        ...
-
-
-class PackageAPI(Protocol):
-    """mimics the Package class from poetry, so we can duck-type our own."""
-
-    name: str
-    version: VersionAPI
-    source_type: Optional[
-        Union[Literal["directory"], str]
-    ]  # there are others; we only care about directory :shrug:
-    source_url: Optional[str]
-    pretty_name: str
-
-    def is_prerelease(self) -> bool:
-        ...
 
 
 class Dependency:
@@ -81,10 +55,8 @@ class PoetryAPI:
         authors: Iterable[str],
         dependencies: Mapping[str, Any] = None,
         dev_dependencies: Mapping[str, Any] = None,
-        _pyproject: PythonProjectAPI,
-        **extra: Any
+        **extra: Any,
     ) -> None:
-        self._pyproject = _pyproject
         self.name: Final[str] = name
         self.safe_name: Final[str] = name.replace("-", "_")
         self.authors: Final[Iterable[str]] = authors

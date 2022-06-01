@@ -9,7 +9,7 @@ from junit_xml import TestCase
 
 from coveo_stew.ci.reporting import generate_report
 from coveo_stew.environment import PythonEnvironment
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
+from coveo_stew.stew import PythonProject
 
 
 class RunnerStatus(Enum):
@@ -30,7 +30,7 @@ class ContinuousIntegrationRunner:
     # implementations may provide an auto fix routine.
     _auto_fix_routine: Optional[Callable[[PythonEnvironment], None]] = None
 
-    def __init__(self, *, _pyproject: PythonProjectAPI) -> None:
+    def __init__(self, *, _pyproject: PythonProject) -> None:
         """Implementations may add additional keyword args."""
         self._pyproject = _pyproject
         self._last_output: List[str] = []

@@ -5,13 +5,13 @@ import pkg_resources
 import re
 from typing import Generator, Union, Optional
 
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
-from coveo_stew.environment import PythonEnvironment, PythonTool, coveo_stew_environment
+from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.metadata.python_api import PythonFile
+from coveo_stew.stew import PythonProject
 
 
 class MypyRunner(ContinuousIntegrationRunner):
@@ -19,9 +19,7 @@ class MypyRunner(ContinuousIntegrationRunner):
     check_failed_exit_codes = [1]
     outputs_own_report = True
 
-    def __init__(
-        self, *, set_config: Union[str, bool] = True, _pyproject: PythonProjectAPI
-    ) -> None:
+    def __init__(self, *, set_config: Union[str, bool] = True, _pyproject: PythonProject) -> None:
         super().__init__(_pyproject=_pyproject)
         self.set_config = set_config
 
@@ -52,11 +50,6 @@ class MypyRunner(ContinuousIntegrationRunner):
             ]
             return RunnerStatus.Error
 
-        # projects may opt to use coveo-stew's mypy version by not including mypy in their dependencies.
-        mypy_environment = (
-            environment if environment.mypy_executable.exists() else coveo_stew_environment
-        )
-
         args = [
             # the --python-executable switch tells mypy in which environment the imports should be followed.
             "--python-executable",
@@ -72,7 +65,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             args.append("--config-file")
             args.append(mypy_config)
 
-        command = mypy_environment.build_command(
+        command = environment.build_command(
             PythonTool.Mypy,
             *args,
             *extra_args,  # any extra argument provided by the caller

@@ -13,22 +13,19 @@ import warnings
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
 from coveo_styles.styles import echo
-from coveo_systools.filesystem import find_repo_root, CannotFindRepoRoot, find_application
+from coveo_systools.filesystem import find_repo_root, CannotFindRepoRoot
 from coveo_systools.subprocess import check_run, DetailedCalledProcessError
 
-from coveo_stew.ci.config import ContinuousIntegrationConfig
-from coveo_stew.ci.runner import RunnerStatus
-from coveo_stew.environment import PythonEnvironment
+from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
 from coveo_stew.exceptions import PythonProjectException, NotAPoetryProject
 from coveo_stew.metadata.stew_api import StewPackage
 from coveo_stew.metadata.poetry_api import PoetryAPI
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
 from coveo_stew.metadata.python_api import PythonFile
 
 from coveo_stew.utils import load_toml_from_path
 
 
-class PythonProject(PythonProjectAPI):
+class PythonProject:
     """Access the information within a pyproject.toml file and operate on them."""
 
     def __init__(self, project_path: Path, *, verbose: bool = False) -> None:
@@ -43,7 +40,7 @@ class PythonProject(PythonProjectAPI):
 
         try:
             self.package: PoetryAPI = flexfactory(
-                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry"), _pyproject=self
+                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry")
             )
         except KeyError as exception:
             raise NotAPoetryProject from exception
@@ -55,6 +52,8 @@ class PythonProject(PythonProjectAPI):
             **dict_lookup(toml_content, "tool", "stew", default={}),
             _pyproject=self,
         )
+
+        from coveo_stew.ci.config import ContinuousIntegrationConfig  # circular import
 
         if self.options.pydev:
             # ensure no steps are repeated. pydev projects only receive basic poetry/lock checks
@@ -270,6 +269,8 @@ class PythonProject(PythonProjectAPI):
         self, auto_fix: bool = False, checks: List[str] = None, quick: bool = False
     ) -> bool:
         """Launch all continuous integration runners on the project."""
+        from coveo_stew.ci.runner import RunnerStatus  # circular import
+
         if self.ci.disabled:
             return True
 
@@ -375,15 +376,18 @@ class PythonProject(PythonProjectAPI):
         breakout_of_venv: bool = True,
         environment: PythonEnvironment = None,
     ) -> Optional[str]:
-        """internal run-a-poetry-command."""
-        poetry_executable = find_application("poetry", raise_if_not_found=True)
+        """
+        Internal run-a-poetry-command.
+
+        The `environment` param will make that environment active (e.g.: `poetry env use` called before).
+        """
         environment_variables = os.environ.copy()
         if breakout_of_venv:
             environment_variables.pop("VIRTUAL_ENV", None)
 
         with self._activate_poetry_environment(environment):
             return check_run(
-                poetry_executable,
+                *find_python_tool(PythonTool.Poetry, environment=environment),
                 *commands,
                 "-vv" if self.verbose else "",
                 working_directory=self.project_path,

@@ -1,4 +1,3 @@
-import functools
 import logging
 import os
 import re
@@ -6,11 +5,13 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import Set, Optional, Pattern
 
-from coveo_systools.subprocess import check_call, check_output
+from coveo_systools.subprocess import check_output
 
+from coveo_stew.discovery import find_pyproject
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.exceptions import PythonProjectException
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
+from coveo_stew.stew import PythonProject
+
 
 _DEFAULT_PIP_OPTIONS = (
     "--disable-pip-version-check",
@@ -25,7 +26,7 @@ LOCAL_REQUIREMENT_PATTERN: Pattern = re.compile(r"^(?P<library_name>.+) @ file:/
 
 
 def offline_publish(
-    project: PythonProjectAPI,
+    project: PythonProject,
     wheelhouse: Path,
     environment: PythonEnvironment,
     *,
@@ -41,26 +42,14 @@ def offline_publish(
 
 
 class _OfflinePublish:
-    """
-    this class is taking the long route to obtain the dependencies because of two issues in poetry:
-        https://github.com/python-poetry/poetry/issues/3254
-        https://github.com/python-poetry/poetry/issues/3189
-
-    once they're fixed, most of the code below can be removed in favor of:
-        poetry export --format requirements.txt --no-dev --output requirements.txt
-        pip wheel -r requirements.txt --target target_path --find-links target_path
-    """
+    """Handles the offline publish."""
 
     def __init__(
-        self, project: PythonProjectAPI, wheelhouse: Path, environment: PythonEnvironment
+        self, project: PythonProject, wheelhouse: Path, environment: PythonEnvironment
     ) -> None:
         self.project = project
         self.environment = environment
         self.wheelhouse = wheelhouse
-        self._check_call = functools.partial(
-            check_call if self.verbose else check_output, verbose=self.verbose
-        )
-
         self._valid_packages: Optional[Set[str]] = None
         self._local_projects: Set[str] = {
             name
@@ -86,7 +75,7 @@ class _OfflinePublish:
         self._validate_package(f"{self.project.package.name}=={self.project.package.version}")
 
     def _store_setup_dependencies_in_wheelhouse(
-        self, project: Optional[PythonProjectAPI] = None
+        self, project: Optional[PythonProject] = None
     ) -> None:
         """store the build dependencies in the wheelhouse, like setuptools.
         Eventually pip/poetry will play better and this won't be necessary anymore"""
@@ -98,15 +87,14 @@ class _OfflinePublish:
                 if dependency.version == "*"
                 else f"{dependency.name}{dependency.version}"
             )  # such as setuptools>=42
-            self._check_call(
+            _ = check_output(
                 *self.environment.build_command(PythonTool.Pip, "wheel", dep),
                 working_directory=self.wheelhouse,
+                verbose=self.verbose,
             )
 
-    def _store_dependencies_in_wheelhouse(self, project: Optional[PythonProjectAPI] = None) -> None:
+    def _store_dependencies_in_wheelhouse(self, project: Optional[PythonProject] = None) -> None:
         """Store the dependency wheels in the wheelhouse."""
-        from coveo_stew.discovery import find_pyproject  # circular import
-
         project = project or self.project
 
         lines = []
@@ -138,7 +126,7 @@ class _OfflinePublish:
         )
 
         try:
-            self._check_call(*command)
+            _ = check_output(*command, verbose=self.verbose)
         finally:
             try:
                 Path(path).unlink(missing_ok=True)
@@ -148,7 +136,8 @@ class _OfflinePublish:
     def _validate_package(self, package_specification: str) -> None:
         """Validates that a package and all its dependencies can be resolved from the wheelhouse.
         Package specification can be a name like `coveo-functools` or a constraint like `coveo-functools>=0.2.1`"""
-        self._check_call(
+        # using check_output will silence output
+        _ = check_output(
             *self.environment.build_command(
                 PythonTool.Pip,
                 "wheel",
@@ -161,4 +150,5 @@ class _OfflinePublish:
                 *_DEFAULT_PIP_OPTIONS,
             ),
             working_directory=self.wheelhouse,
+            verbose=self.verbose,
         )

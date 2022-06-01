@@ -21,6 +21,10 @@ class PythonProjectNotFound(PythonProjectException):
     ...
 
 
+class ToolNotFound(PythonProjectException):
+    ...
+
+
 class MypyNotFound(PythonProjectException):
     ...
 
