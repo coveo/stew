@@ -13,18 +13,18 @@ import warnings
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
 from coveo_styles.styles import echo
-from coveo_systools.filesystem import find_repo_root, CannotFindRepoRoot
+from coveo_systools.filesystem import find_repo_root, CannotFindRepoRoot, find_application
 from coveo_systools.subprocess import check_run, DetailedCalledProcessError
-from poetry.factory import Factory
 
 from coveo_stew.ci.config import ContinuousIntegrationConfig
 from coveo_stew.ci.runner import RunnerStatus
-from coveo_stew.environment import PythonEnvironment, coveo_stew_environment, PythonTool
+from coveo_stew.environment import PythonEnvironment
 from coveo_stew.exceptions import PythonProjectException, NotAPoetryProject
 from coveo_stew.metadata.stew_api import StewPackage
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.pyproject_api import PythonProjectAPI
 from coveo_stew.metadata.python_api import PythonFile
+
 from coveo_stew.utils import load_toml_from_path
 
 
@@ -67,9 +67,6 @@ class PythonProject(PythonProjectAPI):
                 **dict_lookup(toml_content, "tool", "stew", "ci", default={}),
                 _pyproject=self,
             )
-
-        # these are the actual poetry apis
-        self.poetry = Factory().create_poetry(self.project_path)
 
         try:
             repo_root: Optional[Path] = find_repo_root(self.project_path)
@@ -123,7 +120,21 @@ class PythonProject(PythonProjectAPI):
         """True if the toml file has pending changes that were not applied to poetry.lock"""
         if not self.lock_path.exists():
             return False
-        return not self.poetry.locker.is_fresh()
+
+        # yolo: use the dry run output to determine if the lock is too old
+        dry_run_output = self.poetry_run(
+            "install", "--remove-untracked", "--dry-run", capture_output=True
+        )
+
+        for sentence in (
+            "Warning: The lock file is not up to date",
+            "outdated dependencies",
+            "Run update to update them",
+        ):
+            if sentence.casefold() in dry_run_output.casefold():
+                return True
+
+        return False
 
     @property
     def activated_environment(self) -> Optional[PythonEnvironment]:
@@ -251,6 +262,10 @@ class PythonProject(PythonProjectAPI):
 
         return target
 
+    def export(self) -> str:
+        """Generates the content of a `requirements.txt` file based on the lock."""
+        return self.poetry_run("export", capture_output=True)
+
     def launch_continuous_integration(
         self, auto_fix: bool = False, checks: List[str] = None, quick: bool = False
     ) -> bool:
@@ -361,22 +376,16 @@ class PythonProject(PythonProjectAPI):
         environment: PythonEnvironment = None,
     ) -> Optional[str]:
         """internal run-a-poetry-command."""
-        # we use the poetry executable from our dependencies, not from the project's environment!
-        poetry_env = coveo_stew_environment
-        if not poetry_env.poetry_executable.exists():
-            raise PythonProjectException(
-                f"Poetry was not found; expected to be somewhere around {poetry_env.python_executable}?"
-            )
-
+        poetry_executable = find_application("poetry", raise_if_not_found=True)
         environment_variables = os.environ.copy()
         if breakout_of_venv:
             environment_variables.pop("VIRTUAL_ENV", None)
 
         with self._activate_poetry_environment(environment):
             return check_run(
-                *poetry_env.build_command(
-                    PythonTool.Poetry, *commands, "-vv" if self.verbose else ""
-                ),
+                poetry_executable,
+                *commands,
+                "-vv" if self.verbose else "",
                 working_directory=self.project_path,
                 capture_output=capture_output,
                 verbose=self.verbose,

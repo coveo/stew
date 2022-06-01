@@ -2,8 +2,6 @@ from pathlib import Path
 from typing import Optional, TYPE_CHECKING, Iterator
 from typing_extensions import Protocol
 
-from poetry.poetry import Poetry
-
 
 if TYPE_CHECKING:
     from coveo_stew.environment import PythonEnvironment
@@ -19,7 +17,6 @@ class PythonProjectAPI(Protocol):
     options: "StewPackage"
     lock_path: Path
     egg_path: Path
-    poetry: Poetry
     repo_root: Optional[Path]
 
     def __init__(self, project_path: Path, *, verbose: bool = False) -> None:
@@ -44,4 +41,7 @@ class PythonProjectAPI(Protocol):
 
     @property
     def lock_is_outdated(self) -> bool:
+        ...
+
+    def export(self) -> str:
         ...
