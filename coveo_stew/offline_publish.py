@@ -26,7 +26,9 @@ _DEFAULT_PIP_OPTIONS = (
 # - `coveo-stew @ file://home/jonapich/code/stew/coveo-stew; python ...` on linux
 # - `coveo-stew @ file:///C:/Users/jonapich/code/stew/coveo-stew; python ...` on windows :shrug:
 if WINDOWS:
-    LOCAL_REQUIREMENT_PATTERN: Pattern = re.compile(r"^(?P<library_name>.+) @ file:///(?P<path>.+);")
+    LOCAL_REQUIREMENT_PATTERN: Pattern = re.compile(
+        r"^(?P<library_name>.+) @ file:///(?P<path>.+);"
+    )
 else:
     LOCAL_REQUIREMENT_PATTERN = re.compile(r"^(?P<library_name>.+) @ file://(?P<path>.+);")
 
