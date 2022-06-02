@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import Set, Optional, Pattern
 
+from coveo_systools.platforms import WINDOWS
 from coveo_systools.subprocess import check_output
 
 from coveo_stew.discovery import find_pyproject
@@ -21,8 +22,13 @@ _DEFAULT_PIP_OPTIONS = (
     "--pre",
 )
 
-# looks like `coveo-stew @ file:///home/jonapich/code/stew/coveo-stew; python ...`
-LOCAL_REQUIREMENT_PATTERN: Pattern = re.compile(r"^(?P<library_name>.+) @ file:///(?P<path>.+);")
+# looks like:
+# - `coveo-stew @ file://home/jonapich/code/stew/coveo-stew; python ...` on linux
+# - `coveo-stew @ file:///C:/Users/jonapich/code/stew/coveo-stew; python ...` on windows :shrug:
+if WINDOWS:
+    LOCAL_REQUIREMENT_PATTERN: Pattern = re.compile(r"^(?P<library_name>.+) @ file:///(?P<path>.+);")
+else:
+    LOCAL_REQUIREMENT_PATTERN = re.compile(r"^(?P<library_name>.+) @ file://(?P<path>.+);")
 
 
 def offline_publish(
