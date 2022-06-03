@@ -1,37 +1,45 @@
 """Exceptions thrown by the stew scripts."""
 
 
-class PythonProjectException(Exception):
+class StewException(Exception):
     ...
 
 
-class CannotLoadProject(PythonProjectException):
+class CannotLoadProject(StewException):
     ...
 
 
-class NotAPoetryProject(PythonProjectException):
+class NotAPoetryProject(StewException):
     ...
 
 
-class RequirementsOutdated(PythonProjectException):
+class RequirementsOutdated(StewException):
     ...
 
 
-class PythonProjectNotFound(PythonProjectException):
+class PythonProjectNotFound(StewException):
     ...
 
 
-class ToolNotFound(PythonProjectException):
+class LockNotFound(StewException):
     ...
 
 
-class MypyNotFound(PythonProjectException):
+class ToolNotFound(StewException):
     ...
 
 
-class CheckFailed(PythonProjectException):
+class MypyNotFound(StewException):
     ...
 
 
-class UsageError(PythonProjectException):
+class CheckFailed(StewException):
+    ...
+
+
+class CheckError(StewException):
+    ...
+
+
+class UsageError(StewException):
     ...

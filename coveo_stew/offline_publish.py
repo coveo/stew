@@ -3,16 +3,16 @@ import os
 import re
 from pathlib import Path
 from tempfile import mkstemp
-from typing import Set, Optional, Pattern
+from typing import Optional, Pattern, Set
 
+from coveo_styles.styles import ExitWithFailure
 from coveo_systools.platforms import WINDOWS
 from coveo_systools.subprocess import check_output
 
 from coveo_stew.discovery import find_pyproject
 from coveo_stew.environment import PythonEnvironment, PythonTool
-from coveo_stew.exceptions import PythonProjectException
+from coveo_stew.exceptions import LockNotFound, PythonProjectNotFound
 from coveo_stew.stew import PythonProject
-
 
 _DEFAULT_PIP_OPTIONS = (
     "--disable-pip-version-check",
@@ -46,7 +46,12 @@ def offline_publish(
     Some packages provide wheels specific to an interpreter's version/abi/platform/implementation. It's important
     to use the right environment here because the files may differ and `pip install --no-index` will not work.
     """
-    _OfflinePublish(project, wheelhouse, environment).perform_offline_install(quiet=quiet)
+    try:
+        _OfflinePublish(project, wheelhouse, environment).perform_offline_install(quiet=quiet)
+    except LockNotFound as exception:
+        raise ExitWithFailure(
+            suggestions="Run `stew bump` or `poetry lock` and try again."
+        ) from exception
 
 
 class _OfflinePublish:
@@ -72,7 +77,7 @@ class _OfflinePublish:
     def perform_offline_install(self, *, quiet: bool = False) -> None:
         """Performs all the operation for the offline install."""
         if not self.project.lock_path.exists():
-            raise PythonProjectException("Project isn't locked; can't proceed.")
+            raise LockNotFound("Project isn't locked; can't proceed.")
 
         # build the wheels for the current project
         self.project.build(self.wheelhouse)
@@ -108,9 +113,15 @@ class _OfflinePublish:
         lines = []
         for requirement in project.export().splitlines():
             if match := LOCAL_REQUIREMENT_PATTERN.match(requirement):
+                dependency_name, dependency_location = match["library_name"], Path(match["path"])
                 # this is a local dependency. Since poetry locks all transitive dependencies,
                 # we're only interested in the setup dependencies and the local dependency.
-                dependency = find_pyproject(match["library_name"], path=Path(match["path"]))
+                try:
+                    dependency = find_pyproject(dependency_name, path=dependency_location)
+                except PythonProjectNotFound as exception:
+                    raise ExitWithFailure(
+                        failures=f"There was no poetry project for {dependency_name} in {dependency_location}"
+                    ) from exception
                 self._store_setup_dependencies_in_wheelhouse(dependency)
                 dependency.build(self.wheelhouse)
             else:

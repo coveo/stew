@@ -1,27 +1,25 @@
 """Interact with python projects programmatically."""
 
-from contextlib import contextmanager
 import os
-from pathlib import Path
 import re
 import shutil
-from shutil import rmtree
 import sys
-from typing import Generator, Optional, Any, List, Tuple, Iterator, Dict
-import warnings
+from contextlib import contextmanager
+from pathlib import Path
+from shutil import rmtree
+from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
-from coveo_styles.styles import echo
-from coveo_systools.filesystem import find_repo_root, CannotFindRepoRoot
-from coveo_systools.subprocess import check_run, DetailedCalledProcessError
+from coveo_styles.styles import ExitWithFailure, echo
+from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
+from coveo_systools.subprocess import DetailedCalledProcessError, check_run
 
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
-from coveo_stew.exceptions import PythonProjectException, NotAPoetryProject
-from coveo_stew.metadata.stew_api import StewPackage
+from coveo_stew.exceptions import NotAPoetryProject, StewException, CheckError
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.python_api import PythonFile
-
+from coveo_stew.metadata.stew_api import StewPackage
 from coveo_stew.utils import load_toml_from_path
 
 
@@ -78,41 +76,6 @@ class PythonProject:
     def relative_path(self, path: Path) -> Path:
         """returns the relative path of a path vs the project folder."""
         return path.relative_to(self.project_path)
-
-    @classmethod
-    def find_pyproject(
-        cls, project_name: str, path: Path = None, *, verbose: bool = False
-    ) -> "PythonProject":
-        warnings.warn(
-            "This functionality moved to the `coveo_stew.discovery` module.", DeprecationWarning
-        )
-        from coveo_stew.discovery import find_pyproject
-
-        return find_pyproject(project_name, path, verbose=verbose)
-
-    @classmethod
-    def find_pyprojects(
-        cls,
-        path: Path = None,
-        *,
-        query: str = None,
-        exact_match: bool = False,
-        verbose: bool = False,
-    ) -> Generator["PythonProject", None, None]:
-        """Factory; scan a path (recursive) and return a PythonProject instance for each pyproject.toml
-
-        Parameters:
-            path: where to start looking for pyproject.toml files.
-            query: substring for package selection. '-' and '_' are equivalent.
-            exact_match: turns query into an exact match (except for - and _). Recommended use: CI scripts
-            verbose: output more details to command line
-        """
-        warnings.warn(
-            "This functionality moved to the `coveo_stew.discovery` module.", DeprecationWarning
-        )
-        from coveo_stew.discovery import discover_pyprojects
-
-        yield from discover_pyprojects(path, query=query, exact_match=exact_match, verbose=verbose)
 
     @property
     def lock_is_outdated(self) -> bool:
@@ -238,7 +201,7 @@ class PythonProject:
         wheel_match = wheel_pattern.search(poetry_output)
 
         if not wheel_match:
-            raise PythonProjectException(
+            raise StewException(
                 f"Unable able to find a wheel filename in poetry's output:\n{poetry_output}"
             )
 
@@ -269,13 +232,16 @@ class PythonProject:
         self, auto_fix: bool = False, checks: List[str] = None, quick: bool = False
     ) -> bool:
         """Launch all continuous integration runners on the project."""
-        from coveo_stew.ci.runner import RunnerStatus  # circular import
+        from coveo_stew.ci.runner import (  # circular import
+            ContinuousIntegrationRunner,
+            RunnerStatus,
+        )
 
         if self.ci.disabled:
             return True
 
         checks = [check.lower() for check in checks or []]
-        exceptions: List[DetailedCalledProcessError] = []
+        exceptions: List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]] = []
         for environment in self.virtual_environments(create_default_if_missing=True):
             if not quick:
                 self.install(environment=environment, remove_untracked=True)
@@ -301,12 +267,20 @@ class PythonProject:
                         f"The ci runner {runner} failed to complete "
                         f"due to an environment or configuration error."
                     )
-                    exceptions.append(exception)
+                    exceptions.append((runner, exception))
 
         if exceptions:
-            if len(exceptions) > 1:
-                echo.warning(f"{len(exceptions)} exceptions found; raising first one.")
-            raise exceptions[0]
+            raise ExitWithFailure(
+                suggestions=(
+                    "If a command should be treated as a check failure, specify `check-failed-exit-codes`",
+                    "Reference: https://github.com/coveo/stew/blob/main/README.md#options)",
+                    "Try the commands in a shell to troubleshoot them faster.",
+                ),
+                failures=(
+                    f"\n------- [{runner} failed unexpectedly] -------\n\n{str(ex)}\n"
+                    for runner, ex in exceptions
+                ),
+            ) from CheckError("Unexpected errors occurred when launching external processes.")
 
         allowed_statuses: Tuple[RunnerStatus, ...] = (
             (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
