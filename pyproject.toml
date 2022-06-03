@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "coveo-stew"
+version = "3.0.0"
+description = "Opinionated python packaging and development utilities"
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/coveo/stew"
+authors = ["Jonathan Piché <tools@coveo.com>"]
+
+packages = [
+    { include = "coveo_stew/**/*" },
+]
+
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4"
+click = ">=8.1"
+coveo-functools = "^2.0.0"
+coveo-itertools = "^2.0.0"
+coveo-systools = "^2.0.0"
+coveo-styles = "^2.0.0"
+junit-xml = "*"
+poetry = "<1.2"
+toml = "*"
+
+
+[tool.poetry.dev-dependencies]
+black = "22.3"
+coveo-testing = "^2.0.0"
+flake8 = "*"
+mypy = "0.950"  # required for 3.10 support
+pytest = "*"
+types-setuptools = "*"
+types-toml = "*"
+
+
+[tool.poetry.scripts]
+stew = "coveo_stew.commands:stew"
+
+
+[tool.stew.ci]
+pytest = true
+offline-build = true
+black = true
+
+
+[tool.stew.ci.custom-runners]
+flake8 = { check-args = "--ignore=E501,W503" }
+
+
+[tool.black]
+line-length = 100
+
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
