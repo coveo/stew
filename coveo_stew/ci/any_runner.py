@@ -5,9 +5,9 @@ from typing import Iterable, Tuple, Union, List, Optional
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment
 from coveo_stew.exceptions import CannotLoadProject, UsageError
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
 from coveo_systools.filesystem import find_repo_root
 from coveo_systools.subprocess import check_output
+from coveo_stew.stew import PythonProject
 
 
 class WorkingDirectoryKind(Enum):
@@ -32,7 +32,7 @@ class AnyRunner(ContinuousIntegrationRunner):
         working_directory: str = "project",
         check_args: Optional[Union[str, List[str]]] = None,
         autofix_args: Optional[Union[str, List[str]]] = None,
-        _pyproject: PythonProjectAPI,
+        _pyproject: PythonProject,
     ) -> None:
         if args and check_args:
             raise UsageError(

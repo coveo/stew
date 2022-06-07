@@ -2,7 +2,7 @@ from subprocess import PIPE
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
+from coveo_stew.stew import PythonProject
 from coveo_systools.subprocess import check_output
 
 
@@ -16,17 +16,13 @@ class PytestRunner(ContinuousIntegrationRunner):
         *,
         marker_expression: str = None,
         doctest_modules: bool = True,
-        _pyproject: PythonProjectAPI,
+        _pyproject: PythonProject,
     ) -> None:
         super().__init__(_pyproject=_pyproject)
         self.marker_expression = marker_expression
         self.doctest_modules: bool = doctest_modules
 
     def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
-        if not environment.pytest_executable.exists():
-            self._last_output.append("pytest executable could not be found")
-            return RunnerStatus.Error
-
         command = environment.build_command(
             PythonTool.Pytest,
             "--durations=5",

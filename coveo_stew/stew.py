@@ -15,20 +15,17 @@ from coveo_itertools.lookups import dict_lookup
 from coveo_styles.styles import echo
 from coveo_systools.filesystem import find_repo_root, CannotFindRepoRoot
 from coveo_systools.subprocess import check_run, DetailedCalledProcessError
-from poetry.factory import Factory
 
-from coveo_stew.ci.config import ContinuousIntegrationConfig
-from coveo_stew.ci.runner import RunnerStatus
-from coveo_stew.environment import PythonEnvironment, coveo_stew_environment, PythonTool
+from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
 from coveo_stew.exceptions import PythonProjectException, NotAPoetryProject
 from coveo_stew.metadata.stew_api import StewPackage
 from coveo_stew.metadata.poetry_api import PoetryAPI
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
 from coveo_stew.metadata.python_api import PythonFile
+
 from coveo_stew.utils import load_toml_from_path
 
 
-class PythonProject(PythonProjectAPI):
+class PythonProject:
     """Access the information within a pyproject.toml file and operate on them."""
 
     def __init__(self, project_path: Path, *, verbose: bool = False) -> None:
@@ -43,7 +40,7 @@ class PythonProject(PythonProjectAPI):
 
         try:
             self.package: PoetryAPI = flexfactory(
-                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry"), _pyproject=self
+                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry")
             )
         except KeyError as exception:
             raise NotAPoetryProject from exception
@@ -56,6 +53,8 @@ class PythonProject(PythonProjectAPI):
             _pyproject=self,
         )
 
+        from coveo_stew.ci.config import ContinuousIntegrationConfig  # circular import
+
         if self.options.pydev:
             # ensure no steps are repeated. pydev projects only receive basic poetry/lock checks
             self.ci: ContinuousIntegrationConfig = ContinuousIntegrationConfig(
@@ -67,9 +66,6 @@ class PythonProject(PythonProjectAPI):
                 **dict_lookup(toml_content, "tool", "stew", "ci", default={}),
                 _pyproject=self,
             )
-
-        # these are the actual poetry apis
-        self.poetry = Factory().create_poetry(self.project_path)
 
         try:
             repo_root: Optional[Path] = find_repo_root(self.project_path)
@@ -118,14 +114,26 @@ class PythonProject(PythonProjectAPI):
 
         yield from discover_pyprojects(path, query=query, exact_match=exact_match, verbose=verbose)
 
-    @property
     def lock_is_outdated(self) -> bool:
         """True if the toml file has pending changes that were not applied to poetry.lock"""
         if not self.lock_path.exists():
             return False
-        return not self.poetry.locker.is_fresh()
 
-    @property
+        # yolo: use the dry run output to determine if the lock is too old
+        dry_run_output = self.poetry_run(
+            "install", "--remove-untracked", "--dry-run", capture_output=True
+        )
+
+        for sentence in (
+            "Warning: The lock file is not up to date",
+            "outdated dependencies",
+            "Run update to update them",
+        ):
+            if sentence.casefold() in dry_run_output.casefold():
+                return True
+
+        return False
+
     def activated_environment(self) -> Optional[PythonEnvironment]:
         """The environment activated for a project.
 
@@ -251,10 +259,16 @@ class PythonProject(PythonProjectAPI):
 
         return target
 
+    def export(self) -> str:
+        """Generates the content of a `requirements.txt` file based on the lock."""
+        return self.poetry_run("export", capture_output=True)
+
     def launch_continuous_integration(
         self, auto_fix: bool = False, checks: List[str] = None, quick: bool = False
     ) -> bool:
         """Launch all continuous integration runners on the project."""
+        from coveo_stew.ci.runner import RunnerStatus  # circular import
+
         if self.ci.disabled:
             return True
 
@@ -307,7 +321,7 @@ class PythonProject(PythonProjectAPI):
         """
         Performs a 'poetry install --remove-untracked' on the project. If an environment is provided, target it.
         """
-        target_environment = environment or self.activated_environment
+        target_environment = environment or self.activated_environment()
         if target_environment and target_environment.installed:
             # this environment was already installed
             if not (remove_untracked and not target_environment.cleaned):
@@ -323,7 +337,7 @@ class PythonProject(PythonProjectAPI):
         self.poetry_run(*command, environment=target_environment)
 
         self._refresh_virtual_environment_cache()
-        affected_environment = target_environment or self.activated_environment
+        affected_environment = target_environment or self.activated_environment()
         affected_environment.installed = True
         affected_environment.cleaned |= remove_untracked
 
@@ -348,7 +362,7 @@ class PythonProject(PythonProjectAPI):
 
     def lock_if_needed(self) -> bool:
         """Lock if needed, return True if ran."""
-        if not self.lock_path.exists() or self.lock_is_outdated:
+        if not self.lock_path.exists() or self.lock_is_outdated():
             self.poetry_run("lock", breakout_of_venv=True)
             return True
         return False
@@ -360,23 +374,20 @@ class PythonProject(PythonProjectAPI):
         breakout_of_venv: bool = True,
         environment: PythonEnvironment = None,
     ) -> Optional[str]:
-        """internal run-a-poetry-command."""
-        # we use the poetry executable from our dependencies, not from the project's environment!
-        poetry_env = coveo_stew_environment
-        if not poetry_env.poetry_executable.exists():
-            raise PythonProjectException(
-                f"Poetry was not found; expected to be somewhere around {poetry_env.python_executable}?"
-            )
+        """
+        Internal run-a-poetry-command.
 
+        The `environment` param will make that environment active (e.g.: `poetry env use` called before).
+        """
         environment_variables = os.environ.copy()
         if breakout_of_venv:
             environment_variables.pop("VIRTUAL_ENV", None)
 
         with self._activate_poetry_environment(environment):
             return check_run(
-                *poetry_env.build_command(
-                    PythonTool.Poetry, *commands, "-vv" if self.verbose else ""
-                ),
+                *find_python_tool(PythonTool.Poetry, environment=environment),
+                *commands,
+                "-vv" if self.verbose else "",
                 working_directory=self.project_path,
                 capture_output=capture_output,
                 verbose=self.verbose,
@@ -393,7 +404,7 @@ class PythonProject(PythonProjectAPI):
             yield
             return
 
-        current_environment = self.activated_environment
+        current_environment = self.activated_environment()
         if current_environment == environment:
             yield
             return

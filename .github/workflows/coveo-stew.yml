@@ -1,12 +1,12 @@
 name: coveo-stew
 
 on:
-  # push:
-  #   branches:
-  #     - main
+#   push:
+#     branches:
+#       - main
 
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
+  pull_request:
+     types: [opened, synchronize, reopened]
 
   workflow_dispatch:
     inputs:

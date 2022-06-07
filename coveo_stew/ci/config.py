@@ -10,7 +10,7 @@ from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
 from coveo_stew.ci.pytest_runner import PytestRunner
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
 from coveo_stew.exceptions import CannotLoadProject
-from coveo_stew.metadata.pyproject_api import PythonProjectAPI
+from coveo_stew.stew import PythonProject
 
 
 T = TypeVar("T")
@@ -30,7 +30,7 @@ class ContinuousIntegrationConfig:
         offline_build: CIConfig = False,
         black: CIConfig = False,
         custom_runners: Optional[Dict[str, CIConfig]] = None,
-        _pyproject: PythonProjectAPI,
+        _pyproject: PythonProject,
     ):
         self._pyproject = _pyproject
         self.disabled = disabled  # a master switch used by stew to skip this project.

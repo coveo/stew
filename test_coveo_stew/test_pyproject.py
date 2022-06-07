@@ -5,7 +5,7 @@ from textwrap import dedent
 from coveo_systools.filesystem import pushd
 from coveo_testing.markers import UnitTest, Integration
 from coveo_testing.parametrize import parametrize
-from poetry.core.packages import Package
+
 import pytest
 
 from coveo_stew.exceptions import NotAPoetryProject
@@ -29,7 +29,7 @@ def test_pyproject_mock_initial_state(pyproject_mock: PythonProject) -> None:
 
 @Integration
 def test_pyproject_mock_initial_state_integration(pyproject_mock: PythonProject) -> None:
-    assert not pyproject_mock.lock_is_outdated
+    assert not pyproject_mock.lock_is_outdated()
 
 
 @UnitTest
@@ -40,17 +40,6 @@ def test_pyproject_dependencies(pyproject_mock: PythonProject, package_name: str
     assert dependency.name == package_name
     assert not dependency.optional
     assert not dependency.extras
-
-
-@UnitTest
-def test_pyproject_locker(pyproject_mock: PythonProject) -> None:
-    locked_requests: Package = next(
-        filter(
-            lambda package: package.name == "requests",
-            pyproject_mock.poetry.locker.locked_repository().packages,
-        )
-    )
-    assert str(locked_requests.version) == "2.26.0"
 
 
 @Integration

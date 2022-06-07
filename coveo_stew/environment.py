@@ -2,12 +2,14 @@ from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 import platform
-import sys
-from typing import Union, Optional, Any, List
-from typing_extensions import Final
+from subprocess import CalledProcessError, PIPE
+from typing import Union, Optional, Any, List, Tuple
+
+from coveo_systools.filesystem import find_application
 
 from coveo_systools.subprocess import check_output
 
+from coveo_stew.exceptions import ToolNotFound
 
 RUNNING_IN_WINDOWS: bool = bool(platform.system() == "Windows")
 
@@ -19,6 +21,9 @@ class PythonTool(Enum):
     Pytest = "pytest"
     Pip = "pip"
     Black = "black"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class PythonEnvironment:
@@ -49,34 +54,20 @@ class PythonEnvironment:
 
         self.python_executable: Path = python_path
 
-    @lru_cache()
-    def _guess_path(self, tool: Union[PythonTool, str]) -> Path:
-        if tool is PythonTool.Python:
-            return self.python_executable
-
-        tool_name = tool.value if isinstance(tool, PythonTool) else tool
-        return self.python_executable.with_name(tool_name).with_suffix(self._suffix).absolute()
-
     def build_command(self, tool: Union[PythonTool, str], *args: Any) -> List[Any]:
-        """Builds a command for a python module."""
-        tool = tool.value if isinstance(tool, PythonTool) else tool
-        return [self.python_executable, "-m", tool, *args]
+        """
+        Builds a command for a python tool. If the tool cannot be found in the environment,
+        it will try to find one from the PATH.
+        """
+        return [*find_python_tool(tool, environment=self), *args]
 
-    @property
-    def mypy_executable(self) -> Path:
-        return self._guess_path(PythonTool.Mypy)
-
-    @property
-    def poetry_executable(self) -> Path:
-        return self._guess_path(PythonTool.Poetry)
-
-    @property
-    def pytest_executable(self) -> Path:
-        return self._guess_path(PythonTool.Pytest)
-
-    @property
-    def black_executable(self) -> Path:
-        return self._guess_path(PythonTool.Black)
+    @lru_cache
+    def has_tool(self, tool: Union[PythonTool, str]) -> bool:
+        try:
+            _ = check_output(self.python_executable, "-c", f"import {tool};", stderr=PIPE)
+            return True
+        except CalledProcessError:
+            return False
 
     @property
     def python_version(self) -> str:
@@ -106,5 +97,31 @@ class PythonEnvironment:
         return hash(self.python_executable)
 
 
-# this is where our own dependencies reside (e.g.: our isolated poetry install)
-coveo_stew_environment: Final[PythonEnvironment] = PythonEnvironment(sys.executable)
+def find_python_tool(
+    tool: Union[PythonTool, str], *, environment: Optional[PythonEnvironment] = None
+) -> Tuple[Union[str, Path], ...]:
+    """
+    Finds a tool and returns the arguments to call it from the command line.
+
+    For instance, if `black` is found in `environment`:
+        "/path/to/env/python.exe", "-m", "black"
+
+    If it was found from the system:
+        "/path/to/black"
+    """
+    if environment and environment.has_tool(tool):
+        return environment.python_executable, "-m", str(tool)
+
+    if app := find_application(str(tool)):
+        return (app,)
+
+    raise ToolNotFound(
+        f"""
+{tool} was not found.
+
+Starting from coveo-stew 3.0.0, 3rd party tools are no longer provided:
+
+- You can add {tool} to your `pyproject.toml`, typically in the `[tool.poetry.dev-dependencies]` section.
+- Or you can install {tool} to your system so that it can be found in the PATH
+"""
+    )
