@@ -11,20 +11,18 @@ setup your project according to one of the two options below.
 This setup is only suitable for single-library repositories.
 
 1. The `pyproject.toml` file is at the root of the repository (e.g.: `/pyproject.toml`)
-2. A folder that matches the name of your import, next to the `pyproject.toml` file (e.g.: `/coveo_systools/`)
-3. An `__init__.py` file inside the importable folder  (e.g.: `/coveo_systools/__init__.py`)
+2. A folder that matches the name of your import, next to the `pyproject.toml` file (e.g.: `/coveo_stew/`)
+3. An `__init__.py` file inside the importable folder  (e.g.: `/coveo_stew/__init__.py`)
 
-While we don't have a reference to showcase, we use this setup extensively in our private repositories.
+The current repository uses that setup.
 
 
 ## Option 2: In a folder
 
-This setup will suit both the single library and multiple-library setups.
-
-See the [multiple libraries guide](./README_MULTIPLE_LIBRARIES.md) for more information. 
+This setup is actually the [multiple library setup](./README_MULTIPLE_LIBRARIES.md) with just one library:
 
 1. The `pyproject.toml` file is contained in a folder somewhere in the repository (e.g.: `/src/python/pyproject.toml`)
 2. There's a folder that matches the name of your module import, next to the `pyproject.toml` file (e.g.: `/src/python/coveo_systools/*.py`)
 3. An `__init__.py` file inside the importable folder  (e.g.: `/src/python/coveo_systools/__init__.py`)
 
-Single library in a folder reference: [coveo-systools](../coveo-systools)
+As a reference, take a look at the [coveo-python-oss repository](https://github.com/coveooss/coveo-python-oss).

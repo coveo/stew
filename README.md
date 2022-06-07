@@ -7,7 +7,7 @@ using [poetry](https://python-poetry.org) as its backend.
 # Features
 
 ## CI tools
-- Builtin, config-free pytest, mypy and black runners
+- Config-free pytest, mypy and black runners
 - Add your own linters and tools
 - JUnit report generation
 - GitHub Action that runs all your CI tools
@@ -31,6 +31,23 @@ Similar to: poetry, flit, pbr, setuptools
 Similar to: nothing! it's unique! 😎 
 
 
+# Prerequisites
+
+*Changed in 3.0*: `poetry` is no longer provided out-of-the-box.
+
+You need [poetry](https://python-poetry.org/) installed on your system, and it must be available through the `PATH`.
+
+The `3.0` version of `coveo-stew` is designed to work with `poetry >= 1.1.13`.
+
+While it is compatible with older versions, old poetry issues 
+such as [this](https://github.com/python-poetry/poetry/issues/3189) 
+and [this](https://github.com/python-poetry/poetry/issues/3254) 
+will cause `stew` to misbehave.
+
+If you need to work with an older version of poetry, 
+consider using `coveo-stew < 3.0` which had workarounds implemented around these issues.
+
+
 # Installation
 
 Just like poetry, `stew` is a CLI tool that you install in your system.
@@ -42,7 +59,7 @@ pip install pipx --user
 pipx install coveo-stew
 ```
 
-If you don't use pipx, make sure to isolate the installation into a virtual environment, otherwise it may interfere with an existing poetry installation.
+If you don't use pipx, make sure to isolate the installation into a virtual environment.
 
 
 # Repository Structure
@@ -80,6 +97,7 @@ Errors will show in the console, and junit xml reports will be generated inside 
 Without configuration, this command will run the following checks:
 
 - mypy (using opinionated, strict rules)
+  - Note: `mypy` is not provided with `coveo-stew`. See [builtin-runners](#builtin-runners) for info.
 - poetry check
 - stew check-outdated
 
@@ -89,6 +107,7 @@ Options:
 - `--check <runner>` will launch only that runner. This option can be repeated.
 - `--quick` skips running `poetry install --remove-untracked` before running the checks.
 
+The configuration for this feature is explained in more details in the [runners](#runners-stew-ci) section.
 
 ## `stew build`
 
@@ -140,7 +159,7 @@ Returns the path to a project:
 
 ```
 $ stew locate coveo-stew
-/home/jonapich/code/coveo-python-oss/coveo-stew
+/home/jonapich/code/stew/coveo-stew
 ```
 
 # Configuration
@@ -160,14 +179,24 @@ offline-build = false
 You don't have to include the `[tool.stew.ci]` section at all if these defaults suit you!
 
 
-## Builtin Runners
+# Runners (stew ci)
 
-Even though `coveo-stew` provides builtin `mypy` and `black`, we strongly suggest pinning them to your
+*Changed in coveo-stew 3.0*: mypy and black are no longer provided out-of-the-box.
+
+In order to use a builtin or custom runner, you must have it installed. These locations are supported:
+
+- Recommended: The runner is in the project's virtual environment (most likely as a dev dependency in `pyproject.toml`)
+- Alternative: The runner is installed in your system and available through the PATH
+
+We strongly suggest pinning them to your
 `pyproject.toml` file in the `[tool.poetry.dev-dependencies]` section.
 
 This way, mypy won't surprise you with new failures when they release new versions! 😎
 
 Note: You can override and customize most runners by [rewriting them as custom runners.](#custom-runners)
+
+
+## Builtin Runners
 
 ### mypy
 
@@ -203,8 +232,6 @@ pytest = { marker-expression = 'not docker_tests' }
 pytest = { doctest-modules = False }
 ```
 
-Note: `pytest` is not bundled with `coveo-stew` at all! Make sure you add it to your project dependencies.
-
 
 ### black
 
@@ -215,7 +242,7 @@ Black supports the `pyproject.toml` file natively:
 line-length = 100
 ```
 
-See https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file
+Ref: [black documentation](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file)
 
 
 ### poetry-check
