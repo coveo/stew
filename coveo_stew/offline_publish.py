@@ -128,7 +128,7 @@ class _OfflinePublish:
                 # keep the line as is.
                 lines.append(requirement)
 
-        requirements_file_descriptor, path = mkstemp()
+        requirements_file_descriptor, requirements_file_path = mkstemp()
         with os.fdopen(requirements_file_descriptor, mode="w+") as f:
             f.write("\n".join(lines))
 
@@ -140,7 +140,7 @@ class _OfflinePublish:
             "--no-deps",
             "--no-cache-dir",
             "--requirement",
-            path,
+            requirements_file_path,
             *_DEFAULT_PIP_OPTIONS,
         )
 
@@ -148,9 +148,9 @@ class _OfflinePublish:
             _ = check_output(*command, verbose=self.verbose)
         finally:
             try:
-                Path(path).unlink(missing_ok=True)
+                Path(requirements_file_path).unlink(missing_ok=True)
             except Exception:  # noqa
-                logging.exception(f"Cannot delete {path}. Ignoring.")
+                logging.exception(f"Cannot delete {requirements_file_path}. Ignoring.")
 
     def _validate_package(self, package_specification: str) -> None:
         """Validates that a package and all its dependencies can be resolved from the wheelhouse.

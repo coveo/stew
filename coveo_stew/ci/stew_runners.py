@@ -15,7 +15,7 @@ class CheckOutdatedRunner(ContinuousIntegrationRunner):
     name: str = "check-outdated"
 
     def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
-        if self._pyproject.lock_is_outdated:
+        if self._pyproject.lock_is_outdated():
             self._last_output = ['The lock file is out of date: run "stew fix-outdated"']
             return RunnerStatus.CheckFailed
         return RunnerStatus.Success

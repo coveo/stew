@@ -29,7 +29,7 @@ def test_pyproject_mock_initial_state(pyproject_mock: PythonProject) -> None:
 
 @Integration
 def test_pyproject_mock_initial_state_integration(pyproject_mock: PythonProject) -> None:
-    assert not pyproject_mock.lock_is_outdated
+    assert not pyproject_mock.lock_is_outdated()
 
 
 @UnitTest

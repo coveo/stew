@@ -69,7 +69,7 @@ def check_outdated(verbose: bool = False) -> None:
     try:
         for project in discover_pyprojects(verbose=verbose):
             echo.noise(project, item=True)
-            if not project.lock_path.exists() or project.lock_is_outdated:
+            if not project.lock_path.exists() or project.lock_is_outdated():
                 outdated.add(project.lock_path)
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
