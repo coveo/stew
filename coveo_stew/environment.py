@@ -121,7 +121,7 @@ def find_python_tool(
 
 Starting from coveo-stew 3.0.0, 3rd party tools are no longer provided:
 
-- You can add {tool} to your `pyproject.toml`
+- You can add {tool} to your `pyproject.toml`, typically in the `[tool.poetry.dev-dependencies]` section.
 - Or you can install {tool} to your system so that it can be found in the PATH
 """
     )

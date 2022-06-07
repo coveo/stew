@@ -114,7 +114,6 @@ class PythonProject:
 
         yield from discover_pyprojects(path, query=query, exact_match=exact_match, verbose=verbose)
 
-    @property
     def lock_is_outdated(self) -> bool:
         """True if the toml file has pending changes that were not applied to poetry.lock"""
         if not self.lock_path.exists():
@@ -135,7 +134,6 @@ class PythonProject:
 
         return False
 
-    @property
     def activated_environment(self) -> Optional[PythonEnvironment]:
         """The environment activated for a project.
 
@@ -323,7 +321,7 @@ class PythonProject:
         """
         Performs a 'poetry install --remove-untracked' on the project. If an environment is provided, target it.
         """
-        target_environment = environment or self.activated_environment
+        target_environment = environment or self.activated_environment()
         if target_environment and target_environment.installed:
             # this environment was already installed
             if not (remove_untracked and not target_environment.cleaned):
@@ -339,7 +337,7 @@ class PythonProject:
         self.poetry_run(*command, environment=target_environment)
 
         self._refresh_virtual_environment_cache()
-        affected_environment = target_environment or self.activated_environment
+        affected_environment = target_environment or self.activated_environment()
         affected_environment.installed = True
         affected_environment.cleaned |= remove_untracked
 
@@ -364,7 +362,7 @@ class PythonProject:
 
     def lock_if_needed(self) -> bool:
         """Lock if needed, return True if ran."""
-        if not self.lock_path.exists() or self.lock_is_outdated:
+        if not self.lock_path.exists() or self.lock_is_outdated():
             self.poetry_run("lock", breakout_of_venv=True)
             return True
         return False
@@ -406,7 +404,7 @@ class PythonProject:
             yield
             return
 
-        current_environment = self.activated_environment
+        current_environment = self.activated_environment()
         if current_environment == environment:
             yield
             return
