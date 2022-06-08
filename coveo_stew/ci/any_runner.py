@@ -1,12 +1,14 @@
 from enum import Enum, auto
 from subprocess import PIPE
-from typing import Iterable, Tuple, Union, List, Optional
+from typing import Iterable, List, Optional, Tuple, Union
+
+from coveo_styles.styles import ExitWithFailure
+from coveo_systools.filesystem import find_repo_root
+from coveo_systools.subprocess import check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment
 from coveo_stew.exceptions import CannotLoadProject, UsageError
-from coveo_systools.filesystem import find_repo_root
-from coveo_systools.subprocess import check_output
 from coveo_stew.stew import PythonProject
 
 
@@ -35,7 +37,9 @@ class AnyRunner(ContinuousIntegrationRunner):
         _pyproject: PythonProject,
     ) -> None:
         if args and check_args:
-            raise UsageError(
+            raise ExitWithFailure(
+                suggestions=f"Change all `args` for `check-args` in {_pyproject.toml_path}"
+            ) from UsageError(
                 "Cannot use `args` and `check-args` together. They are equivalent, but `args` is deprecated."
             )
         if args:
@@ -53,8 +57,13 @@ class AnyRunner(ContinuousIntegrationRunner):
         try:
             self.working_directory = WorkingDirectoryKind[working_directory.title()]
         except KeyError:
-            raise CannotLoadProject(
-                f"Working directory for {self.name} should be within {WorkingDirectoryKind.valid_values}"
+            raise ExitWithFailure(
+                suggestions=(
+                    f"Adjust {_pyproject.toml_path} so that [tool.stew.ci.custom-runners.{name}] has a valid `working-directory` value.",
+                    "Docs: https://github.com/coveo/stew/blob/main/README.md#options",
+                )
+            ) from CannotLoadProject(
+                f"Working directory for {self.name} should be within {WorkingDirectoryKind.valid_values()}"
             )
 
     def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:

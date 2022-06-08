@@ -5,17 +5,20 @@ python projects in a repository for developer convenience.
 It has some additional features and tricks that do not apply to other projects. This is centralized here.
 """
 
-from typing import Generator, Tuple, Set, Any
+from typing import Any, Generator, Set, Tuple
 
-from coveo_systools.filesystem import safe_text_write
 import tomlkit
-from tomlkit.items import item as toml_item, Item as TomlItem, Table
+from coveo_styles.styles import ExitWithFailure
+from coveo_systools.filesystem import safe_text_write
+from tomlkit.items import Item as TomlItem
+from tomlkit.items import Table
+from tomlkit.items import item as toml_item
 
-from coveo_stew.exceptions import PythonProjectException
+from coveo_stew.exceptions import NotAPoetryProject, StewException
 from coveo_stew.stew import PythonProject
 
 
-class NotPyDevProject(PythonProjectException):
+class NotPyDevProject(StewException):
     ...
 
 
@@ -76,9 +79,15 @@ def _dev_dependencies_of_dependencies(
     # we only care about local non-dev dependencies from the project.
     for dependency in filter(lambda _: _.is_local, project.package.dependencies.values()):
         assert not dependency.path.is_absolute()
-        local_project = PythonProject(
-            project.project_path / dependency.path, verbose=project.verbose
-        )
+        try:
+            local_project = PythonProject(
+                project.project_path / dependency.path, verbose=project.verbose
+            )
+        except NotAPoetryProject as exception:
+            raise ExitWithFailure(
+                suggestions=f"Add a `pyproject.toml` file in {dependency.path}",
+                failures="Local dependencies must also be poetry projects.",
+            ) from exception
         new = set(local_project.package.dev_dependencies).difference(seen)
         seen.update(new)
         for dev_dependency in (local_project.package.dev_dependencies[_] for _ in new):

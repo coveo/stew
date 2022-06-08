@@ -1,12 +1,12 @@
+import platform
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-import platform
-from subprocess import CalledProcessError, PIPE
-from typing import Union, Optional, Any, List, Tuple
+from subprocess import PIPE, CalledProcessError
+from typing import Any, List, Optional, Tuple, Union
 
+from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_application
-
 from coveo_systools.subprocess import check_output
 
 from coveo_stew.exceptions import ToolNotFound
@@ -50,7 +50,9 @@ class PythonEnvironment:
             python_path = (python_path / self._prefix / "python").with_suffix(self._suffix)
 
         if not python_path.exists():
-            raise FileNotFoundError(f"Cannot find a python executable in {environment_path}")
+            raise ExitWithFailure(
+                suggestions="Launch `poetry env use /path/to/python`"
+            ) from FileNotFoundError(f"Cannot find a python executable in {environment_path}")
 
         self.python_executable: Path = python_path
 
@@ -117,7 +119,7 @@ def find_python_tool(
 
     raise ToolNotFound(
         f"""
-{tool} was not found.
+{tool} was not found, or could not be imported.
 
 Starting from coveo-stew 3.0.0, 3rd party tools are no longer provided:
 

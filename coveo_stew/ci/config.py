@@ -1,17 +1,17 @@
-from typing import TypeVar, Any, Dict, Optional, Iterator, Union, Type
+from typing import Any, Dict, Iterator, Optional, Type, TypeVar, Union
 
 from coveo_functools.casing import flexfactory
-from coveo_stew.ci.any_runner import AnyRunner
+from coveo_styles.styles import ExitWithFailure
 
+from coveo_stew.ci.any_runner import AnyRunner
 from coveo_stew.ci.black_runner import BlackRunner
 from coveo_stew.ci.mypy_runner import MypyRunner
 from coveo_stew.ci.poetry_runners import PoetryCheckRunner
-from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
 from coveo_stew.ci.pytest_runner import PytestRunner
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
 from coveo_stew.exceptions import CannotLoadProject
 from coveo_stew.stew import PythonProject
-
 
 T = TypeVar("T")
 
@@ -45,8 +45,15 @@ class ContinuousIntegrationConfig:
         }
 
         # these builtin runners are specialized and cannot be overwritten.
-        if custom_runners and {"check-outdated", "offline-build"}.intersection(custom_runners):
-            raise CannotLoadProject(
+        if custom_runners and (
+            culprits := {"check-outdated", "offline-build"}.intersection(custom_runners)
+        ):
+            raise ExitWithFailure(
+                suggestions=(
+                    f"You can configure {culprits} using the [tool.stew.ci] section.",
+                    "Docs: https://github.com/coveo/stew/blob/main/README.md#options",
+                )
+            ) from CannotLoadProject(
                 "Cannot define `check-outdated` and `offline-build` as custom runners."
             )
 
