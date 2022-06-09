@@ -16,7 +16,7 @@ from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import DetailedCalledProcessError, check_run
 
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
-from coveo_stew.exceptions import NotAPoetryProject, StewException, CheckError
+from coveo_stew.exceptions import CheckError, NotAPoetryProject, StewException
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage

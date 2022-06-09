@@ -2,16 +2,14 @@ from os import PathLike
 from pathlib import Path
 from textwrap import dedent
 
-from coveo_systools.filesystem import pushd
-from coveo_testing.markers import UnitTest, Integration
-from coveo_testing.parametrize import parametrize
-
 import pytest
+from coveo_systools.filesystem import pushd
+from coveo_testing.markers import Integration, UnitTest
+from coveo_testing.parametrize import parametrize
 
 from coveo_stew.exceptions import NotAPoetryProject
 from coveo_stew.offline_publish import offline_publish
 from coveo_stew.stew import PythonProject
-
 from test_coveo_stew.pyprojet_mock.fixtures import pyproject_mock
 
 _ = pyproject_mock  # mark the fixture as used

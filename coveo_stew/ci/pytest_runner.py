@@ -1,9 +1,10 @@
 from subprocess import PIPE
 
+from coveo_systools.subprocess import check_output
+
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.stew import PythonProject
-from coveo_systools.subprocess import check_output
 
 
 class PytestRunner(ContinuousIntegrationRunner):
