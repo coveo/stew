@@ -3,7 +3,7 @@ from subprocess import PIPE
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.stew import PythonProject
-from coveo_systools.subprocess import check_output
+from coveo_systools.subprocess import check_output, async_check_output
 
 
 class PytestRunner(ContinuousIntegrationRunner):
@@ -22,7 +22,7 @@ class PytestRunner(ContinuousIntegrationRunner):
         self.marker_expression = marker_expression
         self.doctest_modules: bool = doctest_modules
 
-    def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
         command = environment.build_command(
             PythonTool.Pytest,
             "--durations=5",
@@ -35,7 +35,7 @@ class PytestRunner(ContinuousIntegrationRunner):
         if self.doctest_modules:
             command.append("--doctest-modules")
 
-        check_output(
+        await async_check_output(
             *command,
             *extra_args,
             working_directory=self._pyproject.project_path,

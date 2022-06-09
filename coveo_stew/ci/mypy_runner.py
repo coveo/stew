@@ -6,7 +6,7 @@ import re
 from typing import Generator, Union, Optional
 
 from coveo_styles.styles import echo
-from coveo_systools.subprocess import check_output
+from coveo_systools.subprocess import check_output, async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
@@ -41,7 +41,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             self._pyproject.project_path.iterdir(),
         )
 
-    def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
         typed_folders = tuple(folder.name for folder in self._find_typed_folders())
 
         if not typed_folders:
@@ -75,7 +75,7 @@ class MypyRunner(ContinuousIntegrationRunner):
         if self._pyproject.verbose:
             echo.normal(command)
 
-        check_output(
+        await async_check_output(
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,

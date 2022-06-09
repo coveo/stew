@@ -1,21 +1,50 @@
-from typing import Any, Dict, Iterator, Optional, Type, TypeVar, Union
+import asyncio
+from asyncio import Future
+from collections.abc import Coroutine
+from dataclasses import dataclass, field
+from functools import partial
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    List,
+    Iterable,
+    Tuple,
+    Callable,
+    Sequence,
+    Generator,
+)
 
 from coveo_functools.casing import flexfactory
-from coveo_styles.styles import ExitWithFailure
+from coveo_styles.styles import ExitWithFailure, echo
+from coveo_systools.subprocess import DetailedCalledProcessError
 
 from coveo_stew.ci.any_runner import AnyRunner
 from coveo_stew.ci.black_runner import BlackRunner
 from coveo_stew.ci.mypy_runner import MypyRunner
 from coveo_stew.ci.poetry_runners import PoetryCheckRunner
 from coveo_stew.ci.pytest_runner import PytestRunner
-from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
-from coveo_stew.exceptions import CannotLoadProject
+from coveo_stew.environment import PythonEnvironment
+from coveo_stew.exceptions import CannotLoadProject, CheckError
 from coveo_stew.stew import PythonProject
 
 T = TypeVar("T")
 
 CIConfig = Optional[Union[Dict[str, Any], bool]]
+CheckExecutor = Coroutine[Any, Any, RunnerStatus]
+
+
+@dataclass
+class CIPlan:
+    environment: PythonEnvironment
+    sequential_checks: List[ContinuousIntegrationRunner] = field(default_factory=list)
+    parallel: List[ContinuousIntegrationRunner] = field(default_factory=list)
 
 
 class ContinuousIntegrationConfig:
@@ -85,3 +114,89 @@ class ContinuousIntegrationConfig:
     def get_runner(self, runner_name: str) -> Optional[ContinuousIntegrationRunner]:
         """Obtain a runner by name."""
         return self._runners.get(runner_name)
+
+    def _generate_test_plan(
+        self, checks: Optional[List[str]], parallel: bool
+    ) -> Generator[CIPlan, None, None]:
+        """Generates one test plan per environment."""
+        for environment in self._pyproject.virtual_environments(create_default_if_missing=True):
+            future = CIPlan(environment)
+
+            for runner in self.runners:
+                if checks and runner.name.lower() not in checks:
+                    continue
+
+                workflow = (
+                    future.sequential_checks
+                    if (runner.supports_auto_fix or not parallel)
+                    else future.parallel
+                )
+                workflow.append(runner)
+
+            yield future
+
+    async def launch_continuous_integration(
+        self, auto_fix, checks: Optional[List[str]], quick: bool, parallel: bool
+    ) -> bool:
+        if self.disabled:
+            return True
+
+        checks = [check.lower() for check in checks or []]
+        exceptions: List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]] = []
+
+        test_plans = list(self._generate_test_plan(checks=checks, parallel=parallel))
+
+        for plan in test_plans:
+            if not quick:
+                self._pyproject.install(environment=plan.environment, remove_untracked=True)
+
+            for sequential_check in plan.sequential_checks:
+                echo.step("Launching sequential checks...")
+                await asyncio.gather(
+                    sequential_check.launch(plan.environment, auto_fix=auto_fix),
+                    return_exceptions=True,
+                )
+                echo.step("Launching parallel checks...")
+            await asyncio.gather(
+                *(parallel_check.launch(plan.environment) for parallel_check in plan.parallel),
+                return_exceptions=True,
+            )
+
+        for plan in test_plans:
+            for check in plan.sequential_checks:
+                echo.normal(
+                    f"{check} ({plan.environment.pretty_python_version})", emoji="hourglass"
+                )
+
+                if check.status is RunnerStatus.Error:
+                    echo.error(
+                        f"The ci runner {check} failed to complete "
+                        f"due to an environment or configuration error."
+                    )
+                    exceptions.append((check, check.last_exception))
+
+                if check.status is not RunnerStatus.Success:
+                    echo.warning(
+                        f"{self._pyproject.package.name}: {check} reported issues:",
+                        pad_before=False,
+                        pad_after=False,
+                    )
+                    check.echo_last_failures()
+
+        if exceptions:
+            raise ExitWithFailure(
+                suggestions=(
+                    "If a command should be treated as a check failure, specify `check-failed-exit-codes`",
+                    "Reference: https://github.com/coveo/stew/blob/main/README.md#options)",
+                    "Try the commands in a shell to troubleshoot them faster.",
+                ),
+                failures=(
+                    f"\n------- [{runner} failed unexpectedly] -------\n\n{str(ex)}\n"
+                    for runner, ex in exceptions
+                ),
+            ) from CheckError("Unexpected errors occurred when launching external processes.")
+
+        allowed_statuses: Tuple[RunnerStatus, ...] = (
+            (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
+        )
+        return all(runner.status in allowed_statuses for runner in self.runners)

@@ -1,5 +1,5 @@
 """Interact with python projects programmatically."""
-
+import asyncio
 import os
 import re
 import shutil
@@ -227,63 +227,18 @@ class PythonProject:
         return self.poetry_run("export", capture_output=True)
 
     def launch_continuous_integration(
-        self, auto_fix: bool = False, checks: List[str] = None, quick: bool = False
+        self,
+        auto_fix: bool = False,
+        checks: Optional[List[str]] = None,
+        quick: bool = False,
+        parallel: bool = True,
     ) -> bool:
         """Launch all continuous integration runners on the project."""
-        from coveo_stew.ci.runner import (  # circular import
-            ContinuousIntegrationRunner,
-            RunnerStatus,
+        return asyncio.run(
+            self.ci.launch_continuous_integration(
+                auto_fix=auto_fix, checks=checks, quick=quick, parallel=parallel
+            )
         )
-
-        if self.ci.disabled:
-            return True
-
-        checks = [check.lower() for check in checks or []]
-        exceptions: List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]] = []
-        for environment in self.virtual_environments(create_default_if_missing=True):
-            if not quick:
-                self.install(environment=environment, remove_untracked=True)
-            for runner in self.ci.runners:
-                if checks and runner.name.lower() not in checks:
-                    continue
-
-                try:
-                    echo.normal(
-                        f"{runner} ({environment.pretty_python_version})", emoji="hourglass"
-                    )
-                    status = runner.launch(environment, auto_fix=auto_fix)
-                    if status is not RunnerStatus.Success:
-                        echo.warning(
-                            f"{self.package.name}: {runner} reported issues:",
-                            pad_before=False,
-                            pad_after=False,
-                        )
-                        runner.echo_last_failures()
-
-                except DetailedCalledProcessError as exception:
-                    echo.error(
-                        f"The ci runner {runner} failed to complete "
-                        f"due to an environment or configuration error."
-                    )
-                    exceptions.append((runner, exception))
-
-        if exceptions:
-            raise ExitWithFailure(
-                suggestions=(
-                    "If a command should be treated as a check failure, specify `check-failed-exit-codes`",
-                    "Reference: https://github.com/coveo/stew/blob/main/README.md#options)",
-                    "Try the commands in a shell to troubleshoot them faster.",
-                ),
-                failures=(
-                    f"\n------- [{runner} failed unexpectedly] -------\n\n{str(ex)}\n"
-                    for runner, ex in exceptions
-                ),
-            ) from CheckError("Unexpected errors occurred when launching external processes.")
-
-        allowed_statuses: Tuple[RunnerStatus, ...] = (
-            (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
-        )
-        return all(runner.status in allowed_statuses for runner in self.ci.runners)
 
     def install(
         self,

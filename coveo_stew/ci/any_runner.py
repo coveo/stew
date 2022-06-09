@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_repo_root
-from coveo_systools.subprocess import check_output
+from coveo_systools.subprocess import check_output, async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment
@@ -66,7 +66,7 @@ class AnyRunner(ContinuousIntegrationRunner):
                 f"Working directory for {self.name} should be within {WorkingDirectoryKind.valid_values()}"
             )
 
-    def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
         args = [self.check_args] if isinstance(self.check_args, str) else self.check_args
         command = environment.build_command(self.name, *args)
 
@@ -75,12 +75,14 @@ class AnyRunner(ContinuousIntegrationRunner):
             working_directory = find_repo_root(working_directory)
 
         self._last_output.extend(
-            check_output(
-                *command,
-                *extra_args,
-                working_directory=working_directory,
-                verbose=self._pyproject.verbose,
-                stderr=PIPE,
+            (
+                await async_check_output(
+                    *command,
+                    *extra_args,
+                    working_directory=working_directory,
+                    verbose=self._pyproject.verbose,
+                    stderr=PIPE,
+                )
             ).split("\n")
         )
 
@@ -90,7 +92,7 @@ class AnyRunner(ContinuousIntegrationRunner):
     def name(self) -> str:
         return self._name
 
-    def _custom_autofix(self, environment: PythonEnvironment) -> None:
+    async def _custom_autofix(self, environment: PythonEnvironment) -> None:
         args = [self.autofix_args] if isinstance(self.autofix_args, str) else self.autofix_args
         command = environment.build_command(self.name, *args)
 
@@ -99,10 +101,12 @@ class AnyRunner(ContinuousIntegrationRunner):
             working_directory = find_repo_root(working_directory)
 
         self._last_output.extend(
-            check_output(
-                *command,
-                working_directory=working_directory,
-                verbose=self._pyproject.verbose,
-                stderr=PIPE,
+            (
+                await async_check_output(
+                    *command,
+                    working_directory=working_directory,
+                    verbose=self._pyproject.verbose,
+                    stderr=PIPE,
+                )
             ).split("\n")
         )

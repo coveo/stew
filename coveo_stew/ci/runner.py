@@ -35,18 +35,20 @@ class ContinuousIntegrationRunner:
         self._pyproject = _pyproject
         self._last_output: List[str] = []
         self._test_cases: List[TestCase] = []
+        self._last_exception: Optional[Exception] = None
 
-    def launch(
+    async def launch(
         self, environment: PythonEnvironment = None, *extra_args: str, auto_fix: bool = False
     ) -> RunnerStatus:
         """Launch the runner's checks. Will raise on unhandled exceptions."""
         self._last_output.clear()
         self._test_cases.clear()
         try:
-            self.status = self._launch(environment, *extra_args)
+            self.status = await self._launch(environment, *extra_args)
         except DetailedCalledProcessError as exception:
             if exception.returncode not in self.check_failed_exit_codes:
                 self.status = RunnerStatus.Error
+                self._last_exception = exception
                 raise
             self._last_output.extend(exception.decode_output().split("\n"))
             self._last_output.extend(exception.decode_stderr().split("\n"))
@@ -54,10 +56,10 @@ class ContinuousIntegrationRunner:
 
         if all((auto_fix, self.supports_auto_fix, self.status == RunnerStatus.CheckFailed)):
             echo.noise("Errors founds; launching auto-fix routine.")
-            self._auto_fix_routine(environment)
+            await self._auto_fix_routine(environment)
 
             # it should pass now!
-            self.launch(environment, *extra_args)
+            await self.launch(environment, *extra_args)
             if self.status == RunnerStatus.CheckFailed:
                 echo.error("The auto fix routine was launched but the check is still failing.")
             else:
@@ -79,7 +81,7 @@ class ContinuousIntegrationRunner:
         return self._auto_fix_routine is not None
 
     @abstractmethod
-    def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
         """Launch the continuous integration check using the given environment and store the output."""
 
     def echo_last_failures(self) -> None:
@@ -90,6 +92,10 @@ class ContinuousIntegrationRunner:
 
     def last_output(self) -> str:
         return "\n".join(self._last_output)
+
+    @property
+    def last_exception(self) -> Optional[DetailedCalledProcessError]:
+        return self._last_exception
 
     def report_path(self, environment: PythonEnvironment) -> Path:
         """The report path for the current invocation. e.g.: ci.py3.6.2.mypy.coveo-functools.xml"""
