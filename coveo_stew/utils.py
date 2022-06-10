@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import MutableMapping, Any
+from typing import Any, MutableMapping
 
-from coveo_styles.styles import ExitWithFailure
 import toml
+from coveo_styles.styles import ExitWithFailure
 from toml import TomlDecodeError
 
 

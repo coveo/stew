@@ -1,4 +1,4 @@
-from typing import Mapping, Any
+from typing import Any, Mapping
 
 from coveo_stew.metadata.poetry_api import dependencies_factory
 

@@ -1,10 +1,9 @@
 from enum import Enum, auto
-from subprocess import PIPE
 from typing import Iterable, List, Optional, Tuple, Union
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_repo_root
-from coveo_systools.subprocess import check_output, async_check_output
+from coveo_systools.subprocess import async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.environment import PythonEnvironment
@@ -81,7 +80,6 @@ class AnyRunner(ContinuousIntegrationRunner):
                     *extra_args,
                     working_directory=working_directory,
                     verbose=self._pyproject.verbose,
-                    stderr=PIPE,
                 )
             ).split("\n")
         )
@@ -106,7 +104,6 @@ class AnyRunner(ContinuousIntegrationRunner):
                     *command,
                     working_directory=working_directory,
                     verbose=self._pyproject.verbose,
-                    stderr=PIPE,
                 )
             ).split("\n")
         )

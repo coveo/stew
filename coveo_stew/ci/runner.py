@@ -1,10 +1,11 @@
 from abc import abstractmethod
+from collections.abc import Coroutine
 from enum import Enum, auto
 from pathlib import Path
-from typing import List, Optional, Callable, Iterable
+from typing import Callable, Iterable, List, Optional
 
-from coveo_systools.subprocess import DetailedCalledProcessError
 from coveo_styles.styles import echo
+from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
 
 from coveo_stew.ci.reporting import generate_report
@@ -28,14 +29,14 @@ class ContinuousIntegrationRunner:
     outputs_own_report: bool = False  # set to True if the runner produces its own report.
 
     # implementations may provide an auto fix routine.
-    _auto_fix_routine: Optional[Callable[[PythonEnvironment], None]] = None
+    _auto_fix_routine: Optional[Callable[[PythonEnvironment], Coroutine[None, None, None]]] = None
 
     def __init__(self, *, _pyproject: PythonProject) -> None:
         """Implementations may add additional keyword args."""
         self._pyproject = _pyproject
         self._last_output: List[str] = []
         self._test_cases: List[TestCase] = []
-        self._last_exception: Optional[Exception] = None
+        self._last_exception: Optional[DetailedCalledProcessError] = None
 
     async def launch(
         self, environment: PythonEnvironment = None, *extra_args: str, auto_fix: bool = False
@@ -56,6 +57,7 @@ class ContinuousIntegrationRunner:
 
         if all((auto_fix, self.supports_auto_fix, self.status == RunnerStatus.CheckFailed)):
             echo.noise("Errors founds; launching auto-fix routine.")
+            assert self._auto_fix_routine is not None  # mypy
             await self._auto_fix_routine(environment)
 
             # it should pass now!

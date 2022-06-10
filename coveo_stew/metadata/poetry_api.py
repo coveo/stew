@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import Dict, Any, Optional, Union, Mapping, List, Type, TypeVar, Iterable
-from typing_extensions import Final
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Type, TypeVar, Union
 
 from coveo_functools.casing import flexfactory
-
+from typing_extensions import Final
 
 T = TypeVar("T")
 

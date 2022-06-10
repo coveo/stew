@@ -1,22 +1,17 @@
 import asyncio
-from asyncio import Future
 from collections.abc import Coroutine
 from dataclasses import dataclass, field
-from functools import partial
 from typing import (
     Any,
     Dict,
+    Generator,
     Iterator,
+    List,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
-    List,
-    Iterable,
-    Tuple,
-    Callable,
-    Sequence,
-    Generator,
 )
 
 from coveo_functools.casing import flexfactory
@@ -136,7 +131,7 @@ class ContinuousIntegrationConfig:
             yield future
 
     async def launch_continuous_integration(
-        self, auto_fix, checks: Optional[List[str]], quick: bool, parallel: bool
+        self, auto_fix: bool, checks: Optional[List[str]], quick: bool, parallel: bool
     ) -> bool:
         if self.disabled:
             return True
@@ -152,18 +147,29 @@ class ContinuousIntegrationConfig:
 
             for sequential_check in plan.sequential_checks:
                 echo.step("Launching sequential checks...")
+                echo.normal(
+                    f"{sequential_check} ({plan.environment.pretty_python_version})",
+                    emoji="hourglass",
+                )
                 await asyncio.gather(
                     sequential_check.launch(plan.environment, auto_fix=auto_fix),
                     return_exceptions=True,
                 )
-                echo.step("Launching parallel checks...")
-            await asyncio.gather(
+                echo.success("Sequential checks are complete.")
+
+            echo.step("Launching parallel checks...")
+            results = await asyncio.gather(
                 *(parallel_check.launch(plan.environment) for parallel_check in plan.parallel),
                 return_exceptions=True,
             )
+            echo.success("Parallel checks are complete.")
+            for result in results:
+                if isinstance(result, Exception):
+                    raise result
+                    # exceptions.append(sequential_check, result)
 
         for plan in test_plans:
-            for check in plan.sequential_checks:
+            for check in *plan.sequential_checks, *plan.parallel:
                 echo.normal(
                     f"{check} ({plan.environment.pretty_python_version})", emoji="hourglass"
                 )

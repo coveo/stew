@@ -1,12 +1,7 @@
-from subprocess import PIPE
-
-from coveo_systools.subprocess import check_output, DetailedCalledProcessError, async_check_output
+from coveo_systools.subprocess import DetailedCalledProcessError, async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
-from coveo_stew.environment import (
-    PythonEnvironment,
-    PythonTool,
-)
+from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.stew import PythonProject
 
 
@@ -36,5 +31,4 @@ class BlackRunner(ContinuousIntegrationRunner):
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
-            stderr=PIPE,
         )

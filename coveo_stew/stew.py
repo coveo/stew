@@ -1,4 +1,5 @@
 """Interact with python projects programmatically."""
+
 import asyncio
 import os
 import re
@@ -7,16 +8,15 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Dict, Generator, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Generator, Iterator, List, Optional
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
-from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import DetailedCalledProcessError, check_run
 
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
-from coveo_stew.exceptions import NotAPoetryProject, StewException, CheckError
+from coveo_stew.exceptions import NotAPoetryProject, StewException
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage

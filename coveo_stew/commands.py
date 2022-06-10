@@ -1,20 +1,23 @@
 """Automates poetry operations in the repo."""
 
-from pathlib import Path
 import re
-from typing import Set, Iterable, List, Union, Generator
+from pathlib import Path
+from typing import Generator, Iterable, List, Set, Union
 
 import click
 from coveo_functools.finalizer import finalizer
-from coveo_stew.discovery import find_pyproject, discover_pyprojects
+from coveo_styles.styles import ExitWithFailure, echo, install_pretty_exception_hook
 from coveo_systools.filesystem import find_repo_root
-from coveo_styles.styles import echo, ExitWithFailure, install_pretty_exception_hook
 
-from coveo_stew.exceptions import CheckFailed, RequirementsOutdated, PythonProjectNotFound
+from coveo_stew.discovery import discover_pyprojects, find_pyproject
+from coveo_stew.exceptions import (
+    CheckFailed,
+    PythonProjectNotFound,
+    RequirementsOutdated,
+)
 from coveo_stew.offline_publish import offline_publish
 from coveo_stew.pydev import is_pydev_project, pull_and_write_dev_requirements
-from coveo_stew.stew import PythonProject, PythonEnvironment
-
+from coveo_stew.stew import PythonEnvironment, PythonProject
 
 _COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate"]
 
