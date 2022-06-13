@@ -28,6 +28,7 @@ tomlkit = "*"
 black = "22.3"
 coveo-testing = "^2.0.0"
 flake8 = "*"
+isort = "*"
 mypy = "0.950"  # required for 3.10 support
 pytest = "*"
 types-setuptools = "*"
