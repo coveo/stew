@@ -142,12 +142,13 @@ class ContinuousIntegrationRunner:
 @dataclass
 class CIPlan:
     """
-    The CIPlan gathers all the runners for an environment
+    The CIPlan holds all the runners for an environment
     and orchestrates the workflow of launching them.
     """
 
     environment: PythonEnvironment
     checks: Sequence[ContinuousIntegrationRunner]
+    parallel: bool
 
     @cached_property
     def autofix_checks(self) -> List[ContinuousIntegrationRunner]:
@@ -161,7 +162,7 @@ class CIPlan:
     def non_autofix_checks(self) -> List[ContinuousIntegrationRunner]:
         return [check for check in self.checks if check not in self.autofix_checks]
 
-    async def orchestrate(self, auto_fix: bool = False, parallel: bool = False) -> None:
+    async def orchestrate(self, auto_fix: bool = False) -> None:
         """Orchestrates this CIPlan by launching runners in the correct order."""
         runs: List[Run] = []
         echo.step(
@@ -170,7 +171,7 @@ class CIPlan:
 
         if auto_fix:
             # run autofix first
-            runs.append(run := Run(self.environment, self.autofix_checks, parallel=parallel))
+            runs.append(run := Run(self.environment, self.autofix_checks, self.parallel))
             await run.run_and_report()
 
             if run.overall_status is RunnerStatus.CheckFailed:
@@ -178,11 +179,11 @@ class CIPlan:
                 await run.run_and_report()  # verify that autofix worked
 
             # run all other runners
-            runs.append(run := Run(self.environment, self.non_autofix_checks, parallel=parallel))
+            runs.append(run := Run(self.environment, self.non_autofix_checks, self.parallel))
             await run.run_and_report()
 
         else:
-            runs.append(run := Run(self.environment, self.checks, parallel=parallel))
+            runs.append(run := Run(self.environment, self.checks, self.parallel))
             await run.run_and_report()
 
         overall_status = get_overall_run_status(*runs)
@@ -210,7 +211,7 @@ class Run:
 
     environment: PythonEnvironment
     checks: Sequence[ContinuousIntegrationRunner]
-    parallel: bool = True
+    parallel: bool
 
     @cached_property
     def exceptions(self) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
@@ -222,7 +223,9 @@ class Run:
         return get_overall_run_status(self)
 
     async def run_and_report(
-        self, auto_fix: bool = False, feedback: bool = True,
+        self,
+        auto_fix: bool = False,
+        feedback: bool = True,
     ) -> None:
         """Launch the runners and report the results to the user."""
         self.exceptions.clear()
