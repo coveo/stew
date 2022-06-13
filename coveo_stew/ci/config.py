@@ -98,9 +98,7 @@ class ContinuousIntegrationConfig:
         return self._runners.get(runner_name)
 
     def _generate_ci_plans(
-        self,
-        checks: Optional[List[str]],
-        parallel: bool = True
+        self, checks: Optional[List[str]], parallel: bool = True
     ) -> Generator[CIPlan, None, None]:
         """Generates one test plan per environment."""
         checks = [check.lower() for check in checks] if checks else []
@@ -120,11 +118,15 @@ class ContinuousIntegrationConfig:
         if self.disabled:
             return True
 
-        ci_plans = list(self._generate_ci_plans(checks=[check.lower() for check in checks or []], parallel=parallel))
+        ci_plans = list(
+            self._generate_ci_plans(
+                checks=[check.lower() for check in checks or []], parallel=parallel
+            )
+        )
         for plan in ci_plans:
             if not quick:
                 self._pyproject.install(environment=plan.environment, remove_untracked=True)
-            await plan.orchestrate(auto_fix, parallel)
+            await plan.orchestrate(auto_fix)
 
         allowed_statuses: Tuple[RunnerStatus, ...] = (
             (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
