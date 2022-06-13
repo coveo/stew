@@ -19,7 +19,7 @@ from coveo_stew.ci.black_runner import BlackRunner
 from coveo_stew.ci.mypy_runner import MypyRunner
 from coveo_stew.ci.poetry_runners import PoetryCheckRunner
 from coveo_stew.ci.pytest_runner import PytestRunner
-from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus, CIPlan
+from coveo_stew.ci.runner import CIPlan, ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
 from coveo_stew.exceptions import CannotLoadProject
 from coveo_stew.stew import PythonProject

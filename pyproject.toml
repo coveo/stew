@@ -43,9 +43,12 @@ pytest = true
 offline-build = true
 black = true
 
-
 [tool.stew.ci.custom-runners]
 flake8 = { check-args = "--ignore=E501,W503" }
+
+[tool.stew.ci.custom-runners.isort]
+check-args = ["--check", "--profile", "black", "."]
+autofix-args = ["--profile", "black", "."]
 
 
 [tool.black]

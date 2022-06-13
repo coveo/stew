@@ -7,7 +7,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Sequence, Tuple
 
-from coveo_styles.styles import echo, ExitWithFailure
+from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
 
@@ -170,21 +170,21 @@ class CIPlan:
         )
 
         if auto_fix:
-            # run autofix first
-            runs.append(run := Run(self.environment, self.autofix_checks, self.parallel))
-            await run.run_and_report()
+            # run autofix first, in parallel
+            runs.append(run := Run(self.environment, self.autofix_checks))
+            await run.run_and_report(parallel=self.parallel)
 
             if run.overall_status is RunnerStatus.CheckFailed:
-                await run.run_and_report(auto_fix=True, feedback=False)
-                await run.run_and_report()  # verify that autofix worked
+                await run.run_and_report(auto_fix=True, feedback=False, parallel=False)
+                await run.run_and_report(parallel=self.parallel)  # verify that autofix worked
 
             # run all other runners
-            runs.append(run := Run(self.environment, self.non_autofix_checks, self.parallel))
-            await run.run_and_report()
+            runs.append(run := Run(self.environment, self.non_autofix_checks))
+            await run.run_and_report(parallel=self.parallel)
 
         else:
-            runs.append(run := Run(self.environment, self.checks, self.parallel))
-            await run.run_and_report()
+            runs.append(run := Run(self.environment, self.checks))
+            await run.run_and_report(parallel=self.parallel)
 
         overall_status = get_overall_run_status(*runs)
         echo.success(
@@ -211,7 +211,6 @@ class Run:
 
     environment: PythonEnvironment
     checks: Sequence[ContinuousIntegrationRunner]
-    parallel: bool
 
     @cached_property
     def exceptions(self) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
@@ -223,14 +222,15 @@ class Run:
         return get_overall_run_status(self)
 
     async def run_and_report(
-        self,
-        auto_fix: bool = False,
-        feedback: bool = True,
+        self, auto_fix: bool = False, feedback: bool = True, parallel: bool = True
     ) -> None:
         """Launch the runners and report the results to the user."""
         self.exceptions.clear()
 
-        if self.parallel:
+        if auto_fix:
+            parallel = False  # can't run autofix routines in parallel, and crashing is bad UX
+
+        if parallel:
             for next_result in asyncio.as_completed(
                 [runner.launch(self.environment, auto_fix=auto_fix) for runner in self.checks]
             ):
