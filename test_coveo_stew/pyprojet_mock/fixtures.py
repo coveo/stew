@@ -6,7 +6,6 @@ import pytest
 
 from coveo_stew.stew import PythonProject
 
-
 MOCK_FOLDER = Path("mock-pyproject")
 MOCK_DEPENDENCY_FOLDER = Path("mock-pyproject-dependency")
 

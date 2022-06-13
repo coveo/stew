@@ -1,10 +1,9 @@
+import re
 from pathlib import Path
 from subprocess import PIPE
+from typing import Generator, Optional, Union
 
 import pkg_resources
-import re
-from typing import Generator, Union, Optional
-
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import check_output
 

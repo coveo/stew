@@ -1,6 +1,6 @@
-from pathlib import Path
 import shutil
 import tempfile
+from pathlib import Path
 from subprocess import PIPE
 
 from coveo_systools.filesystem import pushd

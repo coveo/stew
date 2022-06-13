@@ -1,12 +1,9 @@
 from subprocess import PIPE
 
-from coveo_systools.subprocess import check_output, DetailedCalledProcessError
+from coveo_systools.subprocess import DetailedCalledProcessError, check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
-from coveo_stew.environment import (
-    PythonEnvironment,
-    PythonTool,
-)
+from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.stew import PythonProject
 
 

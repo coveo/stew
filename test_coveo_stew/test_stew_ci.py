@@ -1,13 +1,13 @@
 import os
 from contextlib import contextmanager
-from typing import Generator, Final
+from typing import Final, Generator
 
 import pytest
 from _pytest.tmpdir import TempPathFactory
+from coveo_testing.parametrize import parametrize
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
 from coveo_stew.stew import PythonProject
-from coveo_testing.parametrize import parametrize
 
 PROJECT_NAME: Final = "mock_linter_errors"
 

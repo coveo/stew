@@ -1,11 +1,10 @@
 from pathlib import Path
-from typing import Callable, Any
+from typing import Any, Callable
 
 from coveo_testing.markers import UnitTest
 from toml.decoder import TomlDecodeError
 
 from coveo_stew.utils import _load_toml_from_content
-
 
 DUMMY_TEST_PATH = Path("/some/dummy/path.toml")
 

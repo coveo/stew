@@ -28,7 +28,8 @@ tomlkit = "*"
 black = "22.3"
 coveo-testing = "^2.0.0"
 flake8 = "*"
-mypy = "0.950"
+isort = "*"
+mypy = "0.950"  # required for 3.10 support
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
@@ -46,6 +47,11 @@ black = true
 
 [tool.stew.ci.custom-runners]
 flake8 = { check-args = "--ignore=E501,W503" }
+
+
+[tool.stew.ci.custom-runners.isort]
+check-args = ["--check", "--profile", "black", "."]
+autofix-args = ["--profile", "black", "."]
 
 
 [tool.black]

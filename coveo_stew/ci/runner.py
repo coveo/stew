@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from enum import Enum, auto
 from pathlib import Path
-from typing import List, Optional, Callable, Iterable
+from typing import Callable, Iterable, List, Optional
 
-from coveo_systools.subprocess import DetailedCalledProcessError
 from coveo_styles.styles import echo
+from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
 
 from coveo_stew.ci.reporting import generate_report
