@@ -9,5 +9,4 @@ runs:
     - name: Run stew ci
       shell: bash
       run: |
-        python -m poetry install
         python -m poetry run stew ci coveo-stew --exact-match
