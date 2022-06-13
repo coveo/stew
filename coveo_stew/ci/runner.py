@@ -169,18 +169,20 @@ class CIPlan:
         )
 
         if auto_fix:
-            runs.append(run := Run(self.environment, self.autofix_checks))
+            # run autofix first
+            runs.append(run := Run(self.environment, self.autofix_checks, parallel=parallel))
             await run.run_and_report()
 
             if run.overall_status is RunnerStatus.CheckFailed:
                 await run.run_and_report(auto_fix=True, feedback=False)
                 await run.run_and_report()  # verify that autofix worked
 
-            runs.append(run := Run(self.environment, self.non_autofix_checks))
+            # run all other runners
+            runs.append(run := Run(self.environment, self.non_autofix_checks, parallel=parallel))
             await run.run_and_report()
 
         else:
-            runs.append(run := Run(self.environment, self.autofix_checks + self.non_autofix_checks))
+            runs.append(run := Run(self.environment, self.checks, parallel=parallel))
             await run.run_and_report()
 
         overall_status = get_overall_run_status(*runs)
@@ -204,10 +206,11 @@ class CIPlan:
 
 @dataclass
 class Run:
-    """The Run is a stateful object that runs checks in parallel and reports the results to the user."""
+    """The Run is a stateful object that runs checks and reports the results to the user."""
 
     environment: PythonEnvironment
     checks: Sequence[ContinuousIntegrationRunner]
+    parallel: bool = True
 
     @cached_property
     def exceptions(self) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
@@ -218,21 +221,29 @@ class Run:
     def overall_status(self) -> RunnerStatus:
         return get_overall_run_status(self)
 
-    async def run_and_report(self, auto_fix: bool = False, feedback: bool = True) -> None:
+    async def run_and_report(
+        self, auto_fix: bool = False, feedback: bool = True,
+    ) -> None:
         """Launch the runners and report the results to the user."""
         self.exceptions.clear()
 
-        for next_result in asyncio.as_completed(
-            [runner.launch(self.environment, auto_fix=auto_fix) for runner in self.checks]
-        ):
-            check = await next_result
+        if self.parallel:
+            for next_result in asyncio.as_completed(
+                [runner.launch(self.environment, auto_fix=auto_fix) for runner in self.checks]
+            ):
+                self._report(await next_result, feedback=feedback)
+        else:
+            for runner in self.checks:
+                self._report(
+                    await runner.launch(self.environment, auto_fix=auto_fix), feedback=feedback
+                )
 
-            if check.status is RunnerStatus.Error:
-                self.exceptions.append((check, check.last_exception))
+    def _report(self, check: ContinuousIntegrationRunner, feedback: bool = True) -> None:
+        """Reports on a completed check."""
+        if check.status is RunnerStatus.Error:
+            self.exceptions.append((check, check.last_exception))
 
-            if not feedback:
-                continue
-
+        if feedback:
             if check.status is RunnerStatus.Success:
                 echo.normal(f"PASSED: {check}", emoji="heavy_check_mark", fg="green")
 

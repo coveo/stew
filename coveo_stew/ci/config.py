@@ -122,8 +122,8 @@ class ContinuousIntegrationConfig:
         ci_plans = list(self._generate_ci_plans(checks=[check.lower() for check in checks or []]))
         for plan in ci_plans:
             if not quick:
-                self._pyproject.install(environment=plan.environment)
-            await plan.orchestrate(auto_fix)
+                self._pyproject.install(environment=plan.environment, remove_untracked=True)
+            await plan.orchestrate(auto_fix, parallel)
 
         allowed_statuses: Tuple[RunnerStatus, ...] = (
             (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
