@@ -96,7 +96,7 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-systools"
-version = "2.0.7a2"
+version = "2.0.7"
 description = "Filesystem, language and OS related tools."
 category = "main"
 optional = false
@@ -361,7 +361,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">3.8.0,<4"
-content-hash = "b6045a8be38c6ec6423baf8fa086e31d87e6b2dcfc2ed7e340669849e3a11eda"
+content-hash = "bb9c709f84fea061133bfb7d2983c6bd4ca7c1f6afb18d1c4a6c120337e401a6"
 
 [metadata.files]
 atomicwrites = [
@@ -418,8 +418,8 @@ coveo-styles = [
     {file = "coveo_styles-2.1-py3-none-any.whl", hash = "sha256:3a5831983a1e2cb6543ca65ee859a13a788f1d331cbb19987ec5d8e53cefd27c"},
 ]
 coveo-systools = [
-    {file = "coveo-systools-2.0.7a2.tar.gz", hash = "sha256:103971b7aeac80bec7ebb29d81fca96ee4ddda9c5e6002c5fda19706c7cc794d"},
-    {file = "coveo_systools-2.0.7a2-py3-none-any.whl", hash = "sha256:23bd576dbd2627dd5d2b2badd979742ee74409b5673a4cc6d58996f3b2b370bd"},
+    {file = "coveo-systools-2.0.7.tar.gz", hash = "sha256:6577339065bd903bc6f8c4fb67d2caa2c4ce0883d73be98856b478d7ad9693eb"},
+    {file = "coveo_systools-2.0.7-py3-none-any.whl", hash = "sha256:dee5ccb385880f1a9adbcd9a4b8b240c7daff112641df5d2e996c6e7d8378c8e"},
 ]
 coveo-testing = [
     {file = "coveo-testing-2.0.6.tar.gz", hash = "sha256:143bde870d1cc56044995b69347f920fad4f24539120d0d2476ba0f933fddf17"},
