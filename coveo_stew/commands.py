@@ -339,5 +339,3 @@ def ci(
         raise ExitWithFailure(failures=failures) from CheckFailed(
             f"{len(failures)} project(s) failed ci steps."
         )
-
-    echo.success()

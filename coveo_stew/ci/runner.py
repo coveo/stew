@@ -1,15 +1,19 @@
+import asyncio
 from abc import abstractmethod
 from collections.abc import Coroutine
+from dataclasses import dataclass
 from enum import Enum, auto
+from functools import cached_property
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple
 
-from coveo_styles.styles import echo
+from coveo_styles.styles import echo, ExitWithFailure
 from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
 
 from coveo_stew.ci.reporting import generate_report
 from coveo_stew.environment import PythonEnvironment
+from coveo_stew.exceptions import CheckError
 from coveo_stew.stew import PythonProject
 
 
@@ -38,10 +42,16 @@ class ContinuousIntegrationRunner:
         self._test_cases: List[TestCase] = []
         self._last_exception: Optional[DetailedCalledProcessError] = None
 
+    @property
+    def project(self) -> PythonProject:
+        return self._pyproject
+
     async def launch(
         self, environment: PythonEnvironment = None, *extra_args: str, auto_fix: bool = False
-    ) -> RunnerStatus:
-        """Launch the runner's checks. Will raise on unhandled exceptions."""
+    ) -> "ContinuousIntegrationRunner":
+        """Launch the runner's checks. Will raise on unhandled exceptions.
+        Returns self for convenience with asyncio gather/as_completed/etc.
+        """
         self._last_output.clear()
         self._test_cases.clear()
         try:
@@ -70,7 +80,7 @@ class ContinuousIntegrationRunner:
         if not self.outputs_own_report:
             self._output_generic_report(environment)
 
-        return self.status
+        return self
 
     @property
     @abstractmethod
@@ -127,3 +137,125 @@ class ContinuousIntegrationRunner:
 
     def __str__(self) -> str:
         return self.name
+
+
+@dataclass
+class CIPlan:
+    """
+    The CIPlan gathers all the runners for an environment
+    and orchestrates the workflow of launching them.
+    """
+
+    environment: PythonEnvironment
+    checks: Sequence[ContinuousIntegrationRunner]
+
+    @cached_property
+    def autofix_checks(self) -> List[ContinuousIntegrationRunner]:
+        """
+        Autofix checks receive a special treatment since they will potentially change line numbers,
+        making reports inaccurate.
+        """
+        return [check for check in self.checks if check.supports_auto_fix]
+
+    @cached_property
+    def non_autofix_checks(self) -> List[ContinuousIntegrationRunner]:
+        return [check for check in self.checks if check not in self.autofix_checks]
+
+    async def orchestrate(self, auto_fix: bool = False, parallel: bool = False) -> None:
+        """Orchestrates this CIPlan by launching runners in the correct order."""
+        runs: List[Run] = []
+        echo.step(
+            f"Planned {len(self.checks)} runners for {self.environment.pretty_python_version}"
+        )
+
+        if auto_fix:
+            runs.append(run := Run(self.environment, self.autofix_checks))
+            await run.run_and_report()
+
+            if run.overall_status is RunnerStatus.CheckFailed:
+                await run.run_and_report(auto_fix=True, feedback=False)
+                await run.run_and_report()  # verify that autofix worked
+
+            runs.append(run := Run(self.environment, self.non_autofix_checks))
+            await run.run_and_report()
+
+        else:
+            runs.append(run := Run(self.environment, self.autofix_checks + self.non_autofix_checks))
+            await run.run_and_report()
+
+        overall_status = get_overall_run_status(*runs)
+        echo.success(
+            f"The CI run for {self.environment.pretty_python_version} completed with status: {overall_status}"
+        )
+
+        if exceptions := [exception for run in runs for exception in run.exceptions]:
+            raise ExitWithFailure(
+                suggestions=(
+                    "If a command should be treated as a check failure, specify `check-failed-exit-codes`",
+                    "Reference: https://github.com/coveo/stew/blob/main/README.md#options)",
+                    "Try the commands in a shell to troubleshoot them faster.",
+                ),
+                failures=(
+                    f"\n------- [{runner} failed unexpectedly] -------\n\n{str(ex)}\n"
+                    for runner, ex in exceptions
+                ),
+            ) from CheckError("Unexpected errors occurred when launching external processes.")
+
+
+@dataclass
+class Run:
+    """The Run is a stateful object that runs checks in parallel and reports the results to the user."""
+
+    environment: PythonEnvironment
+    checks: Sequence[ContinuousIntegrationRunner]
+
+    @cached_property
+    def exceptions(self) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
+        """Exceptions are stored here after the run. Exceptions are cleared when `run_and_report` is called."""
+        return []
+
+    @property
+    def overall_status(self) -> RunnerStatus:
+        return get_overall_run_status(self)
+
+    async def run_and_report(self, auto_fix: bool = False, feedback: bool = True) -> None:
+        """Launch the runners and report the results to the user."""
+        self.exceptions.clear()
+
+        for next_result in asyncio.as_completed(
+            [runner.launch(self.environment, auto_fix=auto_fix) for runner in self.checks]
+        ):
+            check = await next_result
+
+            if check.status is RunnerStatus.Error:
+                self.exceptions.append((check, check.last_exception))
+
+            if not feedback:
+                continue
+
+            if check.status is RunnerStatus.Success:
+                echo.normal(f"PASSED: {check}", emoji="heavy_check_mark", fg="green")
+
+            elif check.status is RunnerStatus.CheckFailed:
+                echo.warning(
+                    f"{check.project.package.name}: {check} reported issues:",
+                    pad_before=False,
+                    pad_after=False,
+                )
+                check.echo_last_failures()
+
+            elif check.status is RunnerStatus.Error:
+                echo.error(
+                    f"The ci runner {check} failed to complete "
+                    f"due to an environment or configuration error."
+                )
+
+
+def get_overall_run_status(*runs: Run) -> RunnerStatus:
+    """Return the overall run status for the provided runs."""
+    statuses = [check.status for run in runs for check in run.checks]
+    for status in RunnerStatus.Error, RunnerStatus.CheckFailed, RunnerStatus.Success:
+        if status in statuses:
+            return status
+
+    return RunnerStatus.NotRan
