@@ -227,6 +227,9 @@ class Run:
         """Launch the runners and report the results to the user."""
         self.exceptions.clear()
 
+        if auto_fix and parallel:
+            raise AssertionError("Some dev made a mistake; parallel and autofix are mutually exclusive!")
+
         if parallel:
             for next_result in asyncio.as_completed(
                 [runner.launch(self.environment, auto_fix=False) for runner in self.checks]
