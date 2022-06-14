@@ -228,7 +228,9 @@ class Run:
         self.exceptions.clear()
 
         if auto_fix and parallel:
-            raise AssertionError("Some dev made a mistake; parallel and autofix are mutually exclusive!")
+            raise AssertionError(
+                "Some dev made a mistake; parallel and autofix are mutually exclusive!"
+            )
 
         if parallel:
             for next_result in asyncio.as_completed(
