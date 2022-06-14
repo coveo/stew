@@ -227,12 +227,9 @@ class Run:
         """Launch the runners and report the results to the user."""
         self.exceptions.clear()
 
-        if auto_fix:
-            parallel = False  # can't run autofix routines in parallel, and crashing is bad UX
-
         if parallel:
             for next_result in asyncio.as_completed(
-                [runner.launch(self.environment, auto_fix=auto_fix) for runner in self.checks]
+                [runner.launch(self.environment, auto_fix=False) for runner in self.checks]
             ):
                 self._report(await next_result, feedback=feedback)
         else:
