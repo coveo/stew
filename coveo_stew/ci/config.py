@@ -1,4 +1,15 @@
-from typing import Any, Dict, Iterator, Optional, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from coveo_functools.casing import flexfactory
 from coveo_styles.styles import ExitWithFailure
@@ -8,7 +19,7 @@ from coveo_stew.ci.black_runner import BlackRunner
 from coveo_stew.ci.mypy_runner import MypyRunner
 from coveo_stew.ci.poetry_runners import PoetryCheckRunner
 from coveo_stew.ci.pytest_runner import PytestRunner
-from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.runner import CIPlan, ContinuousIntegrationRunner, RunnerStatus
 from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
 from coveo_stew.exceptions import CannotLoadProject
 from coveo_stew.stew import PythonProject
@@ -85,3 +96,40 @@ class ContinuousIntegrationConfig:
     def get_runner(self, runner_name: str) -> Optional[ContinuousIntegrationRunner]:
         """Obtain a runner by name."""
         return self._runners.get(runner_name)
+
+    def _generate_ci_plans(
+        self, checks: Optional[List[str]], parallel: bool = True
+    ) -> Generator[CIPlan, None, None]:
+        """Generates one test plan per environment."""
+        checks = [check.lower() for check in checks] if checks else []
+
+        for environment in self._pyproject.virtual_environments(create_default_if_missing=True):
+            runners = []
+            for runner in self.runners:
+                if checks and runner.name.lower() not in checks:
+                    continue
+                runners.append(runner)
+
+            yield CIPlan(environment, runners, parallel)
+
+    async def launch_continuous_integration(
+        self, auto_fix: bool, checks: Optional[List[str]], quick: bool, parallel: bool
+    ) -> bool:
+        if self.disabled:
+            return True
+
+        ci_plans = list(
+            self._generate_ci_plans(
+                checks=[check.lower() for check in checks or []], parallel=parallel
+            )
+        )
+        for plan in ci_plans:
+            if not quick:
+                self._pyproject.install(environment=plan.environment, remove_untracked=True)
+            await plan.orchestrate(auto_fix)
+
+        allowed_statuses: Tuple[RunnerStatus, ...] = (
+            (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
+        )
+
+        return all(check.status in allowed_statuses for plan in ci_plans for check in plan.checks)

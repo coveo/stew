@@ -312,6 +312,7 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
     default=False,
     help="Do not call 'poetry install --remove-untracked' before testing.",
 )
+@click.option("--parallel/--sequential", default=True)
 def ci(
     project_name: str = None,
     exact_match: bool = False,
@@ -319,6 +320,7 @@ def ci(
     check: List[str] = None,
     verbose: bool = False,
     quick: bool = False,
+    parallel: bool = True,
 ) -> None:
     failures = []
     try:
@@ -326,7 +328,9 @@ def ci(
             query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.step(project.package.name, pad_after=False)
-            if not project.launch_continuous_integration(auto_fix=fix, checks=check, quick=quick):
+            if not project.launch_continuous_integration(
+                auto_fix=fix, checks=check, quick=quick, parallel=parallel
+            ):
                 failures.append(project)
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
@@ -335,5 +339,3 @@ def ci(
         raise ExitWithFailure(failures=failures) from CheckFailed(
             f"{len(failures)} project(s) failed ci steps."
         )
-
-    echo.success()
