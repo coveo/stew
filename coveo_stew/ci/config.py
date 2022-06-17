@@ -1,3 +1,4 @@
+from itertools import cycle
 from typing import (
     Any,
     Dict,
@@ -12,7 +13,7 @@ from typing import (
 )
 
 from coveo_functools.casing import flexfactory
-from coveo_styles.styles import ExitWithFailure
+from coveo_styles.styles import ExitWithFailure, echo
 
 from coveo_stew.ci.any_runner import AnyRunner
 from coveo_stew.ci.black_runner import BlackRunner
@@ -98,31 +99,36 @@ class ContinuousIntegrationConfig:
         return self._runners.get(runner_name)
 
     def _generate_ci_plans(
-        self, checks: Optional[List[str]], parallel: bool = True
+        self, checks: Optional[List[str]], skips: Optional[List[str]], parallel: bool = True
     ) -> Generator[CIPlan, None, None]:
         """Generates one test plan per environment."""
         checks = [check.lower() for check in checks] if checks else []
+        skips = [skip.lower() for skip in skips] if skips else []
+
+        emojis = cycle(("see_no_evil", "hear_no_evil", "speak_no_evil"))
 
         for environment in self._pyproject.virtual_environments(create_default_if_missing=True):
             runners = []
             for runner in self.runners:
-                if checks and runner.name.lower() not in checks:
+                if checks and runner.name.lower() not in checks or runner.name.lower() in skips:
+                    echo.noise(f"{runner.name} will be skipped.", emoji=next(emojis))
                     continue
                 runners.append(runner)
 
             yield CIPlan(environment, runners, parallel)
 
     async def launch_continuous_integration(
-        self, auto_fix: bool, checks: Optional[List[str]], quick: bool, parallel: bool
+        self,
+        auto_fix: bool,
+        checks: Optional[List[str]],
+        skips: Optional[List[str]],
+        quick: bool,
+        parallel: bool,
     ) -> bool:
         if self.disabled:
             return True
 
-        ci_plans = list(
-            self._generate_ci_plans(
-                checks=[check.lower() for check in checks or []], parallel=parallel
-            )
-        )
+        ci_plans = list(self._generate_ci_plans(checks=checks, skips=skips, parallel=parallel))
         for plan in ci_plans:
             if not quick:
                 self._pyproject.install(environment=plan.environment, remove_untracked=True)
