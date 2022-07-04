@@ -110,7 +110,7 @@ class ContinuousIntegrationConfig:
         for environment in self._pyproject.virtual_environments(create_default_if_missing=True):
             runners = []
             for runner in self.runners:
-                if checks and runner.name.lower() not in checks or runner.name.lower() in skips:
+                if (checks and runner.name.lower() not in checks) or runner.name.lower() in skips:
                     echo.noise(f"{runner.name} will be skipped.", emoji=next(emojis))
                     continue
                 runners.append(runner)
