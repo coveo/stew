@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Coroutine
+from typing import Callable, Coroutine, Iterable, List, Optional, Sequence, Tuple
 
 from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.subprocess import DetailedCalledProcessError

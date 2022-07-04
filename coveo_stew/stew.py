@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Generator, Iterator, List, Optional, Pattern, Final, Tuple
+from typing import Any, Final, Generator, Iterator, List, Optional, Pattern, Tuple
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
@@ -23,7 +23,9 @@ from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage
 from coveo_stew.utils import load_toml_from_path
 
-ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(r"^(?P<path>.+-py.+?)(?: (?P<activated>\(Activated\)))?$")
+ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(
+    r"^(?P<path>.+?)(?: (?P<activated>\(Activated\)))?$"
+)
 
 
 class PythonProject:
@@ -127,7 +129,9 @@ class PythonProject:
         if not self._virtual_environments_cache:
             return None
 
-        return next(environment for environment in self._virtual_environments_cache if environment.activated)
+        return next(
+            environment for environment in self._virtual_environments_cache if environment.activated
+        )
 
     def virtual_environments(
         self, *, create_default_if_missing: bool = False
@@ -143,7 +147,7 @@ class PythonProject:
         yield from self._virtual_environments_cache
 
     def _create_default_poetry_install(self) -> PythonEnvironment:
-        """ To be used only when no environments exist. Creates a default one by calling "poetry install". """
+        """To be used only when no environments exist. Creates a default one by calling "poetry install"."""
         self.poetry_run("install")
         del self._virtual_environments_cache  # force cache refresh
         activated_environment = self.activated_environment()
@@ -156,8 +160,12 @@ class PythonProject:
         for str_path in self.poetry_run(
             "env", "list", "--full-path", capture_output=True, breakout_of_venv=True
         ).split("\n"):
-            if (stripped := str_path.strip()) and (match := re.fullmatch(ENVIRONMENT_PATH_PATTERN, stripped)):
-                yield Path(match.groupdict()['path'].strip()), bool(match.groupdict().get('activated'))
+            if (stripped := str_path.strip()) and (
+                match := re.fullmatch(ENVIRONMENT_PATH_PATTERN, stripped)
+            ):
+                yield Path(match.groupdict()["path"].strip()), bool(
+                    match.groupdict().get("activated")
+                )
 
     def current_environment_belongs_to_project(self) -> bool:
         """True if we're running from one of the project's virtual envs.
