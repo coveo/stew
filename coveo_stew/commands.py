@@ -305,6 +305,7 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
 @click.option("--exact-match/--no-exact-match", default=False)
 @click.option("--fix/--no-fix", default=False)
 @click.option("--check", multiple=True, default=None)
+@click.option("--skip", multiple=True, default=None)
 @click.option("--verbose", is_flag=True, default=False)
 @click.option(
     "--quick",
@@ -318,6 +319,7 @@ def ci(
     exact_match: bool = False,
     fix: bool = False,
     check: List[str] = None,
+    skip: List[str] = None,
     verbose: bool = False,
     quick: bool = False,
     parallel: bool = True,
@@ -329,7 +331,7 @@ def ci(
         ):
             echo.step(project.package.name, pad_after=False)
             if not project.launch_continuous_integration(
-                auto_fix=fix, checks=check, quick=quick, parallel=parallel
+                auto_fix=fix, checks=check, skips=skip, quick=quick, parallel=parallel
             ):
                 failures.append(project)
     except PythonProjectNotFound as exception:

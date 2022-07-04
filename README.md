@@ -105,6 +105,7 @@ Options:
 
 - `--fix` will reformat the code if `black` fails. Additional fix routines may be added in the future.
 - `--check <runner>` will launch only that runner. This option can be repeated.
+- `--skip <runner>` will skip that runner. Takes precedence over `--check`. This option can be repeated.
 - `--quick` skips running `poetry install --remove-untracked` before running the checks.
 
 The configuration for this feature is explained in more details in the [runners](#runners-stew-ci) section.
