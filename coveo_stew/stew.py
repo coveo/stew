@@ -228,13 +228,14 @@ class PythonProject:
         self,
         auto_fix: bool = False,
         checks: Optional[List[str]] = None,
+        skips: Optional[List[str]] = None,
         quick: bool = False,
         parallel: bool = True,
     ) -> bool:
         """Launch all continuous integration runners on the project."""
         return asyncio.run(
             self.ci.launch_continuous_integration(
-                auto_fix=auto_fix, checks=checks, quick=quick, parallel=parallel
+                auto_fix=auto_fix, checks=checks, skips=skips, quick=quick, parallel=parallel
             )
         )
 
