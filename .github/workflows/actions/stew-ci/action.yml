@@ -1,13 +1,38 @@
 name: stew ci
 description: Installs stew from the current source, and use it to test itself.
 
+inputs:
+  python-version:
+    description: The python version
+    required: true
+
 
 runs:
   using: 'composite'
 
   steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Prepare pipx path
+      shell: bash
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Upgrade python tools and install pipx
+      shell: bash
+      run: python -m pip install --upgrade pip wheel setuptools pipx --user
+
+    - name: poetry
+      shell: bash
+      run: python -m pipx install poetry==1.1.13
+
+    - name: Ensure correct python version
+      shell: bash
+      run: poetry env use python
+
     - name: Run stew ci
       shell: bash
       run: |
-        python -m poetry install
-        python -m poetry run stew ci coveo-stew --exact-match
+        poetry install
+        poetry run stew ci coveo-stew --exact-match
