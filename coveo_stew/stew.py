@@ -222,7 +222,11 @@ class PythonProject:
 
     def export(self) -> str:
         """Generates the content of a `requirements.txt` file based on the lock."""
-        return self.poetry_run("export", capture_output=True)
+        command = ["export"]
+        if self.options.build_without_hashes:
+            command.append("--without-hashes")
+
+        return self.poetry_run(*command, capture_output=True)
 
     def launch_continuous_integration(
         self,
