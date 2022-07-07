@@ -64,7 +64,7 @@ jobs:
   test-action:
     runs-on: ubuntu-latest
     steps:
-      - uses: coveo/stew/actions/stew-ci@${{ github.sha }}
+      - uses: coveo/stew/actions/stew-ci@$8bd260d1c674266a8e1a41a95e2c0d65c9b31f16
         with:
           python-version: "3.10"
           project-name: coveo-stew
