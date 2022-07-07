@@ -62,6 +62,24 @@ pipx install coveo-stew
 If you don't use pipx, make sure to isolate the installation into a virtual environment.
 
 
+# GitHub Action
+
+This action checkouts the code, installs python, poetry and stew, and proceeds to run "stew ci" on a python project.
+
+## Usage
+
+```yml
+jobs:
+  stew-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coveo/stew@main
+        with:
+          python-version: "3.10"
+          project-name: your-project-name
+```
+
+
 # Repository Structure
 
 Please read these guides in order to learn how to organize your repository for maximum compatibility:

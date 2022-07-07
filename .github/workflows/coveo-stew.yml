@@ -60,3 +60,11 @@ jobs:
           pypi-token: ${{ secrets.PYPI_TOKEN }}
           pre-release: ${{ github.ref != 'refs/heads/main' }}
           dry-run: ${{ github.ref != 'refs/heads/main' && github.event.inputs.publish != 'true' }}
+
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coveo/stew@main
+        with:
+          python-version: "3.10"
+          project-name: coveo-stew

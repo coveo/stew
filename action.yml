@@ -1,0 +1,47 @@
+name: stew ci
+description: Launch "stew ci" on a python project
+
+inputs:
+  project-name:
+    description: The project name, from the pyproject.toml file.
+    required: true
+  python-version:
+    description: The python version number, such as "3.10". See `actions/setup-python` for documentation.
+    required: true
+  poetry-version:
+    default: "<2"
+  coveo-stew-version:
+    default: "<4"
+
+
+runs:
+  using: 'composite'
+
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Prepare pipx path
+      shell: bash
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Upgrade python tools and install pipx
+      shell: bash
+      run: python -m pip install --upgrade pip wheel setuptools pipx --user --disable-pip-version-check
+
+    - name: poetry and stew
+      shell: bash
+      env:
+        POETRY_VERSION: ${{ inputs.poetry-version }}
+        COVEO_STEW_VERSION: ${{ inputs.coveo-stew-version }}
+      run: | 
+        python -m pipx install "poetry$POETRY_VERSION"
+        python -m pipx install "coveo-stew$COVEO_STEW_VERSION"
+
+    - name: Run stew ci
+      shell: bash
+      env:
+        PROJECT_NAME: ${{ inputs.project-name }}
+      run: stew ci $PROJECT_NAME --exact-match
