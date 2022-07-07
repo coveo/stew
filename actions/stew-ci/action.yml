@@ -40,11 +40,6 @@ runs:
         python -m pipx install "poetry$POETRY_VERSION"
         python -m pipx install "coveo-stew$COVEO_STEW_VERSION"
 
-    - name: Ensure correct python version
-      shell: bash
-      working-directory: ${{ inputs.project-name }}
-      run: poetry env use python
-
     - name: Run stew ci
       shell: bash
       env:
