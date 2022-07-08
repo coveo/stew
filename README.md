@@ -3,7 +3,7 @@
 The 3.0 update contains breaking changes: 
 `poetry`, `mypy` and `black` are no longer distributed with `coveo-stew`.
 
-Please refer to the [upgrade guide](./README_UPGRADE.md#Upgrading from 2.x to 3.x) for more information and resolution steps. 
+Please refer to the [upgrade guide](./README_UPGRADE.md#upgrading-from-2x-to-3x) for more information and resolution steps. 
 
 
 # coveo-stew
