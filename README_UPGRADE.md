@@ -7,6 +7,20 @@ You need to install poetry to the system and ensure it's available through the p
 A common challenge is to make this work on a CI server.
 Feel free to use or refer to this [GitHub Action](README.md#GitHub Action) ([source](action.yml)).
 
+Here's an example on how to make it work within a Dockerfile, without pipx:
+
+```
+RUN python -m pip install --upgrade pip setuptools wheel
+RUN python -m venv /stew
+RUN /stew/bin/python -m pip install coveo-stew
+RUN chmod a+x /stew/bin/stew
+RUN ln --symbolic /stew/bin/stew /usr/bin/stew
+
+RUN python -m venv /poetry
+RUN /poetry/bin/python -m pip install poetry
+RUN chmod a+x /poetry/bin/poetry
+RUN ln --symbolic /poetry/bin/poetry /usr/bin/poetry
+```
 
 ## mypy, black is not found
 
