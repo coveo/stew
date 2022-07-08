@@ -5,7 +5,7 @@
 You need to install poetry to the system and ensure it's available through the path as `poetry`.
 
 A common challenge is to make this work on a CI server.
-Feel free to use or refer to this [GitHub Action](README.md#GitHub Action) ([source](action.yml)).
+Feel free to use or refer to this [GitHub Action](README.md#GitHub-Action) ([source](action.yml)).
 
 Here's an example on how to make it work within a Dockerfile, without pipx:
 
