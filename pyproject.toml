@@ -39,11 +39,14 @@ types-toml = "*"
 [tool.poetry.scripts]
 stew = "coveo_stew.commands:stew"
 
+[tool.stew]
+build-without-hashes = true
 
 [tool.stew.ci]
 pytest = true
 offline-build = true
 black = true
+
 
 [tool.stew.ci.custom-runners]
 flake8 = { check-args = "--ignore=E501,W503" }
