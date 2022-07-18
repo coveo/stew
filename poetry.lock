@@ -120,7 +120,7 @@ pytest = "*"
 
 [[package]]
 name = "emoji"
-version = "1.7.0"
+version = "2.0.0"
 description = "Emoji for Python"
 category = "main"
 optional = false
@@ -375,7 +375,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">3.8.0,<4"
-content-hash = "eb5983cbcb58b4cb790bb521d4617646b8ad2e4e390a33942545ec7eda0621c3"
+content-hash = "391624d1ee35eaf61752d9e5a682efb405fbb853f23ce80ed09825a8b227d91b"
 
 [metadata.files]
 atomicwrites = []
@@ -433,9 +433,7 @@ coveo-testing = [
     {file = "coveo-testing-2.0.7.tar.gz", hash = "sha256:b47250f62ac60baebc535c5fe579aa1c45371d8b383b71ff9026c5c38989fa96"},
     {file = "coveo_testing-2.0.7-py3-none-any.whl", hash = "sha256:1f1567fe812f8d693d9bcea179e37aa265cb79f4c7fb97cbf287bf336a5c57c7"},
 ]
-emoji = [
-    {file = "emoji-1.7.0.tar.gz", hash = "sha256:65c54533ea3c78f30d0729288998715f418d7467de89ec258a31c0ce8660a1d1"},
-]
+emoji = []
 flake8 = [
     {file = "flake8-4.0.1-py2.py3-none-any.whl", hash = "sha256:479b1304f72536a55948cb40a32dce8bb0ffe3501e26eaf292c7e60eb5e0428d"},
     {file = "flake8-4.0.1.tar.gz", hash = "sha256:806e034dda44114815e23c16ef92f95c91e4c71100ff52813adf7132a6ad870d"},
