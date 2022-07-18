@@ -39,9 +39,10 @@ types-toml = "*"
 [tool.poetry.scripts]
 stew = "coveo_stew.commands:stew"
 
+[tool.stew]
+build-without-hashes = true
 
 [tool.stew.ci]
-build-without-hashes = true
 pytest = true
 offline-build = true
 black = true
