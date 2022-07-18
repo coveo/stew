@@ -1,6 +1,6 @@
 [[package]]
 name = "atomicwrites"
-version = "1.4.0"
+version = "1.4.1"
 description = "Atomic file writes."
 category = "dev"
 optional = false
@@ -63,7 +63,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "coveo-functools"
-version = "2.0.16"
+version = "2.0.17"
 description = "Generic function tooling helpers"
 category = "main"
 optional = false
@@ -75,7 +75,7 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-itertools"
-version = "2.0.3"
+version = "2.0.4"
 description = "Collection-related helpers."
 category = "main"
 optional = false
@@ -83,7 +83,7 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "coveo-styles"
-version = "2.1"
+version = "2.1.1"
 description = "Styles, colors and emojis for the command line."
 category = "main"
 optional = false
@@ -96,7 +96,7 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-systools"
-version = "2.0.7"
+version = "2.0.8"
 description = "Filesystem, language and OS related tools."
 category = "main"
 optional = false
@@ -108,7 +108,7 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-testing"
-version = "2.0.6"
+version = "2.0.7"
 description = "Lightweight testing helpers"
 category = "dev"
 optional = false
@@ -342,7 +342,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "tomlkit"
-version = "0.11.0"
+version = "0.11.1"
 description = "Style preserving TOML library"
 category = "main"
 optional = false
@@ -350,7 +350,7 @@ python-versions = ">=3.6,<4.0"
 
 [[package]]
 name = "types-setuptools"
-version = "57.4.18"
+version = "63.2.0"
 description = "Typing stubs for setuptools"
 category = "dev"
 optional = false
@@ -358,7 +358,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-toml"
-version = "0.10.7"
+version = "0.10.8"
 description = "Typing stubs for toml"
 category = "dev"
 optional = false
@@ -375,13 +375,10 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">3.8.0,<4"
-content-hash = "391624d1ee35eaf61752d9e5a682efb405fbb853f23ce80ed09825a8b227d91b"
+content-hash = "eb5983cbcb58b4cb790bb521d4617646b8ad2e4e390a33942545ec7eda0621c3"
 
 [metadata.files]
-atomicwrites = [
-    {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
-    {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
-]
+atomicwrites = []
 attrs = [
     {file = "attrs-21.4.0-py2.py3-none-any.whl", hash = "sha256:2d27e3784d7a565d36ab851fe94887c5eccd6a463168875832a1be79c82828b4"},
     {file = "attrs-21.4.0.tar.gz", hash = "sha256:626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd"},
@@ -420,24 +417,21 @@ colorama = [
     {file = "colorama-0.4.5.tar.gz", hash = "sha256:e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4"},
 ]
 coveo-functools = [
-    {file = "coveo-functools-2.0.16.tar.gz", hash = "sha256:d39791a6d95a355f1d291ce240b79934c6955cbf678d9e26ea17eadcbd49d22f"},
-    {file = "coveo_functools-2.0.16-py3-none-any.whl", hash = "sha256:3b3e81bdd333a8e4659e8b23b0ba6b8e47c73b9851e3f2adf88715c0fd1fccf4"},
+    {file = "coveo-functools-2.0.17.tar.gz", hash = "sha256:99259ca4b6072f5c485276164f60e645111c7f71225c9863b7499b6e9b315ad6"},
+    {file = "coveo_functools-2.0.17-py3-none-any.whl", hash = "sha256:c607b70791cff1fd7e807f9f4aba4993f41a56543f6a64deb01b7156ef8c49ad"},
 ]
-coveo-itertools = [
-    {file = "coveo-itertools-2.0.3.tar.gz", hash = "sha256:fb5c9e18751af8c256d27f7cbf011f1ae296756b769ed71516f67a3bc98c735a"},
-    {file = "coveo_itertools-2.0.3-py3-none-any.whl", hash = "sha256:dcaed6841baa6d4d962bad662df9f96321fc06653733216158d128b62ff5d729"},
-]
+coveo-itertools = []
 coveo-styles = [
-    {file = "coveo-styles-2.1.tar.gz", hash = "sha256:901dd9e4dbe1bdd15cccd7080ca6ce8127ad51bc49781149427a0944c26c4a93"},
-    {file = "coveo_styles-2.1-py3-none-any.whl", hash = "sha256:3a5831983a1e2cb6543ca65ee859a13a788f1d331cbb19987ec5d8e53cefd27c"},
+    {file = "coveo-styles-2.1.1.tar.gz", hash = "sha256:83277554504d5beeb16acc05b71a11c40c908a936fbb88c127dd687f5af2b015"},
+    {file = "coveo_styles-2.1.1-py3-none-any.whl", hash = "sha256:072614dfdb305d269c1784e7c183a38cde3d7cd518d01ed084537c1c06612335"},
 ]
 coveo-systools = [
-    {file = "coveo-systools-2.0.7.tar.gz", hash = "sha256:6577339065bd903bc6f8c4fb67d2caa2c4ce0883d73be98856b478d7ad9693eb"},
-    {file = "coveo_systools-2.0.7-py3-none-any.whl", hash = "sha256:dee5ccb385880f1a9adbcd9a4b8b240c7daff112641df5d2e996c6e7d8378c8e"},
+    {file = "coveo-systools-2.0.8.tar.gz", hash = "sha256:fbaa8096a89b333b9f61d5e85bc4e4b3e54f9ab8177b616a1e881f73fa65c6d8"},
+    {file = "coveo_systools-2.0.8-py3-none-any.whl", hash = "sha256:179998527383b8f11ae47c5dc904add9d62b7307d9908351e06a2c86cfa9f4ef"},
 ]
 coveo-testing = [
-    {file = "coveo-testing-2.0.6.tar.gz", hash = "sha256:143bde870d1cc56044995b69347f920fad4f24539120d0d2476ba0f933fddf17"},
-    {file = "coveo_testing-2.0.6-py3-none-any.whl", hash = "sha256:078b86d610d80344c33a23ecdfdd3dd84de068fe0c7bffcc1af553662ccc8e8d"},
+    {file = "coveo-testing-2.0.7.tar.gz", hash = "sha256:b47250f62ac60baebc535c5fe579aa1c45371d8b383b71ff9026c5c38989fa96"},
+    {file = "coveo_testing-2.0.7-py3-none-any.whl", hash = "sha256:1f1567fe812f8d693d9bcea179e37aa265cb79f4c7fb97cbf287bf336a5c57c7"},
 ]
 emoji = [
     {file = "emoji-1.7.0.tar.gz", hash = "sha256:65c54533ea3c78f30d0729288998715f418d7467de89ec258a31c0ce8660a1d1"},
@@ -542,18 +536,9 @@ tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
-tomlkit = [
-    {file = "tomlkit-0.11.0-py3-none-any.whl", hash = "sha256:0f4050db66fd445b885778900ce4dd9aea8c90c4721141fde0d6ade893820ef1"},
-    {file = "tomlkit-0.11.0.tar.gz", hash = "sha256:71ceb10c0eefd8b8f11fe34e8a51ad07812cb1dc3de23247425fbc9ddc47b9dd"},
-]
-types-setuptools = [
-    {file = "types-setuptools-57.4.18.tar.gz", hash = "sha256:8ee03d823fe7fda0bd35faeae33d35cb5c25b497263e6a58b34c4cfd05f40bcf"},
-    {file = "types_setuptools-57.4.18-py3-none-any.whl", hash = "sha256:9660b8774b12cd61b448e2fd87a667c02e7ec13ce9f15171f1d49a4654c4df6a"},
-]
-types-toml = [
-    {file = "types-toml-0.10.7.tar.gz", hash = "sha256:a567fe2614b177d537ad99a661adc9bfc8c55a46f95e66370a4ed2dd171335f9"},
-    {file = "types_toml-0.10.7-py3-none-any.whl", hash = "sha256:05a8da4bfde2f1ee60e90c7071c063b461f74c63a9c3c1099470c08d6fa58615"},
-]
+tomlkit = []
+types-setuptools = []
+types-toml = []
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
     {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
