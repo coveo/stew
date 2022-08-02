@@ -17,7 +17,11 @@ from coveo_stew.exceptions import (
 )
 from coveo_stew.offline_publish import offline_publish
 from coveo_stew.pydev import is_pydev_project, pull_and_write_dev_requirements
-from coveo_stew.stew import PythonEnvironment, PythonProject
+from coveo_stew.stew import (
+    EnvironmentCreationBehavior,
+    PythonEnvironment,
+    PythonProject,
+)
 
 _COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate"]
 
@@ -162,7 +166,9 @@ def build(
     python_environments = (
         [PythonEnvironment(python)]
         if python
-        else project.virtual_environments(create_default_if_missing=True)
+        else project.virtual_environments(
+            create_default_if_missing=EnvironmentCreationBehavior.Empty
+        )
     )
 
     if not directory:
