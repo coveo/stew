@@ -6,10 +6,11 @@ import re
 import shutil
 import sys
 from contextlib import contextmanager
+from enum import Enum, auto
 from functools import cached_property
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Final, Generator, Iterator, List, Optional, Pattern, Tuple
+from typing import Any, Final, Generator, Iterator, List, Optional, Pattern, Tuple, Union
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
@@ -26,6 +27,12 @@ from coveo_stew.utils import load_toml_from_path
 ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(
     r"^(?P<path>.+?)(?: (?P<activated>\(Activated\)))?$"
 )
+
+
+class EnvironmentCreationBehavior(Enum):
+    Full = auto()
+    NoDev = auto()
+    Empty = auto()
 
 
 class PythonProject:
@@ -134,7 +141,7 @@ class PythonProject:
         )
 
     def virtual_environments(
-        self, *, create_default_if_missing: bool = False
+        self, *, create_default_if_missing: Union[bool, EnvironmentCreationBehavior] = False
     ) -> Iterator[PythonEnvironment]:
         """The project's virtual environments. These are cached for performance.
 
@@ -142,17 +149,28 @@ class PythonProject:
             would use by default.
         """
         if not self._virtual_environments_cache and create_default_if_missing:
-            self._create_default_poetry_install()
+            behavior = EnvironmentCreationBehavior.Full if create_default_if_missing is True else create_default_if_missing
+            self._create_default_poetry_install(behavior)
 
         yield from self._virtual_environments_cache
 
-    def _create_default_poetry_install(self) -> PythonEnvironment:
+    def _create_default_poetry_install(self, install: EnvironmentCreationBehavior = EnvironmentCreationBehavior.Full) -> PythonEnvironment:
         """To be used only when no environments exist. Creates a default one by calling "poetry install"."""
-        self.poetry_run("install")
+        if install is EnvironmentCreationBehavior.Full:
+            self.poetry_run("install")
+        elif install is EnvironmentCreationBehavior.NoDev:
+            self.poetry_run("install", "--no-dev")
+        else:
+            assert install is EnvironmentCreationBehavior.Empty
+            self.poetry_run("env", "use", "python")
+
         del self._virtual_environments_cache  # force cache refresh
         activated_environment = self.activated_environment()
-        activated_environment.installed = True
-        activated_environment.cleaned = True
+
+        if install is EnvironmentCreationBehavior.Full:
+            activated_environment.installed = True
+            activated_environment.cleaned = True
+
         return activated_environment
 
     def _get_virtual_environment_paths(self) -> Iterator[Tuple[Path, bool]]:
