@@ -10,7 +10,17 @@ from enum import Enum, auto
 from functools import cached_property
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Final, Generator, Iterator, List, Optional, Pattern, Tuple, Union
+from typing import (
+    Any,
+    Final,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+    Pattern,
+    Tuple,
+    Union,
+)
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
@@ -149,12 +159,18 @@ class PythonProject:
             would use by default.
         """
         if not self._virtual_environments_cache and create_default_if_missing:
-            behavior = EnvironmentCreationBehavior.Full if create_default_if_missing is True else create_default_if_missing
+            behavior = (
+                EnvironmentCreationBehavior.Full
+                if create_default_if_missing is True
+                else create_default_if_missing
+            )
             self._create_default_poetry_install(behavior)
 
         yield from self._virtual_environments_cache
 
-    def _create_default_poetry_install(self, install: EnvironmentCreationBehavior = EnvironmentCreationBehavior.Full) -> PythonEnvironment:
+    def _create_default_poetry_install(
+        self, install: EnvironmentCreationBehavior = EnvironmentCreationBehavior.Full
+    ) -> PythonEnvironment:
         """To be used only when no environments exist. Creates a default one by calling "poetry install"."""
         if install is EnvironmentCreationBehavior.Full:
             self.poetry_run("install")
