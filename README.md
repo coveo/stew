@@ -85,6 +85,8 @@ jobs:
           project-name: your-project-name
 ```
 
+See additional options and documentation in [the action file.](action.yml)
+
 
 # Repository Structure
 
