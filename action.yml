@@ -2,16 +2,29 @@ name: stew ci
 description: Launch "stew ci" on a python project
 
 inputs:
+
   project-name:
     description: The project name, from the pyproject.toml file.
     required: true
+
   python-version:
     description: The python version number, such as "3.10". See `actions/setup-python` for documentation.
     required: true
+
   poetry-version:
     default: "<2"
+    required: false
+    description: The pip constraint when installing poetry.
+
   coveo-stew-version:
     default: "<4"
+    description: The pip constraint when installing coveo-stew.
+    required: false
+
+  run-stew:
+    description: If not "true", `stew ci` will not be ran. This is a shortcut to checkout/setup-python/poetry/stew without running it.
+    required: false
+    default: "true"
 
 
 runs:
@@ -41,6 +54,7 @@ runs:
         python -m pipx install "coveo-stew$COVEO_STEW_VERSION"
 
     - name: Run stew ci
+      if: inputs.run-stew == 'true'
       shell: bash
       env:
         PROJECT_NAME: ${{ inputs.project-name }}
