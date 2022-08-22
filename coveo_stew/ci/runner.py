@@ -250,6 +250,8 @@ class Run:
         if feedback:
             if check.status is RunnerStatus.Success:
                 echo.normal(f"PASSED: {check}", emoji="heavy_check_mark", fg="green")
+                if check.project.verbose:
+                    check.echo_last_failures()
 
             elif check.status is RunnerStatus.CheckFailed:
                 echo.warning(
@@ -264,6 +266,7 @@ class Run:
                     f"The ci runner {check} failed to complete "
                     f"due to an environment or configuration error."
                 )
+                check.echo_last_failures()
 
 
 def get_overall_run_status(*runs: Run) -> RunnerStatus:
