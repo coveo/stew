@@ -242,6 +242,11 @@ class Run:
                     await runner.launch(self.environment, auto_fix=auto_fix), feedback=feedback
                 )
 
+        if self.exceptions:
+            for check, exception in self.exceptions:
+                echo.warning(f"The runner {check} created an exception: ", pad_before=True)
+                echo.noise(exception, pad_after=True)
+
     def _report(self, check: ContinuousIntegrationRunner, feedback: bool = True) -> None:
         """Reports on a completed check."""
         if check.status is RunnerStatus.Error:
