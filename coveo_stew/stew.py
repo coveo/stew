@@ -10,6 +10,7 @@ from enum import Enum, auto
 from functools import cached_property
 from pathlib import Path
 from shutil import rmtree
+from subprocess import CalledProcessError
 from typing import (
     Any,
     Final,
@@ -178,7 +179,10 @@ class PythonProject:
             self.poetry_run("install", "--no-dev")
         else:
             assert install is EnvironmentCreationBehavior.Empty
-            self.poetry_run("env", "use", "python")
+            try:
+                self.poetry_run("env", "use", "python3")
+            except CalledProcessError:
+                self.poetry_run("env", "use", "python")
 
         del self._virtual_environments_cache  # force cache refresh
         activated_environment = self.activated_environment()
