@@ -4,15 +4,14 @@ import os
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Iterable, Dict, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Dict, Iterable, List
 
 from junit_xml import TestCase, TestSuite, to_xml_report_file
 
 from coveo_stew.ci.runner_status import RunnerStatus
 
-
 if TYPE_CHECKING:
-    from coveo_stew.ci.runner import ContinuousIntegrationRunner, CIPlan
+    from coveo_stew.ci.runner import CIPlan, ContinuousIntegrationRunner
 
 
 INDENT = " " * 4
@@ -39,7 +38,7 @@ def generate_github_step_report(ci_plans: Iterable[CIPlan]) -> None:
                 RunnerStatus.NotRan: ":grey_question:",
                 RunnerStatus.Success: ":heavy_check_mark:",
                 RunnerStatus.CheckFailed: ":warning:",
-                RunnerStatus.Error: ":boom:"
+                RunnerStatus.Error: ":boom:",
             }
 
             for status, emoji in emoji_map.items():
@@ -54,8 +53,8 @@ def generate_github_step_report(ci_plans: Iterable[CIPlan]) -> None:
 
             # we add these as footnotes
             for status, comment in (
-                    (RunnerStatus.CheckFailed, f""),
-                    (RunnerStatus.Error, f" crashed"),
+                (RunnerStatus.CheckFailed, ""),
+                (RunnerStatus.Error, " crashed"),
             ):
                 for failed_check in grouped.get(status, []):
                     # footnotes e.g.: [^mypy]:
@@ -64,7 +63,11 @@ def generate_github_step_report(ci_plans: Iterable[CIPlan]) -> None:
                     )
                     markdown.append(textwrap.indent(failed_check.last_output(), INDENT))
                     if failed_check.last_exception:
-                        markdown.append(textwrap.indent(failed_check.last_exception.format(summary=True), INDENT))
+                        markdown.append(
+                            textwrap.indent(
+                                failed_check.last_exception.format(summary=True), INDENT
+                            )
+                        )
 
         with Path(output_filename).open("a") as fd:
             fd.write("\n".join(markdown))

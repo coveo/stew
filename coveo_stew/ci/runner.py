@@ -5,14 +5,13 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable, Coroutine, Iterable, List, Optional, Sequence, Tuple
 
-from coveo_styles.styles import ExitWithFailure, echo
+from coveo_styles.styles import echo
 from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
 
 from coveo_stew.ci.reporting import generate_report
 from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment
-from coveo_stew.exceptions import CheckError
 from coveo_stew.stew import PythonProject
 
 
@@ -182,7 +181,7 @@ class CIPlan:
             RunnerStatus.Success: echo.success,
             RunnerStatus.CheckFailed: echo.warning,
             RunnerStatus.Error: echo.error,
-            RunnerStatus.NotRan: echo.outcome
+            RunnerStatus.NotRan: echo.outcome,
         }
 
         status_to_style_map[overall_status](
@@ -233,10 +232,30 @@ class Run:
                 echo.error(f"The runner {check} created an exception: ", pad_before=True)
                 echo.noise(exception, pad_after=True)
 
-            echo.error("One or more checks were not able to complete:", pad_before=True, pad_after=False, emoji="robot")
-            echo.warning("To have stew treat an exit code as a check failure instead of an error, use `check-failed-exit-codes`", item=True, pad_before=False, pad_after=False)
-            echo.warning("https://github.com/coveo/stew/blob/main/README.md#options", item=True, pad_before=False, pad_after=False)
-            echo.warning("Use the working directory and command (printed above) to invoke the command from the shell manually", item=True, pad_before=False, pad_after=True)
+            echo.error(
+                "One or more checks were not able to complete:",
+                pad_before=True,
+                pad_after=False,
+                emoji="robot",
+            )
+            echo.warning(
+                "To have stew treat an exit code as a check failure instead of an error, use `check-failed-exit-codes`",
+                item=True,
+                pad_before=False,
+                pad_after=False,
+            )
+            echo.warning(
+                "https://github.com/coveo/stew/blob/main/README.md#options",
+                item=True,
+                pad_before=False,
+                pad_after=False,
+            )
+            echo.warning(
+                "Use the working directory and command (printed above) to invoke the command from the shell manually",
+                item=True,
+                pad_before=False,
+                pad_after=True,
+            )
 
     def _report(self, check: ContinuousIntegrationRunner, feedback: bool = True) -> None:
         """Reports on a completed check."""
@@ -251,7 +270,7 @@ class Run:
 
             elif check.status is RunnerStatus.CheckFailed:
                 echo.warning(
-                    f"{check.project.package.name}: {check} reported issues:",
+                    f"{check} [{check.project.package.name}] reported issues:",
                     pad_before=True,
                     pad_after=False,
                 )

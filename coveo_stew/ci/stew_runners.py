@@ -1,7 +1,6 @@
 import asyncio
 import shutil
 import tempfile
-import time
 from pathlib import Path
 
 from coveo_styles.styles import echo
@@ -62,6 +61,8 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
             try:
                 shutil.rmtree(temporary_folder)
             except PermissionError:
-                echo.warning(f"The temporary folder for this check could not be deleted: {temporary_folder}")
+                echo.warning(
+                    f"The temporary folder for this check could not be deleted: {temporary_folder}"
+                )
 
         return RunnerStatus.Success

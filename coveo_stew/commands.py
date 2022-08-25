@@ -332,7 +332,7 @@ def ci(
     verbose: bool = False,
     quick: bool = False,
     parallel: bool = True,
-    github_step_report: bool = False
+    github_step_report: bool = False,
 ) -> None:
     failures = defaultdict(list)
     try:
@@ -340,14 +340,23 @@ def ci(
             query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.step(project.package.name, pad_after=False)
-            if (overall_result := project.launch_continuous_integration(
-                auto_fix=fix, checks=check, skips=skip, quick=quick, parallel=parallel, github=github_step_report
-            )) not in (RunnerStatus.Success, RunnerStatus.NotRan):
+            if (
+                overall_result := project.launch_continuous_integration(
+                    auto_fix=fix,
+                    checks=check,
+                    skips=skip,
+                    quick=quick,
+                    parallel=parallel,
+                    github=github_step_report,
+                )
+            ) not in (RunnerStatus.Success, RunnerStatus.NotRan):
                 failures[overall_result].append(project)
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
 
-    exit_code = 2 if RunnerStatus.Error in failures else 1 if RunnerStatus.CheckFailed in failures else 0
+    exit_code = (
+        2 if RunnerStatus.Error in failures else 1 if RunnerStatus.CheckFailed in failures else 0
+    )
     if failures:
         projects = (p for projects in failures.values() for p in projects)
         raise ExitWithFailure(failures=projects, exit_code=exit_code) from CheckFailed(

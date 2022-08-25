@@ -274,12 +274,17 @@ class PythonProject:
         skips: Optional[List[str]] = None,
         quick: bool = False,
         parallel: bool = True,
-        github: bool = False
+        github: bool = False,
     ) -> RunnerStatus:
         """Launch all continuous integration runners on the project."""
         return asyncio.run(
             self.ci.launch_continuous_integration(
-                auto_fix=auto_fix, checks=checks, skips=skips, quick=quick, parallel=parallel, github=github
+                auto_fix=auto_fix,
+                checks=checks,
+                skips=skips,
+                quick=quick,
+                parallel=parallel,
+                github=github,
             )
         )
 

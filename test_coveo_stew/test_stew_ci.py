@@ -329,7 +329,11 @@ def write_code(project: PythonProject, code: str) -> Generator[None, None, None]
     ids=("mypy", "isort", "black"),
 )
 def test_linters(
-    code: str, expected_outcome: RunnerStatus, check: str, failure_text: str, linter_project: PythonProject
+    code: str,
+    expected_outcome: RunnerStatus,
+    check: str,
+    failure_text: str,
+    linter_project: PythonProject,
 ) -> None:
     with write_code(linter_project, code):
         outcome = linter_project.launch_continuous_integration(checks=[check], quick=True)

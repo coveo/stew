@@ -1,16 +1,5 @@
 from itertools import cycle
-from typing import (
-    Any,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Dict, Generator, Iterator, List, Optional, Type, TypeVar, Union
 
 from coveo_functools.casing import flexfactory
 from coveo_styles.styles import ExitWithFailure, echo
