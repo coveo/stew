@@ -5,7 +5,8 @@ from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_repo_root
 from coveo_systools.subprocess import async_check_output
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
+from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment
 from coveo_stew.exceptions import CannotLoadProject, UsageError
 from coveo_stew.stew import PythonProject

@@ -17,7 +17,7 @@ python = ">3.8.0,<4"
 click = ">=8.1"
 coveo-functools = "^2.0.0"
 coveo-itertools = "^2.0.0"
-coveo-systools = "^2.0.9"
+coveo-systools = "^2.0.10"
 coveo-styles = "^2.1.2"
 junit-xml = "*"
 toml = "*"
@@ -48,7 +48,7 @@ black = true
 
 
 [tool.stew.ci.custom-runners]
-flake8 = { check-args = "--ignore=E501,W503" }
+flake8 = { check-args = "--zignore=E501,W503" }
 
 [tool.stew.ci.custom-runners.isort]
 check-args = ["--check", "--profile", "black", "."]
