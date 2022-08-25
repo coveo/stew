@@ -88,6 +88,14 @@ jobs:
 See additional options and documentation in [the action file.](action.yml)
 
 
+## GitHub Action Step Report
+
+When running in a GitHub context, a step summary will automatically be generated.
+This summary can be seen in the `Summary` tab of a workflow run view in GitHub.
+
+You can disable this feature by launching `stew ci` with `--no-github-step-report`.
+
+
 # Repository Structure
 
 Please read these guides in order to learn how to organize your repository for maximum compatibility:
@@ -133,6 +141,7 @@ Options:
 - `--check <runner>` will launch only that runner. This option can be repeated.
 - `--skip <runner>` will skip that runner. Takes precedence over `--check`. This option can be repeated.
 - `--quick` skips running `poetry install --remove-untracked` before running the checks.
+- `--no-github-step-report` can be used to disable Step Report generation when running in a GitHub context.
 
 The configuration for this feature is explained in more details in the [runners](#runners-stew-ci) section.
 
