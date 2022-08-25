@@ -1,16 +1,5 @@
 from itertools import cycle
-from typing import (
-    Any,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Dict, Generator, Iterator, List, Optional, Type, TypeVar, Union
 
 from coveo_functools.casing import flexfactory
 from coveo_styles.styles import ExitWithFailure, echo
@@ -20,7 +9,9 @@ from coveo_stew.ci.black_runner import BlackRunner
 from coveo_stew.ci.mypy_runner import MypyRunner
 from coveo_stew.ci.poetry_runners import PoetryCheckRunner
 from coveo_stew.ci.pytest_runner import PytestRunner
-from coveo_stew.ci.runner import CIPlan, ContinuousIntegrationRunner, RunnerStatus
+from coveo_stew.ci.reporting import generate_github_step_report
+from coveo_stew.ci.runner import CIPlan, ContinuousIntegrationRunner
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.ci.stew_runners import CheckOutdatedRunner, OfflineInstallRunner
 from coveo_stew.exceptions import CannotLoadProject
 from coveo_stew.stew import PythonProject
@@ -124,9 +115,10 @@ class ContinuousIntegrationConfig:
         skips: Optional[List[str]],
         quick: bool,
         parallel: bool,
-    ) -> bool:
+        github: bool,
+    ) -> RunnerStatus:
         if self.disabled:
-            return True
+            return RunnerStatus.NotRan
 
         ci_plans = list(self._generate_ci_plans(checks=checks, skips=skips, parallel=parallel))
         for plan in ci_plans:
@@ -134,8 +126,12 @@ class ContinuousIntegrationConfig:
                 self._pyproject.install(environment=plan.environment, remove_untracked=True)
             await plan.orchestrate(auto_fix)
 
-        allowed_statuses: Tuple[RunnerStatus, ...] = (
-            (RunnerStatus.Success, RunnerStatus.NotRan) if checks else (RunnerStatus.Success,)
-        )
+        if github:
+            generate_github_step_report(ci_plans)
 
-        return all(check.status in allowed_statuses for plan in ci_plans for check in plan.checks)
+        statuses = set(check.status for plan in ci_plans for check in plan.checks)
+        for status in (RunnerStatus.Error, RunnerStatus.CheckFailed, RunnerStatus.Success):
+            if status in statuses:
+                return status
+
+        return RunnerStatus.NotRan

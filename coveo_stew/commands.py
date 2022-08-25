@@ -1,6 +1,7 @@
 """Automates poetry operations in the repo."""
 
 import re
+from collections import defaultdict
 from pathlib import Path
 from typing import Generator, Iterable, List, Set, Union
 
@@ -9,6 +10,7 @@ from coveo_functools.finalizer import finalizer
 from coveo_styles.styles import ExitWithFailure, echo, install_pretty_exception_hook
 from coveo_systools.filesystem import find_repo_root
 
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.discovery import discover_pyprojects, find_pyproject
 from coveo_stew.exceptions import (
     CheckFailed,
@@ -320,6 +322,7 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
     help="Do not call 'poetry install --remove-untracked' before testing.",
 )
 @click.option("--parallel/--sequential", default=True)
+@click.option("--github-step-report", is_flag=True, default=False, envvar="GITHUB_ACTIONS")
 def ci(
     project_name: str = None,
     exact_match: bool = False,
@@ -329,21 +332,33 @@ def ci(
     verbose: bool = False,
     quick: bool = False,
     parallel: bool = True,
+    github_step_report: bool = False,
 ) -> None:
-    failures = []
+    failures = defaultdict(list)
     try:
         for project in discover_pyprojects(
             query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.step(project.package.name, pad_after=False)
-            if not project.launch_continuous_integration(
-                auto_fix=fix, checks=check, skips=skip, quick=quick, parallel=parallel
-            ):
-                failures.append(project)
+            if (
+                overall_result := project.launch_continuous_integration(
+                    auto_fix=fix,
+                    checks=check,
+                    skips=skip,
+                    quick=quick,
+                    parallel=parallel,
+                    github=github_step_report,
+                )
+            ) not in (RunnerStatus.Success, RunnerStatus.NotRan):
+                failures[overall_result].append(project)
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
 
+    exit_code = (
+        2 if RunnerStatus.Error in failures else 1 if RunnerStatus.CheckFailed in failures else 0
+    )
     if failures:
-        raise ExitWithFailure(failures=failures) from CheckFailed(
+        projects = (p for projects in failures.values() for p in projects)
+        raise ExitWithFailure(failures=projects, exit_code=exit_code) from CheckFailed(
             f"{len(failures)} project(s) failed ci steps."
         )

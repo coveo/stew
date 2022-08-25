@@ -1,6 +1,7 @@
 from coveo_systools.subprocess import DetailedCalledProcessError, async_check_output
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
+from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.stew import PythonProject
 

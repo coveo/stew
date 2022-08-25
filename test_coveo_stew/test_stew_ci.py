@@ -7,6 +7,7 @@ from _pytest.tmpdir import TempPathFactory
 from coveo_testing.parametrize import parametrize
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.stew import PythonProject
 
 PROJECT_NAME: Final = "mock_linter_errors"
@@ -313,8 +314,8 @@ def write_code(project: PythonProject, code: str) -> Generator[None, None, None]
 @parametrize(
     ("code", "expected_outcome"),
     (
-        (BROKEN_CODE, False),
-        (WORKING_CODE, True),
+        (BROKEN_CODE, RunnerStatus.CheckFailed),
+        (WORKING_CODE, RunnerStatus.Success),
     ),
     ids=("broken", "correct"),
 )
@@ -328,21 +329,26 @@ def write_code(project: PythonProject, code: str) -> Generator[None, None, None]
     ids=("mypy", "isort", "black"),
 )
 def test_linters(
-    code: str, expected_outcome: bool, check: str, failure_text: str, linter_project: PythonProject
+    code: str,
+    expected_outcome: RunnerStatus,
+    check: str,
+    failure_text: str,
+    linter_project: PythonProject,
 ) -> None:
     with write_code(linter_project, code):
         outcome = linter_project.launch_continuous_integration(checks=[check], quick=True)
+        assert outcome in (RunnerStatus.Success, RunnerStatus.CheckFailed)
         ci_runner = _check_result(outcome, expected_outcome, linter_project, check, failure_text)
-        if expected_outcome is False and ci_runner.supports_auto_fix:
+        if expected_outcome is RunnerStatus.CheckFailed and ci_runner.supports_auto_fix:
             outcome = linter_project.launch_continuous_integration(
                 auto_fix=True, checks=[check], quick=True
             )
-            _ = _check_result(outcome, not expected_outcome, linter_project, check, failure_text)
+            _ = _check_result(outcome, RunnerStatus.Success, linter_project, check, failure_text)
 
 
 def _check_result(
-    outcome: bool,
-    expected_outcome: bool,
+    outcome: RunnerStatus,
+    expected_outcome: RunnerStatus,
     project: PythonProject,
     check_name: str,
     failure_text: str,
@@ -350,7 +356,7 @@ def _check_result(
     assert outcome is expected_outcome
     check_instance = project.ci.get_runner(check_name)
     assert isinstance(check_instance, ContinuousIntegrationRunner)
-    if expected_outcome:
+    if expected_outcome is RunnerStatus.Success:
         assert failure_text not in check_instance.last_output()
     else:
         assert failure_text in check_instance.last_output()

@@ -1,29 +1,18 @@
 import asyncio
 from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum, auto
 from functools import cached_property
 from pathlib import Path
 from typing import Callable, Coroutine, Iterable, List, Optional, Sequence, Tuple
 
-from coveo_styles.styles import ExitWithFailure, echo
+from coveo_styles.styles import echo
 from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
 
 from coveo_stew.ci.reporting import generate_report
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment
-from coveo_stew.exceptions import CheckError
 from coveo_stew.stew import PythonProject
-
-
-class RunnerStatus(Enum):
-    NotRan = auto()
-    Success = auto()
-    CheckFailed = auto()
-    Error = auto()
-
-    def __str__(self) -> str:
-        return self.name
 
 
 class ContinuousIntegrationRunner:
@@ -48,7 +37,8 @@ class ContinuousIntegrationRunner:
     async def launch(
         self, environment: PythonEnvironment = None, *extra_args: str, auto_fix: bool = False
     ) -> "ContinuousIntegrationRunner":
-        """Launch the runner's checks. Will raise on unhandled exceptions.
+        """
+        Launch the runner's checks.
         Returns self for convenience with asyncio gather/as_completed/etc.
         """
         self._last_output.clear()
@@ -56,13 +46,13 @@ class ContinuousIntegrationRunner:
         try:
             self.status = await self._launch(environment, *extra_args)
         except DetailedCalledProcessError as exception:
-            if exception.returncode not in self.check_failed_exit_codes:
+            if exception.returncode in self.check_failed_exit_codes:
+                self.status = RunnerStatus.CheckFailed
+            else:
                 self.status = RunnerStatus.Error
                 self._last_exception = exception
-                raise
             self._last_output.extend(exception.decode_output().split("\n"))
             self._last_output.extend(exception.decode_stderr().split("\n"))
-            self.status = RunnerStatus.CheckFailed
 
         if all((auto_fix, self.supports_auto_fix, self.status == RunnerStatus.CheckFailed)):
             echo.noise("Errors founds; launching auto-fix routine.")
@@ -99,10 +89,10 @@ class ContinuousIntegrationRunner:
         """Echo the failures of the last run to the user. If there was no failure, do nothing."""
         if not self._last_output:
             return
-        echo.error(self.last_output())
+        echo.noise(self.last_output(), pad_after=True)
 
     def last_output(self) -> str:
-        return "\n".join(self._last_output)
+        return "\n".join(self._last_output).strip()
 
     @property
     def last_exception(self) -> Optional[DetailedCalledProcessError]:
@@ -186,22 +176,17 @@ class CIPlan:
             await run.run_and_report(parallel=self.parallel)
 
         overall_status = get_overall_run_status(*runs)
-        echo.success(
+
+        status_to_style_map = {
+            RunnerStatus.Success: echo.success,
+            RunnerStatus.CheckFailed: echo.warning,
+            RunnerStatus.Error: echo.error,
+            RunnerStatus.NotRan: echo.outcome,
+        }
+
+        status_to_style_map[overall_status](
             f"The CI run for {self.environment.pretty_python_version} completed with status: {overall_status}"
         )
-
-        if exceptions := [exception for run in runs for exception in run.exceptions]:
-            raise ExitWithFailure(
-                suggestions=(
-                    "If a command should be treated as a check failure, specify `check-failed-exit-codes`",
-                    "Reference: https://github.com/coveo/stew/blob/main/README.md#options)",
-                    "Try the commands in a shell to troubleshoot them faster.",
-                ),
-                failures=(
-                    f"\n------- [{runner} failed unexpectedly] -------\n\n{str(ex)}\n"
-                    for runner, ex in exceptions
-                ),
-            ) from CheckError("Unexpected errors occurred when launching external processes.")
 
 
 @dataclass
@@ -244,8 +229,33 @@ class Run:
 
         if self.exceptions:
             for check, exception in self.exceptions:
-                echo.warning(f"The runner {check} created an exception: ", pad_before=True)
+                echo.error(f"The runner {check} created an exception: ", pad_before=True)
                 echo.noise(exception, pad_after=True)
+
+            echo.error(
+                "One or more checks were not able to complete:",
+                pad_before=True,
+                pad_after=False,
+                emoji="robot",
+            )
+            echo.warning(
+                "To have stew treat an exit code as a check failure instead of an error, use `check-failed-exit-codes`",
+                item=True,
+                pad_before=False,
+                pad_after=False,
+            )
+            echo.warning(
+                "https://github.com/coveo/stew/blob/main/README.md#options",
+                item=True,
+                pad_before=False,
+                pad_after=False,
+            )
+            echo.warning(
+                "Use the working directory and command (printed above) to invoke the command from the shell manually",
+                item=True,
+                pad_before=False,
+                pad_after=True,
+            )
 
     def _report(self, check: ContinuousIntegrationRunner, feedback: bool = True) -> None:
         """Reports on a completed check."""
@@ -260,8 +270,8 @@ class Run:
 
             elif check.status is RunnerStatus.CheckFailed:
                 echo.warning(
-                    f"{check.project.package.name}: {check} reported issues:",
-                    pad_before=False,
+                    f"{check} [{check.project.package.name}] reported issues:",
+                    pad_before=True,
                     pad_after=False,
                 )
                 check.echo_last_failures()

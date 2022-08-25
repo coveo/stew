@@ -1,11 +1,14 @@
+import asyncio
 import shutil
 import tempfile
 from pathlib import Path
 
+from coveo_styles.styles import echo
 from coveo_systools.filesystem import pushd
 from coveo_systools.subprocess import async_check_output
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner, RunnerStatus
+from coveo_stew.ci.runner import ContinuousIntegrationRunner
+from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.offline_publish import offline_publish
 
@@ -54,6 +57,12 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                     ),
                 )
         finally:
-            shutil.rmtree(temporary_folder)
+            await asyncio.sleep(0.01)  # give a few cycles to close handles/etc
+            try:
+                shutil.rmtree(temporary_folder)
+            except PermissionError:
+                echo.warning(
+                    f"The temporary folder for this check could not be deleted: {temporary_folder}"
+                )
 
         return RunnerStatus.Success
