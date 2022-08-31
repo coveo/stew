@@ -12,7 +12,7 @@ inputs:
     required: true
 
   poetry-version:
-    default: "<2"
+    default: "<1.2.0"
     required: false
     description: The pip constraint when installing poetry.
 
