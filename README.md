@@ -1,3 +1,13 @@
+# :mega: Poetry `1.2.0` introduced a lot of changes
+
+The last fully compatible version is Poetry `1.1.15`.
+
+The newly released Poetry `1.2.0` has not been extensively tested with `coveo-stew` as of now and may contain issues. 
+If you understand the risk and use it anyway, you are encouraged to report these issues [here](https://github.com/coveo/stew/issues/new).
+
+This is a short term situation; please 🐻 😅
+
+
 # Upgrading from 2.x?
 
 The 3.0 update contains breaking changes: 
@@ -43,7 +53,8 @@ Similar to: nothing! it's unique! 😎
 
 You need [poetry](https://python-poetry.org/) installed on your system, and it must be available through the `PATH`.
 
-The `3.0` version of `coveo-stew` is designed to work with `poetry >= 1.1.13`.
+The `3.0` version of `coveo-stew` is designed to work with poetry `1.1.13`, `1.1.14` and `1.1.15`. 
+
 
 While it is compatible with older versions, old poetry issues 
 such as [this](https://github.com/python-poetry/poetry/issues/3189) 

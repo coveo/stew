@@ -25,6 +25,7 @@ from typing import (
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
+from coveo_styles.styles import echo
 from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import check_run
 
@@ -39,6 +40,10 @@ from coveo_stew.utils import load_toml_from_path
 ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(
     r"^(?P<path>.+?)(?: (?P<activated>\(Activated\)))?$"
 )
+
+
+# temporary until 1.2.0 has been cleared as fully compatible
+_CHECKED_POETRY_VERSION: bool = False
 
 
 class EnvironmentCreationBehavior(Enum):
@@ -357,11 +362,34 @@ class PythonProject:
 
         The `environment` param will make that environment active (e.g.: `poetry env use` called before).
         """
+        global _CHECKED_POETRY_VERSION
+
         environment_variables = os.environ.copy()
         if breakout_of_venv:
             environment_variables.pop("VIRTUAL_ENV", None)
 
         with self._activate_poetry_environment(environment):
+
+            # issue a warning once when running from a non-compatible poetry version
+            if not _CHECKED_POETRY_VERSION:
+                _CHECKED_POETRY_VERSION = True
+                output = check_run(
+                    *find_python_tool(PythonTool.Poetry, environment=environment),
+                    "--version",
+                    "-vv" if self.verbose else "",
+                    working_directory=self.project_path,
+                    capture_output=True,
+                    verbose=self.verbose,
+                    env=environment_variables,
+                )
+
+                if "version 1.2" in output.casefold():
+                    echo.warning(
+                        f"{output.strip()} is not officially supported (yet)."
+                        f" Poetry `1.1.15` is the latest known compatible version."
+                        " See https://github.com/coveo/stew/readme.md for more information."
+                    )
+
             return check_run(
                 *find_python_tool(PythonTool.Poetry, environment=environment),
                 *commands,
