@@ -132,11 +132,18 @@ Starting from coveo-stew 3.0.0, 3rd party tools are no longer provided:
     )
 
 
-RE_POETRY_VERSION: Pattern = re.compile(r"version (?P<version>\d\.\d\.\d)")
+RE_POETRY_VERSION: Pattern = re.compile(
+    r"version.+?(?P<version>\d+\.\d+\.\d+)", flags=re.IGNORECASE
+)
 
 
 @lru_cache
 def find_poetry_version(environment: Optional[PythonEnvironment] = None) -> StrictVersion:
+    return _find_poetry_version(environment)
+
+
+def _find_poetry_version(environment: Optional[PythonEnvironment] = None) -> StrictVersion:
+    """Non cached version, for easier time around tests"""
     poetry = find_python_tool(PythonTool.Poetry, environment=environment)
 
     output = check_output(

@@ -21,6 +21,7 @@ from typing import (
     Pattern,
     Tuple,
     Union,
+    cast,
 )
 
 from coveo_functools.casing import flexfactory
@@ -380,14 +381,17 @@ class PythonProject:
             environment_variables.pop("VIRTUAL_ENV", None)
 
         with self._activate_poetry_environment(environment):
-            return check_run(
-                *find_python_tool(PythonTool.Poetry, environment=environment),
-                *commands,
-                "-vv" if self.verbose else "",
-                working_directory=self.project_path,
-                capture_output=capture_output,
-                verbose=self.verbose,
-                env=environment_variables,
+            return cast(
+                Optional[str],
+                check_run(
+                    *find_python_tool(PythonTool.Poetry, environment=environment),
+                    *commands,
+                    "-vv" if self.verbose else "",
+                    working_directory=self.project_path,
+                    capture_output=capture_output,
+                    verbose=self.verbose,
+                    env=environment_variables,
+                ),
             )
 
     @contextmanager
