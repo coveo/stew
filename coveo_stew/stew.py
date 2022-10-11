@@ -21,7 +21,6 @@ from typing import (
     Pattern,
     Tuple,
     Union,
-    cast,
 )
 
 from coveo_functools.casing import flexfactory
