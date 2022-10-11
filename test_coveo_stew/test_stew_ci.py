@@ -297,7 +297,7 @@ def linter_project(tmp_path_factory: TempPathFactory) -> PythonProject:
     (project_folder / "py.typed").touch()
     (project_folder / "__init__.py").touch()
     project = PythonProject(tmpdir)
-    project.install(remove_untracked=True)
+    project.install(sync=True)
     return project
 
 

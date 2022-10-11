@@ -5,7 +5,10 @@ inputs:
   python-version:
     description: The python version
     required: true
-
+  poetry-version:
+    description: The poetry version constraint
+    required: false
+    default: ""
 
 runs:
   using: 'composite'
@@ -25,7 +28,7 @@ runs:
 
     - name: poetry
       shell: bash
-      run: python -m pipx install poetry==1.1.15
+      run: python -m pipx install "poetry${{ inputs.poetry-version }}"
 
     - name: Ensure correct python version
       shell: bash

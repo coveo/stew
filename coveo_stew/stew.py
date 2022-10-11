@@ -25,7 +25,6 @@ from typing import (
 
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
-from coveo_styles.styles import echo
 from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import check_run
 
@@ -35,6 +34,7 @@ from coveo_stew.exceptions import NotAPoetryProject, StewException
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage
+from coveo_stew.poetry_backward_compatibility import get_verb
 from coveo_stew.utils import load_toml_from_path
 
 ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(
@@ -127,10 +127,14 @@ class PythonProject:
 
         # yolo: use the dry run output to determine if the lock is too old
         dry_run_output = self.poetry_run(
-            "install", "--remove-untracked", "--dry-run", capture_output=True
+            "install",
+            get_verb("--sync", self.activated_environment()),
+            "--dry-run",
+            capture_output=True,
         )
 
         for sentence in (
+            "poetry.lock is not consistent with pyproject.toml",  # poetry 1.2.2
             "Warning: The lock file is not up to date",
             "outdated dependencies",
             "Run update to update them",
@@ -237,6 +241,13 @@ class PythonProject:
         Returns final path to the artifact."""
         # like coredump_detector-0.0.1-py3-none-any.whl
         wheel_pattern = re.compile(r"(?P<distribution>\S+?)-(?P<version>.+?)-(?P<extra>.+)\.whl")
+
+        if not self.activated_environment():
+            # Starting from poetry 1.2.0, when calling `poetry build` without an environment setup, it will
+            # install the environment, build, but it will not show the filename to the output anymore.
+            # Ensure that a default environment exists.
+            self._create_default_poetry_install(install=EnvironmentCreationBehavior.Empty)
+
         poetry_output = self.poetry_run("build", "--format", "wheel", capture_output=True)
         wheel_match = wheel_pattern.search(poetry_output)
 
@@ -297,11 +308,11 @@ class PythonProject:
         self,
         *,
         environment: PythonEnvironment = None,
-        remove_untracked: bool = False,
+        sync: bool = False,
         quiet: bool = False,
     ) -> None:
         """
-        Performs a 'poetry install --remove-untracked' on the project. If an environment is provided, target it.
+        Performs a 'poetry install' on the project. If an environment is provided, target it.
         """
         target_environment = environment or self.activated_environment()
         if not target_environment:
@@ -310,19 +321,19 @@ class PythonProject:
 
         if target_environment.installed:
             # this environment was already installed
-            if not (remove_untracked and not target_environment.cleaned):
+            if not (sync and not target_environment.cleaned):
                 # return unless we are cleaning a non-cleaned environment
                 return
 
         command = ["install"]
-        if remove_untracked:
-            command.append("--remove-untracked")
+        if sync:
+            command.append(get_verb("--sync", target_environment))
         if quiet and not self.verbose:
             command.append("--quiet")
 
         self.poetry_run(*command, environment=target_environment)
         target_environment.installed = True
-        target_environment.cleaned |= remove_untracked
+        target_environment.cleaned |= sync
 
     def remove_egg_info(self) -> bool:
         """Removes the egg-info (editable project hook) from the folder. Returns True if we removed it."""
@@ -341,7 +352,7 @@ class PythonProject:
         """
         self.remove_egg_info()
         self.lock_if_needed()
-        self.install(environment=environment, remove_untracked=True)
+        self.install(environment=environment, sync=True)
 
     def lock_if_needed(self) -> bool:
         """Lock if needed, return True if ran."""
@@ -369,27 +380,6 @@ class PythonProject:
             environment_variables.pop("VIRTUAL_ENV", None)
 
         with self._activate_poetry_environment(environment):
-
-            # issue a warning once when running from a non-compatible poetry version
-            if not _CHECKED_POETRY_VERSION:
-                _CHECKED_POETRY_VERSION = True
-                output = check_run(
-                    *find_python_tool(PythonTool.Poetry, environment=environment),
-                    "--version",
-                    "-vv" if self.verbose else "",
-                    working_directory=self.project_path,
-                    capture_output=True,
-                    verbose=self.verbose,
-                    env=environment_variables,
-                )
-
-                if "version 1.2" in output.casefold():
-                    echo.warning(
-                        f"{output.strip()} is not officially supported (yet)."
-                        f" Poetry `1.1.15` is the latest known compatible version."
-                        " See https://github.com/coveo/stew/readme.md for more information."
-                    )
-
             return check_run(
                 *find_python_tool(PythonTool.Poetry, environment=environment),
                 *commands,
