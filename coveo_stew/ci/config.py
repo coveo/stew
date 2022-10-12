@@ -123,7 +123,7 @@ class ContinuousIntegrationConfig:
         ci_plans = list(self._generate_ci_plans(checks=checks, skips=skips, parallel=parallel))
         for plan in ci_plans:
             if not quick:
-                self._pyproject.install(environment=plan.environment, remove_untracked=True)
+                self._pyproject.install(environment=plan.environment, sync=True)
             await plan.orchestrate(auto_fix)
 
         if github:

@@ -1,9 +1,12 @@
+import os
 import platform
+import re
+from distutils.version import StrictVersion
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Pattern, Tuple, Union
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_application
@@ -127,3 +130,29 @@ Starting from coveo-stew 3.0.0, 3rd party tools are no longer provided:
 - Or you can install {tool} to your system so that it can be found in the PATH
 """
     )
+
+
+RE_POETRY_VERSION: Pattern = re.compile(
+    r"version.+?(?P<version>\d+\.\d+\.\d+)", flags=re.IGNORECASE
+)
+
+
+@lru_cache
+def find_poetry_version(environment: Optional[PythonEnvironment] = None) -> StrictVersion:
+    return _find_poetry_version(environment)
+
+
+def _find_poetry_version(environment: Optional[PythonEnvironment] = None) -> StrictVersion:
+    """Non cached version, for easier time around tests"""
+    poetry = find_python_tool(PythonTool.Poetry, environment=environment)
+
+    output = check_output(
+        *poetry,
+        "--version",
+        env=os.environ.copy(),
+    )
+
+    if match := RE_POETRY_VERSION.search(output):
+        return StrictVersion(match["version"])
+
+    raise ToolNotFound(f"Unable to determine poetry version from output:\n{output}")

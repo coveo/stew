@@ -1,13 +1,3 @@
-# :mega: Poetry `1.2.0` introduced a lot of changes
-
-The last fully compatible version is Poetry `1.1.15`.
-
-The newly released Poetry `1.2.0` has not been extensively tested with `coveo-stew` as of now and may contain issues. 
-If you understand the risk and use it anyway, you are encouraged to report these issues [here](https://github.com/coveo/stew/issues/new).
-
-This is a short term situation; please 🐻 😅
-
-
 # Upgrading from 2.x?
 
 The 3.0 update contains breaking changes: 
