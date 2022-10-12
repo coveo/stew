@@ -20,6 +20,7 @@ coveo-itertools = "^2.0.0"
 coveo-systools = "^2.0.10"
 coveo-styles = "^2.1.2"
 junit-xml = "*"
+packaging = "*"
 toml = "*"
 tomlkit = "*"
 

@@ -1,7 +1,6 @@
 import os
 import platform
 import re
-from distutils.version import StrictVersion
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
@@ -11,6 +10,7 @@ from typing import Any, List, Optional, Pattern, Tuple, Union
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_application
 from coveo_systools.subprocess import check_output
+from packaging.version import Version
 
 from coveo_stew.exceptions import ToolNotFound
 
@@ -138,11 +138,11 @@ RE_POETRY_VERSION: Pattern = re.compile(
 
 
 @lru_cache
-def find_poetry_version(environment: Optional[PythonEnvironment] = None) -> StrictVersion:
+def find_poetry_version(environment: Optional[PythonEnvironment] = None) -> Version:
     return _find_poetry_version(environment)
 
 
-def _find_poetry_version(environment: Optional[PythonEnvironment] = None) -> StrictVersion:
+def _find_poetry_version(environment: Optional[PythonEnvironment] = None) -> Version:
     """Non cached version, for easier time around tests"""
     poetry = find_python_tool(PythonTool.Poetry, environment=environment)
 
@@ -153,6 +153,6 @@ def _find_poetry_version(environment: Optional[PythonEnvironment] = None) -> Str
     )
 
     if match := RE_POETRY_VERSION.search(output):
-        return StrictVersion(match["version"])
+        return Version(match["version"])
 
     raise ToolNotFound(f"Unable to determine poetry version from output:\n{output}")
