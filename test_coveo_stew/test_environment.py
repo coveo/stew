@@ -1,9 +1,9 @@
-from distutils.version import StrictVersion
 from unittest import mock
 
 from coveo_systools.subprocess import check_output
 from coveo_testing.mocks import ref
 from coveo_testing.parametrize import parametrize
+from packaging.version import Version
 
 from coveo_stew.environment import _find_poetry_version
 
@@ -18,4 +18,4 @@ from coveo_stew.environment import _find_poetry_version
 )
 def test_poetry_version(poetry_output: str, expected_version: str) -> None:
     with mock.patch(*ref(check_output, context=_find_poetry_version), return_value=poetry_output):
-        assert _find_poetry_version(None) == StrictVersion(expected_version)
+        assert _find_poetry_version(None) == Version(expected_version)

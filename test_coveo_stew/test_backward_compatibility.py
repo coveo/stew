@@ -1,8 +1,8 @@
-from distutils.version import StrictVersion
 from unittest import mock
 
 from coveo_testing.mocks import ref
 from coveo_testing.parametrize import parametrize
+from packaging.version import Version
 
 from coveo_stew.environment import find_poetry_version
 from coveo_stew.poetry_backward_compatibility import get_verb
@@ -27,7 +27,7 @@ from coveo_stew.poetry_backward_compatibility import get_verb
 )
 def test_get_verb(poetry_version: str, verb: str, expected_verb: str) -> None:
     with mock.patch(
-        *ref(find_poetry_version, context=get_verb), return_value=StrictVersion(poetry_version)
+        *ref(find_poetry_version, context=get_verb), return_value=Version(poetry_version)
     ):
         get_verb.cache_clear()
         assert get_verb(verb, None) == expected_verb
