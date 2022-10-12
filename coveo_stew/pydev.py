@@ -5,7 +5,7 @@ python projects in a repository for developer convenience.
 It has some additional features and tricks that do not apply to other projects. This is centralized here.
 """
 from distutils.version import StrictVersion
-from typing import Any, Generator, Set, Tuple
+from typing import Any, Dict, Generator, Set, Tuple
 
 import tomlkit
 from coveo_styles.styles import ExitWithFailure
@@ -34,7 +34,7 @@ def pull_and_write_dev_requirements(project: PythonProject, *, dry_run: bool = F
         raise NotPyDevProject(f"{project.project_path}: Not a PyDev project.")
 
     # prepare a toml container for our data
-    toml = tomlkit.loads(project.toml_path.read_text())
+    toml: Dict[str, Any] = tomlkit.loads(project.toml_path.read_text())
 
     all_dev_dependencies: Table = tomlkit.table()
 
@@ -49,9 +49,9 @@ def pull_and_write_dev_requirements(project: PythonProject, *, dry_run: bool = F
     )
 
     if find_poetry_version(project.activated_environment()) < StrictVersion("1.2.0"):
-        toml["tool"]["poetry"]["dev-dependencies"] = all_dev_dependencies  # type: ignore[index]
+        toml["tool"]["poetry"]["dev-dependencies"] = all_dev_dependencies
     else:
-        toml["tool"]["poetry"]["group"] = {"dev": {"dependencies": all_dev_dependencies}}  # type: ignore[index]
+        toml["tool"]["poetry"]["group"] = {"dev": {"dependencies": all_dev_dependencies}}
         toml["tool"]["poetry"].pop("dev-dependencies", None)
 
     if safe_text_write(

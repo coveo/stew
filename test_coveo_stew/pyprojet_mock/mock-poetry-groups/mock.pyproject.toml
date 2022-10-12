@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "test-pyproject-groups"
+name = "mock-poetry-groups"
 version = "0.1.1"
 description = "an internal mock for stew's tests"
 authors = ["Jonathan piché <tools@coveo.com>"]
