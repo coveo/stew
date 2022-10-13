@@ -75,7 +75,7 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "coveo-styles"
-version = "2.1.2"
+version = "2.1.3"
 description = "Styles, colors and emojis for the command line."
 category = "main"
 optional = false
@@ -83,7 +83,7 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 click = ">=8.1"
-emoji = ">=1.7.0,<2.0.0"
+emoji = ">=2"
 typing_extensions = "*"
 
 [[package]]
@@ -112,11 +112,11 @@ pytest = "*"
 
 [[package]]
 name = "emoji"
-version = "1.7.0"
+version = "2.1.0"
 description = "Emoji for Python"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
 dev = ["coverage", "coveralls", "pytest"]
@@ -415,8 +415,8 @@ coveo-itertools = [
     {file = "coveo_itertools-2.0.4-py3-none-any.whl", hash = "sha256:3ae9578ad93ff95e46ea74d16e54f9a0781febd0c437551091d1e9108d0fbf6b"},
 ]
 coveo-styles = [
-    {file = "coveo-styles-2.1.2.tar.gz", hash = "sha256:669627d7d01098ea28a2225d864f346edea966460805f9e691403ee2a5aa1a66"},
-    {file = "coveo_styles-2.1.2-py3-none-any.whl", hash = "sha256:5880def6ce0091411994eb2a25ef876f7fbf09d516c025844be84f8349f87266"},
+    {file = "coveo-styles-2.1.3.tar.gz", hash = "sha256:2afe2a481369b0ca64fcbf951389cf2ab26ee02d8b0d6573df25c59d20942120"},
+    {file = "coveo_styles-2.1.3-py3-none-any.whl", hash = "sha256:cb3b03002d83458981c1784a9b037a96f6bc8d11b65c20be530ba6dd065ec30d"},
 ]
 coveo-systools = [
     {file = "coveo-systools-2.0.10.tar.gz", hash = "sha256:ffb9ab1d9a6909f08d38d848f784833cd7169bdb39c3fdbc41900c2b19d77660"},
@@ -427,7 +427,7 @@ coveo-testing = [
     {file = "coveo_testing-2.0.7-py3-none-any.whl", hash = "sha256:1f1567fe812f8d693d9bcea179e37aa265cb79f4c7fb97cbf287bf336a5c57c7"},
 ]
 emoji = [
-    {file = "emoji-1.7.0.tar.gz", hash = "sha256:65c54533ea3c78f30d0729288998715f418d7467de89ec258a31c0ce8660a1d1"},
+    {file = "emoji-2.1.0.tar.gz", hash = "sha256:56a8c5e906c11694eb7694b78e5452d745030869b3945f6306a8151ff5cdbc39"},
 ]
 flake8 = [
     {file = "flake8-5.0.4-py2.py3-none-any.whl", hash = "sha256:7a1cf6b73744f5806ab95e526f6f0d8c01c66d7bbe349562d22dfca20610b248"},

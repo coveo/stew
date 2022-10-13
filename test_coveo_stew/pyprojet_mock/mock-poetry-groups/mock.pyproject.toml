@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "mock-poetry-groups"
+version = "0.1.1"
+description = "an internal mock for stew's tests"
+authors = ["Jonathan piché <tools@coveo.com>"]
+
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+
+requests = "*"
+
+
+[tool.poetry.group.extra.dependencies]
+black = "*"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "*"
+
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

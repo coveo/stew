@@ -54,6 +54,7 @@ class PoetryAPI:
         authors: Iterable[str],
         dependencies: Mapping[str, Any] = None,
         dev_dependencies: Mapping[str, Any] = None,
+        group: Mapping[str, Any] = None,
         **extra: Any,
     ) -> None:
         self.name: Final[str] = name
@@ -61,10 +62,22 @@ class PoetryAPI:
         self.authors: Final[Iterable[str]] = authors
         self.version: Final[str] = version
         self.description: Final[str] = description
-        self.dependencies: Final[Mapping[str, Dependency]] = dependencies_factory(dependencies)
-        self.dev_dependencies: Final[Mapping[str, Dependency]] = dependencies_factory(
-            dev_dependencies
-        )
+
+        deps = dependencies_factory(dependencies)
+        dev_deps = dependencies_factory(dev_dependencies)
+
+        if group:
+            # poetry 1.2 adds dependency groups.
+            for group_name, items in group.items():
+                if group_deps := items.get("dependencies"):
+                    # note: based on the docs, we are moving away from having "dev" dependencies at all...
+                    (dev_deps if group_name == "dev" else deps).update(
+                        dependencies_factory(group_deps)
+                    )
+
+        self.dependencies: Final[Mapping[str, Dependency]] = deps
+        self.dev_dependencies: Final[Mapping[str, Dependency]] = dev_deps
+
         # extra will contain all other properties of the package, mainly for dev/debug purposes.
         self.extra: Final[Mapping[str, Any]] = extra
 

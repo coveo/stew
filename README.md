@@ -173,6 +173,16 @@ Summary of actions:
 - `stew pull-dev-requirements` if a pydev project's dev-requirements are out of sync
 
 
+## `stew pull-dev-requirements`
+
+Only useful on `pydev` projects (see about [multiple-libraries](README_MULTIPLE_LIBRARIES.md)).
+It pulls the dev requirements from the local projects in order to aggregate them into the dev requirements of the root project.
+
+Note: This command uses the `dev` group to identify test dependencies.
+This can be defined as `tool.poetry.dev-dependencies` (poetry 1.1.15) or `tool.poetry.group.dev.dependencies`.
+The group name cannot be customized, feel free to contribute the feature if that's useful to you.
+
+
 ## `stew bump`
 
 Calls `poetry lock` on all projects.
