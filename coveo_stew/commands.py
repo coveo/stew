@@ -176,7 +176,7 @@ def build(
     if not directory:
         directory = (project.repo_root or project.project_path) / ".wheels"
     assert directory
-    directory = Path(directory)
+    directory = Path(directory).absolute()
 
     echo.step(f"Building python project {project} in {directory}")
     for environment in python_environments:
