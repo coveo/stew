@@ -257,7 +257,7 @@ class PythonProject:
             )
 
         assert (
-            wheel_match["distribution"] == self.package.safe_name
+            wheel_match["distribution"].casefold() == self.package.safe_name.casefold()
         ), f"{wheel_match['distribution']} does not match {self.package.safe_name}"
         assert wheel_match["version"] == str(
             self.package.version
