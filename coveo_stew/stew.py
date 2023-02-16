@@ -256,8 +256,12 @@ class PythonProject:
                 f"Unable able to find a wheel filename in poetry's output:\n{poetry_output}"
             )
 
-        assert wheel_match["distribution"] == self.package.safe_name, f"{wheel_match['distribution']} does not match {self.package.safe_name}"
-        assert wheel_match["version"] == str(self.package.version), f"{wheel_match['version']} does not match {self.package.version}"
+        assert (
+            wheel_match["distribution"] == self.package.safe_name
+        ), f"{wheel_match['distribution']} does not match {self.package.safe_name}"
+        assert wheel_match["version"] == str(
+            self.package.version
+        ), f"{wheel_match['version']} does not match {self.package.version}"
         wheel = (
             self.project_path / "dist" / Path(wheel_match.group())
         )  # group() gives the complete match
