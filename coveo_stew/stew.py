@@ -256,8 +256,12 @@ class PythonProject:
                 f"Unable able to find a wheel filename in poetry's output:\n{poetry_output}"
             )
 
-        assert wheel_match["distribution"] == self.package.safe_name
-        assert wheel_match["version"] == str(self.package.version)
+        assert (
+            wheel_match["distribution"].casefold() == self.package.safe_name.casefold()
+        ), f"{wheel_match['distribution']} does not match {self.package.safe_name}"
+        assert wheel_match["version"] == str(
+            self.package.version
+        ), f"{wheel_match['version']} does not match {self.package.version}"
         wheel = (
             self.project_path / "dist" / Path(wheel_match.group())
         )  # group() gives the complete match
@@ -270,7 +274,7 @@ class PythonProject:
         target = target_path / wheel.name
         if not target_path.exists():
             target_path.mkdir(parents=True)
-        assert target_path.is_dir()
+        assert target_path.is_dir(), f"{target_path} could not be found from {Path('.').absolute()}"
         shutil.move(str(wheel), str(target))
 
         return target
