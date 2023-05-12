@@ -61,6 +61,7 @@ jobs:
         uses: ./.github/workflows/actions/publish-to-pypi
         with:
           pypi-token: ${{ secrets.PYPI_TOKEN }}
+          package: coveo-stew
           pre-release: ${{ github.ref != 'refs/heads/main' }}
           dry-run: ${{ github.ref != 'refs/heads/main' && github.event.inputs.publish != 'true' }}
 

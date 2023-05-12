@@ -5,6 +5,9 @@ inputs:
   pypi-token:
     description: The pypi token to use for authentication
     required: true
+  package:
+    description: The name of the package to push to pypi.
+    required: true
   pre-release:
     description: Set to true if a pre-release version should be published.
     required: false
@@ -25,8 +28,8 @@ runs:
       id: get-versions
       shell: bash
       run: |
-        RELEASE="$(python -m coveo_pypi_cli next-version coveo-stew --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
-        PRERELEASE="$(python -m coveo_pypi_cli next-version coveo-stew --prerelease --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
+        RELEASE="$(python -m coveo_pypi_cli next-version ${{ inputs.package }} --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
+        PRERELEASE="$(python -m coveo_pypi_cli next-version ${{ inputs.package }} --prerelease --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
         echo "::set-output name=release::$RELEASE"
         echo "Next release: $RELEASE"
         echo "::set-output name=prerelease::$PRERELEASE"
