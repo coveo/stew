@@ -19,7 +19,7 @@ runs:
     - name: Determine the minimum version for this release (the one in the pyproject.toml file)
       shell: bash
       id: get-minimum-version
-      run: echo "::set-output name=minimum-version::$(${{ github.action_path }}/get-minimum-version.sh)"
+      run: echo "minimum-version=$(${{ github.action_path }}/get-minimum-version.sh)" >> $GITHUB_OUTPUT
 
     - name: Compute the release and prerelease versions
       id: get-versions
@@ -27,9 +27,9 @@ runs:
       run: |
         RELEASE="$(python -m coveo_pypi_cli next-version coveo-stew --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
         PRERELEASE="$(python -m coveo_pypi_cli next-version coveo-stew --prerelease --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
-        echo "::set-output name=release::$RELEASE"
+        echo "release=$RELEASE" >> $GITHUB_OUTPUT
         echo "Next release: $RELEASE"
-        echo "::set-output name=prerelease::$PRERELEASE"
+        echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
         echo "Next prerelease: $PRERELEASE"
 
     - name: Determine the version to publish.
@@ -37,9 +37,9 @@ runs:
       id: get-next-version
       run: |
         if [[ ${{ inputs.pre-release }} == true ]]; then
-          echo "::set-output name=version::${{ steps.get-versions.outputs.prerelease }}"
+          echo "version=${{ steps.get-versions.outputs.prerelease }}" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=version::${{ steps.get-versions.outputs.release }}"
+          echo "version=${{ steps.get-versions.outputs.release }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Setup poetry for publish
@@ -63,7 +63,7 @@ runs:
       id: get-next-tag
       run: |
         TAG_NAME=${{ steps.get-next-version.outputs.version }}
-        echo "::set-output name=tag-name::$TAG_NAME"
+        echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
         echo "This release will be tagged as $TAG_NAME"
         git config user.name "github-actions"
         git config user.email "actions@users.noreply.github.com"
