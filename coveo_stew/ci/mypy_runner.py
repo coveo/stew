@@ -30,9 +30,9 @@ class MypyRunner(ContinuousIntegrationRunner):
             return None
 
         if self.set_config is True:
-            config_ref = importlib_resources.files("coveo_stew") / "package_resources/mypy.ini"
             stack = ExitStack()
-            atexit.register(stack)
+            atexit.register(stack.close)
+            config_ref = importlib_resources.files("coveo_stew") / "package_resources/mypy.ini"
             config_path = stack.enter_context(importlib_resources.as_file(config_ref))
             return config_path
 
