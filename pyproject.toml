@@ -13,7 +13,7 @@ packages = [
 
 
 [tool.poetry.dependencies]
-python = ">3.8.0,<4"
+python = ">3.8.1,<4"
 click = ">=8.1"
 coveo-functools = "^2.0.0"
 coveo-itertools = "^2.0.0"
@@ -23,6 +23,7 @@ junit-xml = "*"
 packaging = "*"
 toml = "*"
 tomlkit = "*"
+importlib-resources = "^6.1.1"
 
 
 [tool.poetry.dev-dependencies]
@@ -49,7 +50,7 @@ black = true
 
 
 [tool.stew.ci.custom-runners]
-flake8 = { check-args = "--ignore=E501,W503" }
+flake8 = { check-args = "--ignore=E501,W503,E203" }
 
 [tool.stew.ci.custom-runners.isort]
 check-args = ["--check", "--profile", "black", "."]

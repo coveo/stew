@@ -1,8 +1,10 @@
+import atexit
 import re
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Generator, Optional, Union
 
-import pkg_resources
+import importlib_resources
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import async_check_output
 
@@ -28,7 +30,11 @@ class MypyRunner(ContinuousIntegrationRunner):
             return None
 
         if self.set_config is True:
-            return Path(pkg_resources.resource_filename("coveo_stew", "package_resources/mypy.ini"))
+            stack = ExitStack()
+            atexit.register(stack.close)
+            config_ref = importlib_resources.files("coveo_stew") / "package_resources/mypy.ini"
+            config_path = stack.enter_context(importlib_resources.as_file(config_ref))
+            return Path(config_path)  # Redundant but mypy is confused
 
         assert isinstance(self.set_config, str)  # mypy
         return self._pyproject.project_path / self.set_config

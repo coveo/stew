@@ -1,9 +1,9 @@
 # Upgrading from 2.x?
 
-The 3.0 update contains breaking changes: 
+The 3.0 update contains breaking changes:
 `poetry`, `mypy` and `black` are no longer distributed with `coveo-stew`.
 
-Please refer to the [upgrade guide](./README_UPGRADE.md#upgrading-from-2x-to-3x) for more information and resolution steps. 
+Please refer to the [upgrade guide](./README_UPGRADE.md#upgrading-from-2x-to-3x) for more information and resolution steps.
 
 
 # coveo-stew
@@ -34,7 +34,7 @@ Similar to: poetry, flit, pbr, setuptools
 - Batch operations
 - Note: Single projects are also supported! 😅
 
-Similar to: nothing! it's unique! 😎 
+Similar to: nothing! it's unique! 😎
 
 
 # Prerequisites
@@ -43,15 +43,14 @@ Similar to: nothing! it's unique! 😎
 
 You need [poetry](https://python-poetry.org/) installed on your system, and it must be available through the `PATH`.
 
-The `3.0` version of `coveo-stew` is designed to work with poetry `1.1.13`, `1.1.14` and `1.1.15`. 
+The `3.0` version of `coveo-stew` is designed to work with modern versions of `poetry`.
 
-
-While it is compatible with older versions, old poetry issues 
-such as [this](https://github.com/python-poetry/poetry/issues/3189) 
-and [this](https://github.com/python-poetry/poetry/issues/3254) 
+While it is compatible with older versions, old poetry issues
+such as [this](https://github.com/python-poetry/poetry/issues/3189)
+and [this](https://github.com/python-poetry/poetry/issues/3254)
 will cause `stew` to misbehave.
 
-If you need to work with an older version of poetry, 
+If you need to work with an older version of poetry,
 consider using `coveo-stew < 3.0` which had workarounds implemented around these issues.
 
 
@@ -160,11 +159,11 @@ Options:
 - `--directory` specifies where the wheels should be downloaded.
 - `--python` may be used to target a different python. It's important to use the same python version, architecture and OS than the target system.
 
-**Make sure your target `<folder>` is clean**: Keep in mind that `pip` will still use the `pyproject.toml` constraints when installing, not `poetry.lock`. 
+**Make sure your target `<folder>` is clean**: Keep in mind that `pip` will still use the `pyproject.toml` constraints when installing, not `poetry.lock`.
 The locked version system works when the locked version is the only thing that `pip` can find in the `<folder>`.
 
 
-## `stew check-outdated` and `stew fix-outdated` 
+## `stew check-outdated` and `stew fix-outdated`
 
 Checks for out-of-date files or automatically update them.
 
@@ -247,15 +246,15 @@ Note: You can override and customize most runners by [rewriting them as custom r
 
 ### mypy
 
-A strict mypy configuration is provided. 
+A strict mypy configuration is provided.
 
-You can provide your own mypy configuration, but you'll have to specify the `set-config` option: 
+You can provide your own mypy configuration, but you'll have to specify the `set-config` option:
 
 ```
 [tool.stew.ci]
 
 # disable stew's strict mypy config (i.e.: let mypy find its config)
-mypy = { set-config = False } 
+mypy = { set-config = False }
 
 # use a specific config (path relative to `pyproject.toml`'s folder)
 mypy = { set-config = "mypy.ini" }
@@ -313,7 +312,7 @@ Note: This runner cannot be overridden, but it can be disabled.
 
 ## Custom Runners
 
-You can add your own runners to `stew ci`. 
+You can add your own runners to `stew ci`.
 You can also redefine a builtin runner completely.
 
 In this example, we create runners for flake8, bandit and isort. We also redefine the pytest runner:
@@ -329,12 +328,12 @@ bandit = { check-args = ["--quiet", "--recursive", "."] }
 check-args = ["--check", ".", "--profile black"]
 autofix-args = [".", "--profile black"]
 
-[tool.stew.ci.custom-runners.pytest] 
+[tool.stew.ci.custom-runners.pytest]
 check-args = ["--tb=long", "--junitxml=.ci/pytest-results.xml"]
 ```
 
 When a builtin runner such as pytest is redefined as a custom runner, you must provide all the arguments.
-In this case, not passing `--junitxml` would mean that we lose the report that used to be in the `.ci/` directory. 
+In this case, not passing `--junitxml` would mean that we lose the report that used to be in the `.ci/` directory.
 
 
 ### Options
@@ -342,7 +341,7 @@ In this case, not passing `--junitxml` would mean that we lose the report that u
 The following options are supported for custom runners:
 
 - name: You can specify the module name if it differs from the name of the tool.
-  - Important: Runners are called through `python -m <name>`, not through the shell! 
+  - Important: Runners are called through `python -m <name>`, not through the shell!
 - check-args: The arguments to invoke the check.
 - autofix-args: The arguments to invoke the autofix. Provide the empty string "" in order to run without arguments.
 - check-failed-exit-codes: A list of ints denoting the exit codes to consider "failed" (anything else will be "error"). 0 is always a success. default is `[1]`.
@@ -417,7 +416,7 @@ To set it up manually:
 1. Obtain the location of the virtual environment (i.e.: `poetry env list --full-path`)
 1. Configure your IDE to use the python interpreter from that location
 
-Your IDE should proceed to analyze the environment and will pick up all imports automatically, 
+Your IDE should proceed to analyze the environment and will pick up all imports automatically,
 regardless of your PYTHONPATH or your working directory.
 Since the local source is editable, any change to the source code will be reflected on the next interpreter run.
 
@@ -426,7 +425,7 @@ If you use the multiple-projects approach, you should hook your IDE to the `pyde
 
 ## Using the virtual environment without activating it
 
-Using the correct interpreter is all you need to do. 
+Using the correct interpreter is all you need to do.
 There is no activation script or environment variables to set up: the interpreter executable inside the virtual environment folder is a fully bootstrapped and isolated environment.
 
 - A python dockerfile may call `<venv-python-exec>` directly in the dockerfile's CMD
