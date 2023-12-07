@@ -14,7 +14,7 @@ inputs:
   poetry-version:
     description: The pip constraint when installing poetry.
     required: false
-    default: "<1.3.0"
+    default: "<2.0.0"
 
   coveo-stew-version:
     description: The pip constraint when installing coveo-stew.
@@ -64,7 +64,7 @@ runs:
         COVEO_STEW_VERSION: ${{ inputs.coveo-stew-version }}
         PYTHON_EXEC: ${{ inputs.python-exec }}
 
-      run: | 
+      run: |
         $PYTHON_EXEC -m pipx install "poetry$POETRY_VERSION"
         $PYTHON_EXEC -m pipx install "coveo-stew$COVEO_STEW_VERSION"
 
