@@ -23,6 +23,7 @@ junit-xml = "*"
 packaging = "*"
 toml = "*"
 tomlkit = "*"
+importlib-resources = "^6.1.1"
 
 
 [tool.poetry.dev-dependencies]

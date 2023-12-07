@@ -1,3 +1,6 @@
+import atexit
+from contextlib import ExitStack
+import importlib_resources
 import re
 from pathlib import Path
 from typing import Generator, Optional, Union
@@ -28,7 +31,11 @@ class MypyRunner(ContinuousIntegrationRunner):
             return None
 
         if self.set_config is True:
-            return Path(pkg_resources.resource_filename("coveo_stew", "package_resources/mypy.ini"))
+            config_ref = importlib_resources.files("coveo_stew") / "package_resources/mypy.ini"
+            stack = ExitStack()
+            atexit.register(stack)
+            config_path = stack.enter_context(importlib_resources.as_file(config_ref))
+            return config_path
 
         assert isinstance(self.set_config, str)  # mypy
         return self._pyproject.project_path / self.set_config
