@@ -8,4 +8,4 @@ class RunnerStatus(Enum):
     Error = auto()
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)  # conversion is redundant, but mypy is confused
