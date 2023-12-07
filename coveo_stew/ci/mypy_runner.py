@@ -34,7 +34,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             atexit.register(stack.close)
             config_ref = importlib_resources.files("coveo_stew") / "package_resources/mypy.ini"
             config_path = stack.enter_context(importlib_resources.as_file(config_ref))
-            return Path(config_path)  # Redundant by mypy is confused
+            return Path(config_path)  # Redundant but mypy is confused
 
         assert isinstance(self.set_config, str)  # mypy
         return self._pyproject.project_path / self.set_config
