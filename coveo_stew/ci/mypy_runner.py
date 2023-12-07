@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 from typing import Generator, Optional, Union
 
-import pkg_resources
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import async_check_output
 
