@@ -1,10 +1,10 @@
 import atexit
-from contextlib import ExitStack
-import importlib_resources
 import re
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Generator, Optional, Union
 
+import importlib_resources
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import async_check_output
 
