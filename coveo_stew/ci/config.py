@@ -90,7 +90,10 @@ class ContinuousIntegrationConfig:
         return self._runners.get(runner_name)
 
     def _generate_ci_plans(
-        self, checks: Optional[List[str]], skips: Optional[List[str]], parallel: bool = True
+        self,
+        checks: Optional[List[str]],
+        skips: Optional[List[str]],
+        parallel: bool = True,
     ) -> Generator[CIPlan, None, None]:
         """Generates one test plan per environment."""
         checks = [check.lower() for check in checks] if checks else []
@@ -130,7 +133,11 @@ class ContinuousIntegrationConfig:
             generate_github_step_report(ci_plans)
 
         statuses = set(check.status for plan in ci_plans for check in plan.checks)
-        for status in (RunnerStatus.Error, RunnerStatus.CheckFailed, RunnerStatus.Success):
+        for status in (
+            RunnerStatus.Error,
+            RunnerStatus.CheckFailed,
+            RunnerStatus.Success,
+        ):
             if status in statuses:
                 return status
 

@@ -12,7 +12,7 @@ class StewPackage:
         build: bool = False,
         build_without_hashes: bool = False,
         pydev: bool = False,
-        build_dependencies: Mapping[str, Any] = None
+        build_dependencies: Mapping[str, Any] = None,
     ) -> None:
         self.build = build  # we won't build a project unless this is specified.
         # poetry sometimes fail at getting hashes, in which case the export cannot work because pip will complain

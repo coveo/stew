@@ -330,6 +330,19 @@ autofix-args = [".", "--profile black"]
 
 [tool.stew.ci.custom-runners.pytest]
 check-args = ["--tb=long", "--junitxml=.ci/pytest-results.xml"]
+
+# using `executable`, you can create multiple custom runners with the same executable:
+[tool.stew.ci.custom-runners.ruff-check]
+executable = "ruff"
+working-directory = "project"
+check-args = ["check", "."]
+autofix-args = [ "check", "--fix", "."]
+
+[tool.stew.ci.custom-runners.ruff-format]
+executable = "ruff"
+working-directory = "project"
+check-args = ["format", "--check", "."]
+autofix-args = ["format", "."]
 ```
 
 When a builtin runner such as pytest is redefined as a custom runner, you must provide all the arguments.
@@ -338,15 +351,16 @@ In this case, not passing `--junitxml` would mean that we lose the report that u
 
 ### Options
 
-The following options are supported for custom runners:
-
-- name: You can specify the module name if it differs from the name of the tool.
-  - Important: Runners are called through `python -m <name>`, not through the shell!
+- executable: You can specify the executable name if it's different from the tool's name.
+  - Runners are called through `python -m <executable>` first to see if it's installed in the virtual environment, else through the shell.
+  - Using `executable`, you can create multiple custom runners with the same executable (e.g.: `ruff check` vs `ruff format`) 
 - check-args: The arguments to invoke the check.
 - autofix-args: The arguments to invoke the autofix. Provide the empty string "" in order to run without arguments.
 - check-failed-exit-codes: A list of ints denoting the exit codes to consider "failed" (anything else will be "error"). 0 is always a success. default is `[1]`.
 - create-generic-report: Whether to create a generic pass/fail JUnit report for this check.
 - working-directory: The default is "project" which corresponds to the project's `pyproject.toml` file. You can change it to "repository" in order to run from the root.
+- name: You can specify the module name if it differs from the name of the tool.
+  - Deprecated: name must be unique. This has been replaced by `executable`. 
 
 The `args` and `check-args` can be:
 
