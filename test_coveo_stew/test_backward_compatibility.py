@@ -27,7 +27,8 @@ from coveo_stew.poetry_backward_compatibility import get_verb
 )
 def test_get_verb(poetry_version: str, verb: str, expected_verb: str) -> None:
     with mock.patch(
-        *ref(find_poetry_version, context=get_verb), return_value=Version(poetry_version)
+        *ref(find_poetry_version, context=get_verb),
+        return_value=Version(poetry_version),
     ):
         get_verb.cache_clear()
         assert get_verb(verb, None) == expected_verb

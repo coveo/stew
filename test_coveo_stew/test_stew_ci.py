@@ -322,7 +322,10 @@ def write_code(project: PythonProject, code: str) -> Generator[None, None, None]
 @parametrize(
     ("check", "failure_text"),
     [
-        ("mypy", 'error: Argument 1 to "fn" has incompatible type "int"; expected "str"'),
+        (
+            "mypy",
+            'error: Argument 1 to "fn" has incompatible type "int"; expected "str"',
+        ),
         ("isort", "Imports are incorrectly sorted and/or formatted."),
         ("black", f"would reformat mock_linter_errors{os.sep}code.py"),
     ],

@@ -20,8 +20,7 @@ from coveo_stew.exceptions import NotAPoetryProject, StewException
 from coveo_stew.stew import PythonProject
 
 
-class NotPyDevProject(StewException):
-    ...
+class NotPyDevProject(StewException): ...
 
 
 def is_pydev_project(project: PythonProject) -> bool:
@@ -102,7 +101,8 @@ def _dev_dependencies_of_dependencies(
             if dev_dependency.is_local:
                 value: Any = tomlkit.inline_table()
                 value.append(
-                    "path", str(dev_dependency.path.relative_to(local_project.project_path))
+                    "path",
+                    str(dev_dependency.path.relative_to(local_project.project_path)),
                 )
             else:
                 value = dev_dependency.version

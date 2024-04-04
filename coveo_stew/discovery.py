@@ -14,7 +14,8 @@ Predicate = Callable[[PythonProject], object]
 def find_pyproject(project_name: str, path: Path = None, *, verbose: bool = False) -> PythonProject:
     """Find a python project in path using the exact project name"""
     project = next(
-        discover_pyprojects(path, query=project_name, exact_match=True, verbose=verbose), None
+        discover_pyprojects(path, query=project_name, exact_match=True, verbose=verbose),
+        None,
     )
     if not project:
         raise PythonProjectNotFound(f"{project_name} cannot be found in {path}")

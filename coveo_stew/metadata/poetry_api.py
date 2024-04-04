@@ -89,7 +89,7 @@ class PoetryAPI:
 
 
 def dependencies_factory(
-    dependencies: Mapping[str, Union[str, dict]] = None
+    dependencies: Mapping[str, Union[str, dict]] = None,
 ) -> Dict[str, Dependency]:
     """Transforms a poetry dependency section (such as tool.poetry.dev-dependencies) into Dependency instances."""
     return (
