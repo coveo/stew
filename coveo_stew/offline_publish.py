@@ -156,7 +156,8 @@ class _OfflinePublish:
 
     def _validate_package(self, package_specification: str) -> None:
         """Validates that a package and all its dependencies can be resolved from the wheelhouse.
-        Package specification can be a name like `coveo-functools` or a constraint like `coveo-functools>=0.2.1`"""
+        Package specification can be a name like `coveo-functools` or a constraint like `coveo-functools>=0.2.1`
+        """
         # using check_output will silence output
         _ = check_output(
             *self.environment.build_command(

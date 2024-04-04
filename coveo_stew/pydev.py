@@ -20,8 +20,7 @@ from coveo_stew.exceptions import NotAPoetryProject, StewException
 from coveo_stew.stew import PythonProject
 
 
-class NotPyDevProject(StewException):
-    ...
+class NotPyDevProject(StewException): ...
 
 
 def is_pydev_project(project: PythonProject) -> bool:
