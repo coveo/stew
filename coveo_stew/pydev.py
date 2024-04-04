@@ -101,7 +101,8 @@ def _dev_dependencies_of_dependencies(
             if dev_dependency.is_local:
                 value: Any = tomlkit.inline_table()
                 value.append(
-                    "path", str(dev_dependency.path.relative_to(local_project.project_path))
+                    "path",
+                    str(dev_dependency.path.relative_to(local_project.project_path)),
                 )
             else:
                 value = dev_dependency.version

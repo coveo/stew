@@ -113,8 +113,9 @@ class _OfflinePublish:
         lines: List[str] = []
         for requirement in project.export().splitlines():
             if match := LOCAL_REQUIREMENT_PATTERN.match(requirement):
-                dependency_name, dependency_location = match["library_name"].strip(), Path(
-                    match["path"].strip()
+                dependency_name, dependency_location = (
+                    match["library_name"].strip(),
+                    Path(match["path"].strip()),
                 )
                 # this is a local dependency. Since poetry locks all transitive dependencies,
                 # we're only interested in the setup dependencies and the local dependency.
