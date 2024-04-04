@@ -162,7 +162,9 @@ class PythonProject:
         )
 
     def virtual_environments(
-        self, *, create_default_if_missing: Union[bool, EnvironmentCreationBehavior] = False
+        self,
+        *,
+        create_default_if_missing: Union[bool, EnvironmentCreationBehavior] = False,
     ) -> Iterator[PythonEnvironment]:
         """The project's virtual environments. These are cached for performance.
 
@@ -211,8 +213,9 @@ class PythonProject:
             if (stripped := str_path.strip()) and (
                 match := re.fullmatch(ENVIRONMENT_PATH_PATTERN, stripped)
             ):
-                yield Path(match.groupdict()["path"].strip()), bool(
-                    match.groupdict().get("activated")
+                yield (
+                    Path(match.groupdict()["path"].strip()),
+                    bool(match.groupdict().get("activated")),
                 )
 
     def current_environment_belongs_to_project(self) -> bool:

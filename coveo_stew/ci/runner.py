@@ -35,7 +35,10 @@ class ContinuousIntegrationRunner:
         return self._pyproject
 
     async def launch(
-        self, environment: PythonEnvironment = None, *extra_args: str, auto_fix: bool = False
+        self,
+        environment: PythonEnvironment = None,
+        *extra_args: str,
+        auto_fix: bool = False,
     ) -> "ContinuousIntegrationRunner":
         """
         Launch the runner's checks.
@@ -118,7 +121,8 @@ class ContinuousIntegrationRunner:
         test_case = TestCase(self.name, classname=f"ci.{self._pyproject.package.name}")
         if self.status is RunnerStatus.Error:
             test_case.add_error_info(
-                "An error occurred, the test was unable to complete.", self.last_output()
+                "An error occurred, the test was unable to complete.",
+                self.last_output(),
             )
         elif self.status is RunnerStatus.CheckFailed:
             test_case.add_failure_info("The test completed; errors were found.", self.last_output())
@@ -197,7 +201,9 @@ class Run:
     checks: Sequence[ContinuousIntegrationRunner]
 
     @cached_property
-    def exceptions(self) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
+    def exceptions(
+        self,
+    ) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
         """Exceptions are stored here after the run. Exceptions are cleared when `run_and_report` is called."""
         return []
 
@@ -224,7 +230,8 @@ class Run:
         else:
             for runner in self.checks:
                 self._report(
-                    await runner.launch(self.environment, auto_fix=auto_fix), feedback=feedback
+                    await runner.launch(self.environment, auto_fix=auto_fix),
+                    feedback=feedback,
                 )
 
         if self.exceptions:

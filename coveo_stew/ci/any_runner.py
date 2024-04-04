@@ -34,6 +34,7 @@ class AnyRunner(ContinuousIntegrationRunner):
         working_directory: str = "project",
         check_args: Optional[Union[str, List[str]]] = None,
         autofix_args: Optional[Union[str, List[str]]] = None,
+        executable: Optional[str] = None,
         _pyproject: PythonProject,
     ) -> None:
         if args and check_args:
@@ -47,6 +48,7 @@ class AnyRunner(ContinuousIntegrationRunner):
 
         super().__init__(_pyproject=_pyproject)
         self._name = name
+        self._executable = executable
         self.check_failed_exit_codes = check_failed_exit_codes
         self.outputs_own_report = not create_generic_report
         self.check_args = [] if check_args is None else check_args
@@ -68,7 +70,7 @@ class AnyRunner(ContinuousIntegrationRunner):
 
     async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
         args = [self.check_args] if isinstance(self.check_args, str) else self.check_args
-        command = environment.build_command(self.name, *args)
+        command = environment.build_command(self.executable, *args)
 
         working_directory = self._pyproject.project_path
         if self.working_directory is WorkingDirectoryKind.Repository:
@@ -91,9 +93,13 @@ class AnyRunner(ContinuousIntegrationRunner):
     def name(self) -> str:
         return self._name
 
+    @property
+    def executable(self) -> str:
+        return self._executable or self.name
+
     async def _custom_autofix(self, environment: PythonEnvironment) -> None:
         args = [self.autofix_args] if isinstance(self.autofix_args, str) else self.autofix_args
-        command = environment.build_command(self.name, *args)
+        command = environment.build_command(self.executable, *args)
 
         working_directory = self._pyproject.project_path
         if self.working_directory is WorkingDirectoryKind.Repository:
