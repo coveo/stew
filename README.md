@@ -338,7 +338,7 @@ working-directory = "project"
 check-args = ["check", "."]
 autofix-args = [ "check", "--fix", "."]
 
-[tool.stew.ci.custom-runners.ruff-lint]
+[tool.stew.ci.custom-runners.ruff-format]
 executable = "ruff"
 working-directory = "project"
 check-args = ["format", "--check", "."]
