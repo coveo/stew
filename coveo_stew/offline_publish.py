@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from tempfile import mkstemp
-from typing import Optional, Pattern, Set
+from typing import List, Optional, Pattern, Set
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.platforms import WINDOWS
@@ -110,7 +110,7 @@ class _OfflinePublish:
         """Store the dependency wheels in the wheelhouse."""
         project = project or self.project
 
-        lines = []
+        lines: List[str] = []
         for requirement in project.export().splitlines():
             if match := LOCAL_REQUIREMENT_PATTERN.match(requirement):
                 dependency_name, dependency_location = match["library_name"].strip(), Path(
@@ -156,7 +156,8 @@ class _OfflinePublish:
 
     def _validate_package(self, package_specification: str) -> None:
         """Validates that a package and all its dependencies can be resolved from the wheelhouse.
-        Package specification can be a name like `coveo-functools` or a constraint like `coveo-functools>=0.2.1`"""
+        Package specification can be a name like `coveo-functools` or a constraint like `coveo-functools>=0.2.1`
+        """
         # using check_output will silence output
         _ = check_output(
             *self.environment.build_command(
