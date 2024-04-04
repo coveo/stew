@@ -66,6 +66,7 @@ runs:
 
       run: |
         $PYTHON_EXEC -m pipx install "poetry$POETRY_VERSION"
+        $PYTHON_EXEC -m pipx inject poetry poetry-plugin-export
         $PYTHON_EXEC -m pipx install "coveo-stew$COVEO_STEW_VERSION"
 
     - name: Run stew ci
