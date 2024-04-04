@@ -30,6 +30,10 @@ runs:
       shell: bash
       run: python -m pipx install "poetry${{ inputs.poetry-version }}"
 
+    - name: poetry-export
+      shell: bash
+      run: python -m pipx inject poetry poetry-plugin-export
+
     - name: Ensure correct python version
       shell: bash
       run: poetry env use python

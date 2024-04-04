@@ -13,7 +13,7 @@ packages = [
 
 
 [tool.poetry.dependencies]
-python = ">3.8.0,<4"
+python = ">3.8.1,<4"
 click = "^8.1.0"
 coveo-functools = "^2.0.0"
 coveo-itertools = "^2.0.0"
@@ -30,9 +30,9 @@ importlib-resources = "^6.1.1"
 [tool.poetry.dev-dependencies]
 black = "24.3"
 coveo-testing = "^2.0.0"
-flake8 = "*"
+flake8 = "^7.0.0"
 isort = "*"
-mypy = "1.9.0"  # required for 3.10 support
+mypy = "1.9.0"
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"

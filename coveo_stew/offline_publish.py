@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from tempfile import mkstemp
-from typing import Optional, Pattern, Set, List
+from typing import List, Optional, Pattern, Set
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.platforms import WINDOWS
