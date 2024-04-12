@@ -332,11 +332,16 @@ class PythonProject:
                 # return unless we are cleaning a non-cleaned environment
                 return
 
-        command = ["install"]
+        command: List[str] = ["install"]
         if sync:
             command.append(get_verb("--sync", target_environment))
         if quiet and not self.verbose:
             command.append("--quiet")
+        if self.options.all_extras:
+            command.append("--all-extras")
+        elif self.options.extras:
+            for extra in self.options.extras:
+                command.extend(["--extras", extra])
 
         self.poetry_run(*command, environment=target_environment)
         target_environment.installed = True

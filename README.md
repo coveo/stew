@@ -210,6 +210,27 @@ $ stew locate coveo-stew
 
 # Configuration
 
+## stew
+
+Configuration is done through the `pyproject.toml` file; default values are shown:
+
+```
+[tool.stew]
+build-without-hashes = false
+pydev = false
+build-dependencies = {}
+extras = []
+all-extras = false
+```
+
+- **build-without-hashes**: Disables hashes when calling `pip` to download dependencies during `stew build`.
+- **pydev**: See the [multiple-libraries](README_MULTIPLE_LIBRARIES.md) guide.
+- **build-dependencies**: You can specify additional dependencies to be installed during `stew build`.
+  - The format is the same as poetry dependencies: `name = "version"` or `name = { version = "version", ... }`
+- **extras**: A list of extras to install during `stew build`. 
+- **all-extras**: If true, all extras will be installed during `stew build`. Overrides the `extras` list. 
+
+## stew ci
 Configuration is done through each `pyproject.toml` file; default values are shown:
 
 ```
