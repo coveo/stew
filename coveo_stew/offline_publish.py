@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from tempfile import mkstemp
-from typing import List, Optional, Pattern, Set
+from typing import List, Optional, Set
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.platforms import WINDOWS
@@ -25,12 +25,13 @@ _DEFAULT_PIP_OPTIONS = (
 # looks like:
 # - `coveo-stew @ file://home/jonapich/code/stew/coveo-stew; python ...` on linux
 # - `coveo-stew @ file:///C:/Users/jonapich/code/stew/coveo-stew; python ...` on windows :shrug:
+# - `-e file://path/to/coveo-stew; python ...` after an upstream breaking change (will be reformatted into the above)
 if WINDOWS:
-    LOCAL_REQUIREMENT_PATTERN: Pattern = re.compile(
-        r"^(?P<library_name>.+) @ file:///(?P<path>.+);"
-    )
+    FILE_IDENTIFIER = "file:///"
 else:
-    LOCAL_REQUIREMENT_PATTERN = re.compile(r"^(?P<library_name>.+) @ file://(?P<path>.+);")
+    FILE_IDENTIFIER = "file://"
+
+LOCAL_REQUIREMENT_PATTERN = re.compile(rf"^(?P<library_name>.+) @ {FILE_IDENTIFIER}(?P<path>.+);")
 
 
 def offline_publish(
@@ -112,6 +113,24 @@ class _OfflinePublish:
 
         lines: List[str] = []
         for requirement in project.export().splitlines():
+            if requirement.startswith("-e "):
+                # everything was going fine on poetry 1.8.3 then something started to break.
+                # `poetry export` changed the format of the local dependencies.
+                # e.g.:
+                #   before: 'mock-pyproject-dependency @ file:///C:/path/to/mock-pyproject-dependency ; ...'
+                #   now: '-e file:///C:/path/to/mock-pyproject-dependency ; ...'
+                requirements_part, _remainder_part = requirement.split(";", maxsplit=1)
+                # remove the `-e file:///` part
+                requirements_part = requirements_part[3 + len(FILE_IDENTIFIER) :].strip()
+                requirement_path = Path(requirements_part)
+                if not requirement_path.exists():
+                    raise ExitWithFailure(
+                        failures=f"Cannot find the local dependency {requirement_path}"
+                    )
+                # reformat the line to what we used to expect before the breaking change
+                # let's hope the folder name == the package name 😅
+                requirement = f"{requirement_path.name} @ {FILE_IDENTIFIER}{requirement_path} ; {_remainder_part}"
+
             if match := LOCAL_REQUIREMENT_PATTERN.match(requirement):
                 dependency_name, dependency_location = (
                     match["library_name"].strip(),
