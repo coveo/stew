@@ -24,5 +24,7 @@ This setup is actually the [multiple library setup](./README_MULTIPLE_LIBRARIES.
 1. The `pyproject.toml` file is contained in a folder somewhere in the repository (e.g.: `/src/python/pyproject.toml`)
 2. There's a folder that matches the name of your module import, next to the `pyproject.toml` file (e.g.: `/src/python/coveo_systools/*.py`)
 3. An `__init__.py` file inside the importable folder  (e.g.: `/src/python/coveo_systools/__init__.py`)
+4. The `tool.stew.pydev` setting should be false or not present
+5. The `poetry.package-mode` setting should be true or not present
 
 As a reference, take a look at the [coveo-python-oss repository](https://github.com/coveooss/coveo-python-oss).
