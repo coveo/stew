@@ -141,6 +141,7 @@ Options:
 - `--check <runner>` will launch only that runner. This option can be repeated.
 - `--skip <runner>` will skip that runner. Takes precedence over `--check`. This option can be repeated.
 - `--quick` skips running `poetry install --remove-untracked` before running the checks.
+  - **v3.0.30**: You can now customize which checks to run when `--quick` is specified. See the [quick](#configuration) configuration option.
 - `--no-github-step-report` can be used to disable Step Report generation when running in a GitHub context.
 
 The configuration for this feature is explained in more details in the [runners](#runners-stew-ci) section.
@@ -230,7 +231,7 @@ quick = {}
   - The format is the same as poetry dependencies: `name = "version"` or `name = { version = "version", ... }`
 - **extras**: A list of extras to install during `stew build`. 
 - **all-extras**: If true, all extras will be installed during `stew build`. Overrides the `extras` list.
-- **quick**: Controls which checks are skipped when calling `stew ci --quick`.
+- **quick**: *(v3.0.30)* Controls which checks are skipped when calling `stew ci --quick`. 
   - The format is a dictionary with either the `check` or `skip` key, followed by a list of runners.
   - The behavior is identical to the `--check` and `--skip` options.
   - e.g.: skip these checks `quick = { skip = ["poetry-check", "check-outdated", "poetry-build", "pytest"] }`
