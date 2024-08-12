@@ -3,7 +3,7 @@
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Generator, Iterable, List, Set, Union
+from typing import Generator, Iterable, Set, Tuple, Union
 
 import click
 from coveo_functools.finalizer import finalizer
@@ -312,14 +312,14 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
 @click.argument("project_name", default=None, required=False)
 @click.option("--exact-match/--no-exact-match", default=False)
 @click.option("--fix/--no-fix", default=False)
-@click.option("--check", multiple=True, default=None)
-@click.option("--skip", multiple=True, default=None)
+@click.option("--check", multiple=True, default=())
+@click.option("--skip", multiple=True, default=())
 @click.option("--verbose", is_flag=True, default=False)
 @click.option(
     "--quick",
     is_flag=True,
     default=False,
-    help="Do not call 'poetry install --remove-untracked' before testing.",
+    help="Do not call 'poetry install --sync' before testing.",
 )
 @click.option("--parallel/--sequential", default=True)
 @click.option("--github-step-report", is_flag=True, default=False, envvar="GITHUB_ACTIONS")
@@ -327,8 +327,8 @@ def ci(
     project_name: str = None,
     exact_match: bool = False,
     fix: bool = False,
-    check: List[str] = None,
-    skip: List[str] = None,
+    check: Tuple[str, ...] = (),
+    skip: Tuple[str, ...] = (),
     verbose: bool = False,
     quick: bool = False,
     parallel: bool = True,
@@ -340,6 +340,11 @@ def ci(
             query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.step(project.package.name, pad_after=False)
+
+            if quick:
+                check += tuple(project.options.quick.get("check", ()))
+                skip += tuple(project.options.quick.get("skip", ()))
+
             if (
                 overall_result := project.launch_continuous_integration(
                     auto_fix=fix,

@@ -1,4 +1,4 @@
-from typing import Any, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from coveo_styles.styles import echo
 
@@ -11,11 +11,11 @@ class StewPackage:
     def __init__(
         self,
         *,
-        build: bool = False,  # deprecated
         build_without_hashes: bool = False,
         pydev: bool = False,
         build_dependencies: Optional[Mapping[str, Any]] = None,
         extras: Optional[List[str]] = None,
+        quick: Optional[Dict[str, Any]] = None,
         all_extras: bool = False,
     ) -> None:
         # poetry sometimes fail at getting hashes, in which case the export cannot work because pip will complain
@@ -26,6 +26,7 @@ class StewPackage:
         self.build_dependencies = dependencies_factory(build_dependencies)
         self.extras = extras
         self.all_extras = all_extras
+        self.quick = quick or {}
 
         if extras and all_extras:
             echo.suggest(

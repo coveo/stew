@@ -43,6 +43,8 @@ stew = "coveo_stew.commands:stew"
 
 [tool.stew]
 build-without-hashes = true
+quick = { skip = ["poetry-check", "check-outdated", "poetry-build", "pytest"] }
+
 
 [tool.stew.ci]
 pytest = true

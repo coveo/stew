@@ -1,5 +1,15 @@
 from itertools import cycle
-from typing import Any, Dict, Generator, Iterator, List, Optional, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from coveo_functools.casing import flexfactory
 from coveo_styles.styles import ExitWithFailure, echo
@@ -91,8 +101,8 @@ class ContinuousIntegrationConfig:
 
     def _generate_ci_plans(
         self,
-        checks: Optional[List[str]],
-        skips: Optional[List[str]],
+        checks: Optional[Iterable[str]],
+        skips: Optional[Iterable[str]],
         parallel: bool = True,
     ) -> Generator[CIPlan, None, None]:
         """Generates one test plan per environment."""
@@ -114,8 +124,8 @@ class ContinuousIntegrationConfig:
     async def launch_continuous_integration(
         self,
         auto_fix: bool,
-        checks: Optional[List[str]],
-        skips: Optional[List[str]],
+        checks: Optional[Iterable[str]],
+        skips: Optional[Iterable[str]],
         quick: bool,
         parallel: bool,
         github: bool,

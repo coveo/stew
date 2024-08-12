@@ -11,7 +11,7 @@ To combine multiple projects in a repository, you need to adhere to the followin
 2. Python libraries should then exist within that folder's hierarchy, each of them in a dedicated folder. The dedicated folder doesn't need to be in the root.
 
 [The coveo-python-oss repository](https://github.com/coveooss/coveo-python-oss) can be used as reference.
-The `pydev` environment is in the root's `pyproject.toml`, and subfolders contain the python libraries
+The `pydev` environment is in the root's `pyproject.toml`, and subfolders contain the python libraries.
 
 
 ## Python libraries structure
@@ -45,6 +45,7 @@ name = "dev-environment"
 version = "0.0.1"
 description = "virtual environment bootstrap for developers"
 authors = ["..."]
+package-mode = false  # see https://python-poetry.org/docs/basic-usage/#operating-modes
 
 [tool.poetry.dependencies]
 python = ">=3.8"

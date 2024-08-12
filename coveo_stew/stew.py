@@ -15,6 +15,7 @@ from typing import (
     Any,
     Final,
     Generator,
+    Iterable,
     Iterator,
     List,
     Optional,
@@ -293,8 +294,8 @@ class PythonProject:
     def launch_continuous_integration(
         self,
         auto_fix: bool = False,
-        checks: Optional[List[str]] = None,
-        skips: Optional[List[str]] = None,
+        checks: Optional[Iterable[str]] = None,
+        skips: Optional[Iterable[str]] = None,
         quick: bool = False,
         parallel: bool = True,
         github: bool = False,
