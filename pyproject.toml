@@ -32,7 +32,7 @@ black = "24.3"
 coveo-testing = "^2.0.0"
 flake8 = "^7.0.0"
 isort = "*"
-mypy = "1.9.0"
+mypy = "1.11.1"
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
@@ -43,8 +43,6 @@ stew = "coveo_stew.commands:stew"
 
 [tool.stew]
 build-without-hashes = true
-quick = { skip = ["poetry-check", "check-outdated", "poetry-build", "pytest"] }
-
 
 [tool.stew.ci]
 pytest = true
