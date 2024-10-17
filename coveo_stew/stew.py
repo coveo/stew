@@ -187,15 +187,18 @@ class PythonProject:
     ) -> PythonEnvironment:
         """To be used only when no environments exist. Creates a default one by calling "poetry install"."""
         if install is EnvironmentCreationBehavior.Full:
-            self.poetry_run("install")
+            command = self._generate_poetry_install_command()
         elif install is EnvironmentCreationBehavior.NoDev:
-            self.poetry_run("install", "--no-dev")
+            command = self._generate_poetry_install_command()
+            command.append("--no-dev")
         else:
             assert install is EnvironmentCreationBehavior.Empty
             try:
-                self.poetry_run("env", "use", "python3")
+                command = ["env", "use", "python3"]
             except CalledProcessError:
-                self.poetry_run("env", "use", "python")
+                command = ["env", "use", "python"]
+
+        self.poetry_run(*command)
 
         del self._virtual_environments_cache  # force cache refresh
         activated_environment = self.activated_environment()
@@ -333,9 +336,17 @@ class PythonProject:
                 # return unless we are cleaning a non-cleaned environment
                 return
 
+        command = self._generate_poetry_install_command(target_environment if sync else None, quiet)
+        self.poetry_run(*command, environment=target_environment)
+        target_environment.installed = True
+        target_environment.cleaned |= sync
+
+    def _generate_poetry_install_command(
+        self, sync_target_environment: Optional[PythonEnvironment] = None, quiet: bool = False
+    ) -> List[str]:
         command: List[str] = ["install"]
-        if sync:
-            command.append(get_verb("--sync", target_environment))
+        if sync_target_environment:
+            command.append(get_verb("--sync", sync_target_environment))
         if quiet and not self.verbose:
             command.append("--quiet")
         if self.options.all_extras:
@@ -343,10 +354,7 @@ class PythonProject:
         elif self.options.extras:
             for extra in self.options.extras:
                 command.extend(["--extras", extra])
-
-        self.poetry_run(*command, environment=target_environment)
-        target_environment.installed = True
-        target_environment.cleaned |= sync
+        return command
 
     def remove_egg_info(self) -> bool:
         """Removes the egg-info (editable project hook) from the folder. Returns True if we removed it."""
