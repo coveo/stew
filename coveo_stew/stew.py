@@ -341,7 +341,9 @@ class PythonProject:
         target_environment.installed = True
         target_environment.cleaned |= sync
 
-    def _generate_poetry_install_command(self, sync_target_environment: Optional[PythonEnvironment] = None, quiet: bool = False) -> List[str]:
+    def _generate_poetry_install_command(
+        self, sync_target_environment: Optional[PythonEnvironment] = None, quiet: bool = False
+    ) -> List[str]:
         command: List[str] = ["install"]
         if sync_target_environment:
             command.append(get_verb("--sync", sync_target_environment))
