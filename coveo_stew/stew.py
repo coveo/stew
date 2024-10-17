@@ -31,7 +31,7 @@ from coveo_systools.subprocess import check_run
 
 from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
-from coveo_stew.exceptions import NotAPoetryProject, StewException
+from coveo_stew.exceptions import NotAPoetryProject, StewException, UsageError
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage
@@ -116,6 +116,25 @@ class PythonProject:
             cache[0].activated = True
 
         return cache
+
+    def overrides_from_cli(
+        self, extras: Tuple[str, ...] = (), no_extras: bool = False, all_extras: bool = False
+    ) -> None:
+        """Overrides the project's options with the CLI arguments."""
+        if no_extras and (extras or all_extras):
+            raise UsageError("Cannot use --no-extras with --extras or --all-extras.")
+        if all_extras and (extras or no_extras):
+            raise UsageError("Cannot use --all-extras with --extras or --no-extras.")
+
+        if extras:
+            self.options.extras = list(extras)
+            self.options.all_extras = False
+        if no_extras:
+            self.options.extras = []
+            self.options.all_extras = False
+        if all_extras:
+            self.options.extras = []
+            self.options.all_extras = True
 
     def relative_path(self, path: Path) -> Path:
         """returns the relative path of a path vs the project folder."""
