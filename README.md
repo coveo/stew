@@ -229,8 +229,8 @@ quick = {}
 - **pydev**: See the [multiple-libraries](README_MULTIPLE_LIBRARIES.md) guide.
 - **build-dependencies**: You can specify additional dependencies to be installed during `stew build`.
   - The format is the same as poetry dependencies: `name = "version"` or `name = { version = "version", ... }`
-- **extras**: A list of extras to install during `stew build` (and `stew ci`: added in *v3.0.33*).
-- **all-extras**: If true, all extras will be installed during `stew build` (and `stew ci`: added in *v3.0.33*). Overrides the `extras` list.
+- **extras**: A list of extras to install during `stew build` and `stew ci`.
+- **all-extras**: If true, all extras will be installed during `stew build` and `stew ci`. Overrides the `extras` list.
 - **quick**: *(v3.0.30)* Controls which checks are skipped when calling `stew ci --quick`. 
   - The format is a dictionary with either the `check` or `skip` key, followed by a list of runners.
   - The behavior is identical to the `--check` and `--skip` options.
