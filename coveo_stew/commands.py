@@ -323,6 +323,9 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
 )
 @click.option("--parallel/--sequential", default=True)
 @click.option("--github-step-report", is_flag=True, default=False, envvar="GITHUB_ACTIONS")
+@click.option("--extra", multiple=True, default=())
+@click.option("--no-extras", is_flag=True, default=False)
+@click.option("--all-extras", is_flag=True, default=False)
 def ci(
     project_name: str = None,
     exact_match: bool = False,
@@ -333,6 +336,9 @@ def ci(
     quick: bool = False,
     parallel: bool = True,
     github_step_report: bool = False,
+    extra: Tuple[str, ...] = (),
+    no_extras: bool = False,
+    all_extras: bool = False,
 ) -> None:
     failures = defaultdict(list)
     try:
@@ -344,6 +350,8 @@ def ci(
             if quick:
                 check += tuple(project.options.quick.get("check", ()))
                 skip += tuple(project.options.quick.get("skip", ()))
+
+            project.overrides_from_cli(extras=extra, no_extras=no_extras, all_extras=all_extras)
 
             if (
                 overall_result := project.launch_continuous_integration(
