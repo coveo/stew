@@ -38,6 +38,7 @@ Similar to: nothing! it's unique! 😎
 
 
 # Prerequisites
+*Changed in 3.1*: You need python 3.9+ to run stew, but you can still use it on projects requiring older versions of python. 
 
 *Changed in 3.0*: `poetry` is no longer provided out-of-the-box.
 
