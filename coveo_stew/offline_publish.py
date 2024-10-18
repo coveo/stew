@@ -105,6 +105,7 @@ class _OfflinePublish:
                 *self.environment.build_command(PythonTool.Pip, "wheel", dep),
                 working_directory=self.wheelhouse,
                 verbose=self.verbose,
+                env=os.environ.copy(),
             )
 
     def _store_dependencies_in_wheelhouse(self, project: Optional[PythonProject] = None) -> None:
@@ -167,7 +168,7 @@ class _OfflinePublish:
         )
 
         try:
-            _ = check_output(*command, verbose=self.verbose)
+            _ = check_output(*command, verbose=self.verbose, env=os.environ.copy())
         finally:
             try:
                 Path(requirements_file_path).unlink(missing_ok=True)
@@ -193,4 +194,5 @@ class _OfflinePublish:
             ),
             working_directory=self.wheelhouse,
             verbose=self.verbose,
+            env=os.environ.copy(),
         )

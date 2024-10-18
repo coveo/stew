@@ -1,3 +1,5 @@
+from typing import Any
+
 from coveo_systools.subprocess import async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
@@ -22,7 +24,9 @@ class PytestRunner(ContinuousIntegrationRunner):
         self.marker_expression = marker_expression
         self.doctest_modules: bool = doctest_modules
 
-    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(
+        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
+    ) -> RunnerStatus:
         command = environment.build_command(
             PythonTool.Pytest,
             "--durations=5",
@@ -40,6 +44,7 @@ class PytestRunner(ContinuousIntegrationRunner):
             *extra_args,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
+            **kwargs,
         )
 
         return RunnerStatus.Success
