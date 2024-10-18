@@ -4,17 +4,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Iterable,
-    List,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-)
+from typing import Any, Coroutine, Iterable, List, Optional, Protocol, Sequence, Tuple
 
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import DetailedCalledProcessError

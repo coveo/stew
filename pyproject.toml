@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "coveo-stew"
-version = "3.0.0"
+version = "3.1.0"
 description = "Opinionated python packaging and development utilities"
 license = "Apache-2.0"
 readme = "README.md"
@@ -13,7 +13,7 @@ packages = [
 
 
 [tool.poetry.dependencies]
-python = ">3.8.1,<4"
+python = ">3.9,<4"
 click = "^8.1.0"
 coveo-functools = "^2.0.0"
 coveo-itertools = "^2.0.0"
@@ -28,11 +28,11 @@ importlib-resources = "^6.1.1"
 
 
 [tool.poetry.dev-dependencies]
-black = "24.3"
+black = "24.10"
 coveo-testing = "^2.0.0"
 flake8 = "^7.0.0"
 isort = "*"
-mypy = "1.11.1"
+mypy = "1.12"
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
@@ -51,7 +51,7 @@ black = true
 
 
 [tool.stew.ci.custom-runners]
-flake8 = { check-args = "--ignore=E203,E501,E701,W503" }
+flake8 = { check-args = "--ignore=E203,E501,E701,E704,W503" }
 
 [tool.stew.ci.custom-runners.isort]
 check-args = ["--check", "--profile", "black", "."]
