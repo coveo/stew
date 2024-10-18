@@ -2,7 +2,7 @@ import atexit
 import re
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Generator, Optional, Union
+from typing import Any, Generator, Optional, Union
 
 import importlib_resources
 from coveo_styles.styles import echo
@@ -46,7 +46,9 @@ class MypyRunner(ContinuousIntegrationRunner):
             self._pyproject.project_path.iterdir(),
         )
 
-    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(
+        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
+    ) -> RunnerStatus:
         typed_folders = tuple(folder.name for folder in self._find_typed_folders())
 
         if not typed_folders:
@@ -84,6 +86,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
+            **kwargs,
         )
         return RunnerStatus.Success
 

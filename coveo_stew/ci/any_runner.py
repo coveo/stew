@@ -1,5 +1,6 @@
+import os
 from enum import Enum, auto
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_repo_root
@@ -68,7 +69,9 @@ class AnyRunner(ContinuousIntegrationRunner):
                 f"Working directory for {self.name} should be within {WorkingDirectoryKind.valid_values()}"
             )
 
-    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(
+        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
+    ) -> RunnerStatus:
         args = [self.check_args] if isinstance(self.check_args, str) else self.check_args
         command = environment.build_command(self.executable, *args)
 
@@ -83,6 +86,7 @@ class AnyRunner(ContinuousIntegrationRunner):
                     *extra_args,
                     working_directory=working_directory,
                     verbose=self._pyproject.verbose,
+                    **kwargs,
                 )
             ).split("\n")
         )
@@ -97,7 +101,7 @@ class AnyRunner(ContinuousIntegrationRunner):
     def executable(self) -> str:
         return self._executable or self.name
 
-    async def _custom_autofix(self, environment: PythonEnvironment) -> None:
+    async def _custom_autofix(self, environment: PythonEnvironment, **kwargs: Any) -> None:
         args = [self.autofix_args] if isinstance(self.autofix_args, str) else self.autofix_args
         command = environment.build_command(self.executable, *args)
 
@@ -111,6 +115,7 @@ class AnyRunner(ContinuousIntegrationRunner):
                     *command,
                     working_directory=working_directory,
                     verbose=self._pyproject.verbose,
+                    **kwargs,
                 )
             ).split("\n")
         )

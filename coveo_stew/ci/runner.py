@@ -1,9 +1,20 @@
 import asyncio
+import os
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Callable, Coroutine, Iterable, List, Optional, Sequence, Tuple
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Iterable,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+)
 
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import DetailedCalledProcessError
@@ -15,13 +26,19 @@ from coveo_stew.environment import PythonEnvironment
 from coveo_stew.stew import PythonProject
 
 
+class AutoFixRoutineCallable(Protocol):
+    def __call__(
+        self, environment: PythonEnvironment, **kwargs: Any
+    ) -> Coroutine[None, None, None]: ...
+
+
 class ContinuousIntegrationRunner:
     status: RunnerStatus = RunnerStatus.NotRan
     check_failed_exit_codes: Iterable[int] = []
     outputs_own_report: bool = False  # set to True if the runner produces its own report.
 
     # implementations may provide an auto fix routine.
-    _auto_fix_routine: Optional[Callable[[PythonEnvironment], Coroutine[None, None, None]]] = None
+    _auto_fix_routine: Optional[AutoFixRoutineCallable] = None
 
     def __init__(self, *, _pyproject: PythonProject) -> None:
         """Implementations may add additional keyword args."""
@@ -46,8 +63,9 @@ class ContinuousIntegrationRunner:
         """
         self._last_output.clear()
         self._test_cases.clear()
+        environment_variables = os.environ.copy()
         try:
-            self.status = await self._launch(environment, *extra_args)
+            self.status = await self._launch(environment, *extra_args, env=environment_variables)
         except DetailedCalledProcessError as exception:
             if exception.returncode in self.check_failed_exit_codes:
                 self.status = RunnerStatus.CheckFailed
@@ -60,7 +78,7 @@ class ContinuousIntegrationRunner:
         if all((auto_fix, self.supports_auto_fix, self.status == RunnerStatus.CheckFailed)):
             echo.noise("Errors founds; launching auto-fix routine.")
             assert self._auto_fix_routine is not None  # mypy
-            await self._auto_fix_routine(environment)
+            await self._auto_fix_routine(environment, env=environment_variables)
 
             # it should pass now!
             await self.launch(environment, *extra_args)
@@ -85,7 +103,9 @@ class ContinuousIntegrationRunner:
         return self._auto_fix_routine is not None
 
     @abstractmethod
-    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(
+        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
+    ) -> RunnerStatus:
         """Launch the continuous integration check using the given environment and store the output."""
 
     def echo_last_failures(self) -> None:
