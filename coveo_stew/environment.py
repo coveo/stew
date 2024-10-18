@@ -69,7 +69,9 @@ class PythonEnvironment:
     @lru_cache
     def has_tool(self, tool: Union[PythonTool, str]) -> bool:
         try:
-            _ = check_output(self.python_executable, "-c", f"import {tool};", stderr=PIPE)
+            _ = check_output(
+                self.python_executable, "-c", f"import {tool};", stderr=PIPE, env=os.environ.copy()
+            )
             return True
         except CalledProcessError:
             return False
@@ -77,7 +79,9 @@ class PythonEnvironment:
     @property
     def python_version(self) -> str:
         if self._python_version is None:
-            self._python_version = check_output(str(self.python_executable), "--version").strip()
+            self._python_version = check_output(
+                str(self.python_executable), "--version", env=os.environ.copy()
+            ).strip()
         assert self._python_version is not None
         return self._python_version
 

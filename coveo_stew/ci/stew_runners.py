@@ -2,6 +2,7 @@ import asyncio
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from coveo_styles.styles import echo
 from coveo_systools.filesystem import pushd
@@ -16,7 +17,9 @@ from coveo_stew.offline_publish import offline_publish
 class CheckOutdatedRunner(ContinuousIntegrationRunner):
     name: str = "check-outdated"
 
-    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(
+        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
+    ) -> RunnerStatus:
         if self._pyproject.lock_is_outdated():
             self._last_output = ['The lock file is out of date: run "stew fix-outdated"']
             return RunnerStatus.CheckFailed
@@ -26,7 +29,9 @@ class CheckOutdatedRunner(ContinuousIntegrationRunner):
 class OfflineInstallRunner(ContinuousIntegrationRunner):
     name: str = "poetry-build"
 
-    async def _launch(self, environment: PythonEnvironment, *extra_args: str) -> RunnerStatus:
+    async def _launch(
+        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
+    ) -> RunnerStatus:
         temporary_folder = Path(tempfile.mkdtemp())
         offline_install_location = temporary_folder / "wheels"
 
@@ -57,6 +62,7 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                             else ""
                         ),
                     ),
+                    **kwargs,
                 )
         finally:
             await asyncio.sleep(0.01)  # give a few cycles to close handles/etc
