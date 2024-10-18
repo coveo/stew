@@ -144,9 +144,9 @@ Options:
 - `--quick` skips running `poetry install --remove-untracked` before running the checks.
   - **v3.0.30**: You can now customize which checks to run when `--quick` is specified. See the [quick](#configuration) configuration option.
 - `--no-github-step-report` can be used to disable Step Report generation when running in a GitHub context.
-- `--extra <extra>` *(v3.0.35)* will install the specified extra(s) for this run. Can be specified multiple times.
-- `--all-extras` *(v3.0.35)* will install all extras for this run.
-- `--no-extras` *(v3.0.35)* will not install any extra for this run.
+- `--extra <extra>` *(v3.1.1)* will install the specified extra(s) for this run. Can be specified multiple times.
+- `--all-extras` *(v3.1.1)* will install all extras for this run.
+- `--no-extras` *(v3.1.1)* will not install any extra for this run.
 
 The configuration for this feature is explained in more details in the [runners](#runners-stew-ci) section.
 
@@ -234,9 +234,9 @@ quick = {}
 - **build-dependencies**: You can specify additional dependencies to be installed during `stew build`.
   - The format is the same as poetry dependencies: `name = "version"` or `name = { version = "version", ... }`
 - **extras**: A list of extras to install during `stew build` and `stew ci`.
-  - *(v3.0.35)* Can be specified at execution time with `stew ci --extra <this> --extra <that>`.  
+  - *(v3.1.1)* Can be specified at execution time with `stew ci --extra <this> --extra <that>`.  
 - **all-extras**: If true, all extras will be installed during `stew build` and `stew ci`. Overrides the `extras` list.
-  - *(v3.0.35)* Can be specified at execution time with `stew ci --all-extras` and `stew ci --no-extras`. 
+  - *(v3.1.1)* Can be specified at execution time with `stew ci --all-extras` and `stew ci --no-extras`. 
 - **quick**: *(v3.0.30)* Controls which checks are skipped when calling `stew ci --quick`. 
   - The format is a dictionary with either the `check` or `skip` key, followed by a list of runners.
   - The behavior is identical to the `--check` and `--skip` options.
