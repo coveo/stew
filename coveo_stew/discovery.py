@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Generator
+from typing import Callable, Generator, Optional
 
 from coveo_styles.styles import echo
 from coveo_systools.filesystem import find_paths, find_repo_root
@@ -25,20 +25,25 @@ def find_pyproject(project_name: str, path: Path = None, *, verbose: bool = Fals
 def discover_pyprojects(
     path: Path = None,
     *,
-    query: str = None,
+    query: Optional[str] = None,
     exact_match: bool = False,
     verbose: bool = False,
-    predicate: Predicate = None,
+    predicate: Optional[Predicate] = None,
+    find_nested: bool = True,
 ) -> Generator[PythonProject, None, None]:
     """
     Search for Python projects in a path and return PythonProject instances.
 
     Parameters:
         path: where to start looking for pyproject.toml files. Default: git root or '.'
-        query: substring for package selection. '-' and '_' are equivalent. case insensitive.
+        query: Name of the project:
+          - case-insensitive
+          - Substring match if exact_match is false.
+          - '-' and '_' are equivalent.
         exact_match: turns query into an exact match. Recommended use: CI scripts
         verbose: output more details to command line
         predicate: optional inclusion filter
+        find_nested: search in subdirectories
     """
     if not path:
         path = find_repo_root(default=".")
@@ -47,7 +52,9 @@ def discover_pyprojects(
         raise PythonProjectNotFound("An exact match was requested but no query was provided.")
 
     predicate = predicate or (lambda _: True)
-    paths = find_paths(PythonFile.PyProjectToml, search_from=path, in_children=True, in_root=True)
+    paths = find_paths(
+        PythonFile.PyProjectToml, search_from=path, in_children=find_nested, in_root=True
+    )
 
     count_projects = 0
     for file in paths:

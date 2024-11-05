@@ -3,7 +3,7 @@
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Generator, Iterable, Set, Tuple, Union
+from typing import Generator, Iterable, Optional, Set, Tuple, Union
 
 import click
 from coveo_functools.finalizer import finalizer
@@ -11,7 +11,7 @@ from coveo_styles.styles import ExitWithFailure, echo, install_pretty_exception_
 from coveo_systools.filesystem import find_repo_root
 
 from coveo_stew.ci.runner_status import RunnerStatus
-from coveo_stew.discovery import discover_pyprojects, find_pyproject
+from coveo_stew.discovery import Predicate, discover_pyprojects, find_pyproject
 from coveo_stew.exceptions import (
     CheckFailed,
     PythonProjectNotFound,
@@ -47,7 +47,7 @@ def _pull_dev_requirements(
 ) -> Generator[Path, None, None]:
     """Writes the dev-dependencies of pydev projects' local dependencies into pydev's pyproject.toml file."""
     dry_run_text = "(dry run) " if dry_run else ""
-    for pydev_project in discover_pyprojects(predicate=is_pydev_project, verbose=verbose):
+    for pydev_project in _discover_pyprojects(predicate=is_pydev_project, verbose=verbose):
         echo.step(f"Analyzing dev requirements for {pydev_project}")
         if pull_and_write_dev_requirements(pydev_project, dry_run=dry_run):
             echo.outcome(
@@ -76,7 +76,7 @@ def check_outdated(verbose: bool = False) -> None:
     echo.step("Analyzing all pyproject.toml files and artifacts:")
     outdated: Set[Path] = set()
     try:
-        for project in discover_pyprojects(verbose=verbose):
+        for project in _discover_pyprojects(verbose=verbose):
             echo.noise(project, item=True)
             if not project.lock_path.exists() or project.lock_is_outdated():
                 outdated.add(project.lock_path)
@@ -109,7 +109,7 @@ def fix_outdated(verbose: bool = False) -> None:
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
-            for project in discover_pyprojects(verbose=verbose):
+            for project in _discover_pyprojects(verbose=verbose):
                 echo.noise(project, item=True)
                 if project.lock_if_needed():
                     updated.add(project.lock_path)
@@ -130,7 +130,7 @@ def bump(verbose: bool = False) -> None:
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
-            for project in discover_pyprojects(verbose=verbose):
+            for project in _discover_pyprojects(verbose=verbose):
                 echo.step(f"Bumping {project.lock_path}")
                 if project.bump():
                     updated.add(project.toml_path)
@@ -204,8 +204,9 @@ def fresh_eggs(project_name: str = None, verbose: bool = False) -> None:
     """
     echo.step("Removing *.egg-info folders.")
     deleted = False
+
     try:
-        for project in discover_pyprojects(query=project_name, verbose=verbose):
+        for project in _discover_pyprojects(query=project_name, verbose=verbose):
             if project.remove_egg_info():
                 echo.outcome("Deleted: ", project.egg_path, item=True)
                 deleted = True
@@ -265,7 +266,7 @@ def locate(project_name: str, verbose: bool = False) -> None:
         # check for partial matches to guide the user
         partial_matches = (
             project.package.name
-            for project in discover_pyprojects(query=project_name, verbose=verbose)
+            for project in _discover_pyprojects(query=project_name, verbose=verbose)
         )
         try:
             raise ExitWithFailure(
@@ -287,7 +288,7 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
     echo.step("Refreshing python project environments...")
     pydev_projects = []
     try:
-        for project in discover_pyprojects(
+        for project in _discover_pyprojects(
             query=project_name, exact_match=exact_match, verbose=verbose
         ):
             if project.options.pydev:
@@ -342,7 +343,7 @@ def ci(
 ) -> None:
     failures = defaultdict(list)
     try:
-        for project in discover_pyprojects(
+        for project in _discover_pyprojects(
             query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.step(project.package.name, pad_after=False)
@@ -374,4 +375,24 @@ def ci(
         projects = (p for projects in failures.values() for p in projects)
         raise ExitWithFailure(failures=projects, exit_code=exit_code) from CheckFailed(
             f"{len(failures)} project(s) failed ci steps."
+        )
+
+
+def _discover_pyprojects(
+    query: Optional[str] = None,
+    predicate: Optional[Predicate] = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+) -> Generator[PythonProject, None, None]:
+    if query and query.startswith("."):
+        if exact_match:
+            echo.warning(
+                f"--exact-match only works with project names, but we are targeting a path: {query}"
+            )
+        yield from discover_pyprojects(
+            path=Path(query), verbose=verbose, find_nested=False, predicate=predicate
+        )
+    else:
+        yield from discover_pyprojects(
+            query=query, exact_match=exact_match, verbose=verbose, predicate=predicate
         )
