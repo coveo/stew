@@ -307,7 +307,7 @@ class PythonProject:
 
     def export(self) -> str:
         """Generates the content of a `requirements.txt` file based on the lock."""
-        command = ["export"]
+        command = ["export", "--with-credentials"]
         if self.options.build_without_hashes:
             command.append("--without-hashes")
 
