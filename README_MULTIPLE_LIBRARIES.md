@@ -48,7 +48,7 @@ authors = ["..."]
 package-mode = false  # see https://python-poetry.org/docs/basic-usage/#operating-modes
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.13"
 local-library = { path = 'local-library/', develop = true }
 something-else = { path = 'lib/other/something-else/', develop = true }
 
