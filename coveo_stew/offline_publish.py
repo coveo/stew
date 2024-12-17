@@ -88,7 +88,9 @@ class _OfflinePublish:
         self._store_dependencies_in_wheelhouse()
 
         # validate the wheelhouse; this will exit in error if something's amiss or result in a noop if all is right.
-        self._validate_package(f"{self.project.package.name}=={self.project.package.version}")
+        # if package mode is disabled, we expect the package to be missing.
+        if self.project.package.package_mode:
+            self._validate_package(f"{self.project.package.name}=={self.project.package.version}")
 
     def _store_setup_dependencies_in_wheelhouse(
         self, project: Optional[PythonProject] = None
