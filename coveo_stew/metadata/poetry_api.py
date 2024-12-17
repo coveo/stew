@@ -55,6 +55,7 @@ class PoetryAPI:
         dependencies: Mapping[str, Any] = None,
         dev_dependencies: Mapping[str, Any] = None,
         group: Mapping[str, Any] = None,
+        package_mode: bool = True,
         **extra: Any,
     ) -> None:
         self.name: Final[str] = name
@@ -62,6 +63,7 @@ class PoetryAPI:
         self.authors: Final[Iterable[str]] = authors
         self.version: Final[str] = version
         self.description: Final[str] = description
+        self.package_mode: Final[bool] = package_mode
 
         deps = dependencies_factory(dependencies)
         dev_deps = dependencies_factory(dev_dependencies)

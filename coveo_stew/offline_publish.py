@@ -80,8 +80,10 @@ class _OfflinePublish:
         if not self.project.lock_path.exists():
             raise LockNotFound("Project isn't locked; can't proceed.")
 
-        # build the wheels for the current project
-        self.project.build(self.wheelhouse)
+        # build the wheels for the current project unless `package-mode: false` is specified.
+        # ref: https://python-poetry.org/docs/basic-usage/#operating-modes
+        if self.project.package.package_mode:
+            self.project.build(self.wheelhouse)
         self._store_setup_dependencies_in_wheelhouse()
         self._store_dependencies_in_wheelhouse()
 
