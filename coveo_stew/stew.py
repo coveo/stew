@@ -35,7 +35,7 @@ from coveo_stew.exceptions import NotAPoetryProject, StewException, UsageError
 from coveo_stew.metadata.poetry_api import PoetryAPI
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage
-from coveo_stew.poetry_backward_compatibility import get_verb
+from coveo_stew.poetry_backward_compatibility import get_install_sync_command
 from coveo_stew.utils import load_toml_from_path
 
 ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(
@@ -147,8 +147,7 @@ class PythonProject:
 
         # yolo: use the dry run output to determine if the lock is too old
         dry_run_output = self.poetry_run(
-            "install",
-            get_verb("--sync", self.activated_environment()),
+            *get_install_sync_command(self.activated_environment()),
             "--dry-run",
             capture_output=True,
         )
@@ -363,9 +362,12 @@ class PythonProject:
     def _generate_poetry_install_command(
         self, sync_target_environment: Optional[PythonEnvironment] = None, quiet: bool = False
     ) -> List[str]:
-        command: List[str] = ["install"]
-        if sync_target_environment:
-            command.append(get_verb("--sync", sync_target_environment))
+        command: List[str] = (
+            get_install_sync_command(sync_target_environment)
+            if sync_target_environment
+            else ["install"]
+        )
+
         if quiet and not self.verbose:
             command.append("--quiet")
         if self.options.all_extras:

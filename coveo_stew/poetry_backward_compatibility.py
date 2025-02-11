@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 from packaging.version import Version
 
@@ -24,3 +24,15 @@ def get_verb(verb: str, environment: Optional[PythonEnvironment]) -> str:
             return old_verb
 
     return verb
+
+
+def get_install_sync_command(sync_target_environment: Optional[PythonEnvironment]) -> List[str]:
+    """Returns the `poetry install --sync` command equivalent for this version of poetry."""
+    if find_poetry_version(sync_target_environment) >= Version("2.0.0"):
+        # 2.0.0 ditched "poetry install --sync" for "poetry sync"
+        return ["sync"]
+
+    # backward compatibility
+    # 1.2.0 and below use `poetry install --remove-untracked` flag
+    # 1.2.1 renamed `--remove-untracked` to `--sync`
+    return ["install", get_verb("--sync", sync_target_environment)]

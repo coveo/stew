@@ -17,15 +17,14 @@ on:
 
 
 jobs:
-  pyprojectci:
-    name: pyproject ci
+  compatibility:
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-        poetry-version: [""]
+        python-version: ["3.9", "3.x"]
+        poetry-version: ["==1.8.5", ""]  # empty means latest
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
@@ -43,11 +42,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           poetry-version: ${{ matrix.poetry-version }}
 
-
   publish:
     name: Publish to pypi.org
     runs-on: ubuntu-latest
-    needs: pyprojectci
+    needs: compatibility
 
     steps:
       - name: Checkout repository
