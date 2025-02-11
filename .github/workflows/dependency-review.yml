@@ -11,8 +11,6 @@ permissions:
 jobs:
   dependency-Review:
     name: Review
-    uses: coveo/public-actions/.github/workflows/dependency-review.yml@main
+    uses: coveo/public-actions/.github/workflows/dependency-review-v2.yml@main
     with:
-      public: true
-      distributed: true
       runs-on: '["ubuntu-latest"]'
