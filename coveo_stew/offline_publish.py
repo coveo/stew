@@ -80,13 +80,17 @@ class _OfflinePublish:
         if not self.project.lock_path.exists():
             raise LockNotFound("Project isn't locked; can't proceed.")
 
-        # build the wheels for the current project
-        self.project.build(self.wheelhouse)
+        # build the wheels for the current project unless `package-mode: false` is specified.
+        # ref: https://python-poetry.org/docs/basic-usage/#operating-modes
+        if self.project.package.package_mode:
+            self.project.build(self.wheelhouse)
         self._store_setup_dependencies_in_wheelhouse()
         self._store_dependencies_in_wheelhouse()
 
         # validate the wheelhouse; this will exit in error if something's amiss or result in a noop if all is right.
-        self._validate_package(f"{self.project.package.name}=={self.project.package.version}")
+        # if package mode is disabled, we expect the package to be missing.
+        if self.project.package.package_mode:
+            self._validate_package(f"{self.project.package.name}=={self.project.package.version}")
 
     def _store_setup_dependencies_in_wheelhouse(
         self, project: Optional[PythonProject] = None

@@ -109,16 +109,28 @@ Please read these guides in order to learn how to organize your repository for m
 
 ## General command usage
 
-Unless a project name is specified, most commands will operate on all projects in a git repository based on the current working folder:
+Unless a project name is specified, commands will operate on all projects in a git repository based on the current working folder:
 
 - `stew <command>`
     - Perform a command on all projects
 - `stew <command> --help`
     - Obtain help about a particular command
+
+
+Some commands allow specifying a project name:
+
 - `stew <command> <project-name>`
-    - Perform the command on all projects with `<project-name>` in their name (partial match)
+    - Perform the command on all projects with `<project-name>` in their name (partial, case-insensitive)
+    - e.g.: `stew ci tools` will run on `tools`, `tools-common`, `my-tools`, etc.
 - `stew <command> <project-name> --exact-match`
     - Disable partial project name matching
+    - e.g.: `stew ci tools --exact-match` will run on `tools` but not on `tools-common`, `my-tools`, etc.
+- `stew <command> .<path>`
+    - **v3.1.3** Only consider the project at this location
+    - The path must start with `.`
+    - Nested projects will not run
+    - e.g.: `stew ci .` will only run on the project in the current folder
+    - e.g.: `stew ci ./tools` will only run on the project in the `tools` folder
 
 The main commands are explained below.
 
