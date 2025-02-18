@@ -180,6 +180,7 @@ def build(
 
     echo.step(f"Building python project {project} in {directory}")
     for environment in python_environments:
+        project.install(environment=environment)
         echo.outcome(f"virtual environment: {environment}", pad_before=True)
         offline_publish(project, directory, environment)
 
