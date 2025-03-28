@@ -66,10 +66,12 @@ class PythonProject:
 
         toml_content = load_toml_from_path(self.toml_path)
 
+        mandatory_poetry_fields = ["name", "version", "description", "authors"]
+        project_section = dict_lookup(toml_content, "project")
+        if any([ project_section.get(x) is None for x in mandatory_poetry_fields]):
+            project_section = dict_lookup(toml_content, "tool", "poetry")  # poetry < 2
         try:
-            self.package: PoetryAPI = flexfactory(
-                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry")
-            )
+            self.package: PoetryAPI = flexfactory(PoetryAPI, **project_section)
         except KeyError as exception:
             raise NotAPoetryProject from exception
 
