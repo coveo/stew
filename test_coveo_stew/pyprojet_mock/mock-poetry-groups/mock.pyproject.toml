@@ -1,4 +1,4 @@
-[project]
+[tool.poetry]
 name = "mock-poetry-groups"
 version = "0.1.1"
 description = "an internal mock for stew's tests"

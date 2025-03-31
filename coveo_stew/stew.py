@@ -67,10 +67,10 @@ class PythonProject:
         toml_content = load_toml_from_path(self.toml_path)
 
         try:
-            tool_poetry_section = dict_lookup(toml_content, "tool", "poetry", default={})
-            tool_poetry_section.update(toml_content.get("project", {}))
-            self.package: PoetryAPI = flexfactory(PoetryAPI, **tool_poetry_section)
-        except TypeError as exception:
+            self.package: PoetryAPI = flexfactory(
+                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry")
+            )
+        except KeyError as exception:
             raise NotAPoetryProject from exception
 
         self.egg_path: Path = self.project_path / f"{self.package.safe_name}.egg-info"
