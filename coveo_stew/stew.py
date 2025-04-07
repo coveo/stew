@@ -43,10 +43,6 @@ ENVIRONMENT_PATH_PATTERN: Final[Pattern] = re.compile(
 )
 
 
-# temporary until 1.2.0 has been cleared as fully compatible
-_CHECKED_POETRY_VERSION: bool = False
-
-
 class EnvironmentCreationBehavior(Enum):
     Full = auto()
     NoDev = auto()
@@ -415,8 +411,6 @@ class PythonProject:
 
         The `environment` param will make that environment active (e.g.: `poetry env use` called before).
         """
-        global _CHECKED_POETRY_VERSION
-
         environment_variables = os.environ.copy()
         if breakout_of_venv:
             environment_variables.pop("VIRTUAL_ENV", None)
