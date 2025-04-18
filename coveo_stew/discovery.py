@@ -60,7 +60,9 @@ def discover_pyprojects(
     for file in paths:
         try:
             project = PythonProject(file, verbose=verbose)
-        except NotAPoetryProject:
+        except NotAPoetryProject as ex:
+            # this will inform the user which pyproject.toml files were found and skipped
+            echo.noise(ex, " It was skipped.", emoji="information")
             continue
 
         if verbose:
