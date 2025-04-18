@@ -2,6 +2,7 @@
 
 import re
 from collections import defaultdict
+from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Final, Generator, Iterable, Optional, Set, Tuple, Union
 
@@ -25,7 +26,7 @@ from coveo_stew.stew import (
     PythonProject,
 )
 
-_COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate"]
+_COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate", "version"]
 
 PROJECT_NAME_ARG: Final = click.argument("project_name", default=None, required=False)
 EXACT_MATCH_ARG: Final = click.option("--exact-match/--no-exact-match", default=False)
@@ -71,6 +72,13 @@ def stew(ctx: click.Context) -> None:
     install_pretty_exception_hook()
     if ctx.invoked_subcommand not in _COMMANDS_THAT_SKIP_INTRO_EMOJIS:
         echo.step("!!sparkles!! !!snake!! !!sparkles!!")
+
+
+@stew.command()
+def version() -> None:
+    """Prints the version of the coveo-stew package."""
+    # we use print to keep the output clean for validations, etc.
+    print(f"coveo-stew {package_version('coveo-stew')}")
 
 
 @stew.command()
