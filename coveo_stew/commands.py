@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from importlib.metadata import version as package_version
 from pathlib import Path
-from typing import Generator, Iterable, Optional, Set, Tuple, Union
+from typing import Final, Generator, Iterable, Optional, Set, Tuple, Union
 
 import click
 from coveo_functools.finalizer import finalizer
@@ -27,6 +27,10 @@ from coveo_stew.stew import (
 )
 
 _COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate", "version"]
+
+PROJECT_NAME_ARG: Final = click.argument("project_name", default=None, required=False)
+EXACT_MATCH_ARG: Final = click.option("--exact-match/--no-exact-match", default=False)
+VERBOSE_ARG: Final = click.option("--verbose", is_flag=True, default=False)
 
 
 def _echo_updated(updated: Set[Path]) -> None:
@@ -78,13 +82,19 @@ def version() -> None:
 
 
 @stew.command()
-@click.option("--verbose", is_flag=True, default=False)
-def check_outdated(verbose: bool = False) -> None:
+@PROJECT_NAME_ARG
+@EXACT_MATCH_ARG
+@VERBOSE_ARG
+def check_outdated(
+    project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+) -> None:
     """Return error code 1 if toml/lock are not in sync."""
-    echo.step("Analyzing all pyproject.toml files and artifacts:")
+    echo.step("Analyzing pyproject.toml files and artifacts:")
     outdated: Set[Path] = set()
     try:
-        for project in _discover_pyprojects(verbose=verbose):
+        for project in _discover_pyprojects(
+            query=project_name, exact_match=exact_match, verbose=verbose
+        ):
             echo.noise(project, item=True)
             if not project.lock_path.exists() or project.lock_is_outdated():
                 outdated.add(project.lock_path)
@@ -102,22 +112,28 @@ def check_outdated(verbose: bool = False) -> None:
             suggestions='Run "poetry run pyproject fix-outdated" to update all outdated files.',
         ) from RequirementsOutdated(f"Found {len(outdated)} outdated file(s).")
 
-    echo.success("Check complete! All files are up-to-date.")
+    echo.success("Check complete! All scanned files are up-to-date.")
 
 
 @stew.command()
-@click.option("--verbose", is_flag=True, default=False)
-def fix_outdated(verbose: bool = False) -> None:
+@PROJECT_NAME_ARG
+@EXACT_MATCH_ARG
+@VERBOSE_ARG
+def fix_outdated(
+    project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+) -> None:
     """Scans the whole repo and updates outdated pyproject-related files.
 
     Updates:
         - Lock files, only if their pyproject.toml was updated.
     """
-    echo.step("Synchronizing all outdated lock files:")
+    echo.step("Synchronizing outdated lock files:")
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
-            for project in _discover_pyprojects(verbose=verbose):
+            for project in _discover_pyprojects(
+                query=project_name, exact_match=exact_match, verbose=verbose
+            ):
                 echo.noise(project, item=True)
                 if project.lock_if_needed():
                     updated.add(project.lock_path)
@@ -132,13 +148,20 @@ def fix_outdated(verbose: bool = False) -> None:
 
 
 @stew.command()
-@click.option("--verbose", is_flag=True, default=False)
-def bump(verbose: bool = False) -> None:
-    """Bumps locked versions for all pyprojects."""
+@PROJECT_NAME_ARG
+@EXACT_MATCH_ARG
+@VERBOSE_ARG
+def bump(
+    project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+) -> None:
+    """Bumps locked versions."""
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
-            for project in _discover_pyprojects(verbose=verbose):
+            for project in _discover_pyprojects(
+                query=project_name, exact_match=exact_match, verbose=verbose
+            ):
+                echo.noise(project, item=True)
                 echo.step(f"Bumping {project.lock_path}")
                 if project.bump():
                     updated.add(project.toml_path)
@@ -149,12 +172,16 @@ def bump(verbose: bool = False) -> None:
 
 
 @stew.command()
-@click.argument("project_name")
+@PROJECT_NAME_ARG
+# Unlike all other commands, exact match is true by default to retain
+# the original behavior which required a project name to be specified exactly.
+@click.option("--exact-match/--no-exact-match", default=True)
+@VERBOSE_ARG
 @click.option("--directory", default=None)
 @click.option("--python", default=None)
-@click.option("--verbose", is_flag=True, default=False)
 def build(
-    project_name: str,
+    project_name: Optional[str] = None,
+    exact_match: bool = True,
     directory: Union[str, Path] = None,
     python: Union[str, Path] = None,
     verbose: bool = False,
@@ -168,11 +195,25 @@ def build(
         IF unspecified and no repo: "pyproject_folder/.wheels/*.whl"
         IF specified:               "directory/*.whl"
     """
+    if not project_name:
+        exact_match = False  # if you write `stew build` we build all.
     try:
-        project = find_pyproject(project_name, verbose=verbose)
+        for project in _discover_pyprojects(
+            query=project_name, exact_match=exact_match, verbose=verbose
+        ):
+            echo.noise(project, item=True)
+            _build(project, directory, python)
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
 
+    echo.success()
+
+
+def _build(
+    project: PythonProject,
+    directory: Optional[Union[str, Path]],
+    python: Optional[Union[str, Path]],
+) -> None:
     python_environments = (
         [PythonEnvironment(python)]
         if python
@@ -192,13 +233,12 @@ def build(
         echo.outcome(f"virtual environment: {environment}", pad_before=True)
         offline_publish(project, directory, environment)
 
-    echo.success()
-
 
 @stew.command()
-@click.argument("project_name", default=None, required=False)
-@click.option("--verbose", is_flag=True, default=False)
-def fresh_eggs(project_name: str = None, verbose: bool = False) -> None:
+@PROJECT_NAME_ARG
+@EXACT_MATCH_ARG
+@VERBOSE_ARG
+def fresh_eggs(project_name: str = None, exact_match: bool = False, verbose: bool = False) -> None:
     """
     Removes the egg-info from project folders.
 
@@ -215,7 +255,10 @@ def fresh_eggs(project_name: str = None, verbose: bool = False) -> None:
     deleted = False
 
     try:
-        for project in _discover_pyprojects(query=project_name, verbose=verbose):
+        for project in _discover_pyprojects(
+            query=project_name, verbose=verbose, exact_match=exact_match
+        ):
+            echo.noise(project, item=True)
             if project.remove_egg_info():
                 echo.outcome("Deleted: ", project.egg_path, item=True)
                 deleted = True
@@ -230,7 +273,7 @@ def fresh_eggs(project_name: str = None, verbose: bool = False) -> None:
 
 @stew.command()
 @click.option("--dry-run/--no-dry-run", default=False)
-@click.option("--verbose", is_flag=True, default=False)
+@VERBOSE_ARG
 def pull_dev_requirements(dry_run: bool = False, verbose: bool = False) -> None:
     """Writes the dev-dependencies of pydev projects' local dependencies into pydev's pyproject.toml file."""
     try:
@@ -290,9 +333,9 @@ def locate(project_name: str, verbose: bool = False) -> None:
 
 
 @stew.command()
-@click.argument("project_name", default=None, required=False)
-@click.option("--exact-match/--no-exact-match", default=False)
-@click.option("--verbose", is_flag=True, default=False)
+@PROJECT_NAME_ARG
+@EXACT_MATCH_ARG
+@VERBOSE_ARG
 def refresh(project_name: str = None, exact_match: bool = False, verbose: bool = False) -> None:
     echo.step("Refreshing python project environments...")
     pydev_projects = []
@@ -319,12 +362,12 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
 
 
 @stew.command()
-@click.argument("project_name", default=None, required=False)
-@click.option("--exact-match/--no-exact-match", default=False)
+@PROJECT_NAME_ARG
+@EXACT_MATCH_ARG
+@VERBOSE_ARG
 @click.option("--fix/--no-fix", default=False)
 @click.option("--check", multiple=True, default=())
 @click.option("--skip", multiple=True, default=())
-@click.option("--verbose", is_flag=True, default=False)
 @click.option(
     "--quick",
     is_flag=True,
