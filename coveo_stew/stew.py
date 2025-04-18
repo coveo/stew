@@ -66,8 +66,10 @@ class PythonProject:
             self.package: PoetryAPI = flexfactory(
                 PoetryAPI, **dict_lookup(toml_content, "tool", "poetry")
             )
-        except KeyError as exception:
-            raise NotAPoetryProject from exception
+        except (KeyError, TypeError) as exception:
+            raise NotAPoetryProject(
+                f"The pyproject.toml file at {self.toml_path} doesn't seem to include a poetry project."
+            ) from exception
 
         self.egg_path: Path = self.project_path / f"{self.package.safe_name}.egg-info"
 
