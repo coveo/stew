@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Type, TypeVar, Union
 
 from coveo_functools.casing import flexfactory
-from typing_extensions import Final
 
 T = TypeVar("T")
 
@@ -40,61 +39,6 @@ class Dependency:
         else:
             dependency["name"] = name
         return flexfactory(cls, **dependency)
-
-
-class PoetryAPI:
-    """Represents the poetry-specific sections of a pyproject.toml file."""
-
-    def __init__(
-        self,
-        *,
-        name: str,
-        version: str,
-        description: str,
-        authors: Iterable[str],
-        dependencies: Optional[Union[Mapping[str, Any], List[Dependency]]] = None,
-        dev_dependencies: Optional[Union[Mapping[str, Any], List[Dependency]]] = None,
-        group: Mapping[str, Any] = None,
-        package_mode: bool = True,
-        **extra: Any,
-    ) -> None:
-        self.name: Final[str] = name
-        self.safe_name: Final[str] = name.replace("-", "_")
-        self.authors: Final[Iterable[str]] = authors
-        self.version: Final[str] = version
-        self.description: Final[str] = description
-        self.package_mode: Final[bool] = package_mode
-
-        if isinstance(dependencies, list):
-            deps = {d.name: d for d in dependencies}
-        else:
-            deps = dependencies_factory(dependencies)
-
-        if isinstance(dev_dependencies, list):
-            dev_deps = {d.name: d for d in dev_dependencies}
-        else:
-            dev_deps = dependencies_factory(dev_dependencies)
-
-        if group:
-            # poetry 1.2 adds dependency groups.
-            for group_name, items in group.items():
-                if group_deps := items.get("dependencies"):
-                    # note: based on the docs, we are moving away from having "dev" dependencies at all...
-                    (dev_deps if group_name == "dev" else deps).update(
-                        dependencies_factory(group_deps)
-                    )
-
-        self.dependencies: Final[Mapping[str, Dependency]] = deps
-        self.dev_dependencies: Final[Mapping[str, Dependency]] = dev_deps
-
-        # extra will contain all other properties of the package, mainly for dev/debug purposes.
-        self.extra: Final[Mapping[str, Any]] = extra
-
-    @property
-    def all_dependencies(self) -> Mapping[str, Dependency]:
-        """Gathers dependencies and dev dependencies. If a dependency is duplicated in both sections, the dev ones
-        take precedence."""
-        return {**self.dependencies, **self.dev_dependencies}
 
 
 def dependencies_factory(

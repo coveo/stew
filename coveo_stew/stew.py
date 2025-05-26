@@ -286,8 +286,6 @@ class PythonProject:
     def build(self, target_path: Path = None) -> Path:
         """Builds the package's wheel. If a path is provided, it will be moved there.
         Returns final path to the artifact."""
-        # like coredump_detector-0.0.1-py3-none-any.whl
-        wheel_pattern = re.compile(r"(?P<distribution>\S+?)-(?P<version>.+?)-(?P<extra>.+)\.whl")
 
         if not self.activated_environment():
             # Starting from poetry 1.2.0, when calling `poetry build` without an environment setup, it will
@@ -295,18 +293,32 @@ class PythonProject:
             # Ensure that a default environment exists.
             self._create_default_poetry_install(install=EnvironmentCreationBehavior.Empty)
 
-        poetry_output = self.poetry_run("build", "--format", "wheel", capture_output=True)
-        wheel_match = wheel_pattern.search(poetry_output)
+        _ = self.poetry_run("build", "--format", "wheel", capture_output=False)
+
+        # cloudtrail_logs_firehose_ingest-0.1.0-py3-none-any.whl
+        expected_distribution = self.poetry.package.name.replace("-", "_").casefold()
+        expected_version = self.poetry.package.pretty_version
+        # like coredump_detector-0.0.1-py3-none-any.whl
+        filename_pattern = re.compile(
+            rf"(?P<distribution>{re.escape(expected_distribution)})-(?P<version>{expected_version})-.+\.whl"
+        )
+
+        # there's a file that matches the expected pattern in self.wheelhouse; find it.
+        wheel_match: Optional[re.Match[str]] = None
+        for file in (self.project_path / "dist").glob("*.whl"):
+            if file.is_file() and (match := filename_pattern.fullmatch(file.name)):
+                wheel_match = match
+                break
 
         if not wheel_match:
             raise StewException(
-                f"Unable able to find a wheel filename in poetry's output:\n{poetry_output}"
+                f"Could not find a wheel file for {self.poetry.package.pretty_name} "
+                f"version {self.poetry.package.pretty_version} in {self.project_path / 'dist'}."
             )
 
-        extracted_distribution = wheel_match["distribution"].casefold()
-        expected_distribution = self.poetry.package.name.replace("-", "_").casefold()
+        # validate
         assert (
-            extracted_distribution == expected_distribution
+            wheel_match.group("distribution").casefold() == expected_distribution
         ), f"{wheel_match['distribution']} does not match {self.poetry.package.pretty_name}"
         assert (
             wheel_match["version"] == self.poetry.package.pretty_version

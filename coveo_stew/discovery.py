@@ -81,8 +81,6 @@ def discover_pyprojects(
                 echo.noise("Skipping: ", ex, emoji="information")
             continue
 
-        # project = PythonProject(poetry, verbose=verbose)
-
         if verbose:
             echo.noise("PyProject found: ", poetry)
 

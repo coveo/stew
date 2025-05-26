@@ -103,14 +103,13 @@ def _dev_dependencies_of_dependencies(
     project: PythonProject,
 ) -> Generator[Tuple[str, TomlItem], None, None]:
     """Yields the dev dependencies of this project's dependencies."""
-    # we mark our dependencies as seen, so that we don't duplicate them in the dev section.
-    seen: set[Dependency] = set(project.dependencies)
-    # we only care about local dependencies (non-dev)
-    local_dependencies: set[PathDependency] = {
-        d for d in project.dependencies if isinstance(d, PathDependency)
-    }
-    for local_dependency in local_dependencies:
+    direct_dependencies: dict[str, Dependency] = {d.pretty_name: d for d in project.dependencies}
+    dependencies: dict[str, Dependency] = {}
+    for local_dependency in direct_dependencies.values():
+        if not isinstance(local_dependency, PathDependency):
+            continue  # we only pull the dev dependencies of local path dependencies
         assert not local_dependency.path.is_absolute()
+
         try:
             local_project = PythonProject(
                 io, project.project_path / local_dependency.path, verbose=project.verbose
@@ -120,15 +119,28 @@ def _dev_dependencies_of_dependencies(
                 suggestions=f"Add a `pyproject.toml` file in {local_dependency.path}",
                 failures="Local dependencies must also be poetry projects.",
             ) from exception
-        unseen_dev_dependencies = local_project.dev_dependencies.difference(seen)
-        seen.update(unseen_dev_dependencies)
-        for dev_dependency in unseen_dev_dependencies:
-            if isinstance(dev_dependency, PathDependency):
-                value: Any = tomlkit.inline_table()
-                value.append(
-                    "path",
-                    str(dev_dependency.path.relative_to(local_project.project_path)),
-                )
+
+        for dev_dependency in local_project.dev_dependencies:
+            if dev_dependency.pretty_name in direct_dependencies:
+                # if the dependency is already a direct dependency, we do not need to add it again
+                continue
+            if dev_dependency.pretty_name not in dependencies:
+                dependencies[dev_dependency.pretty_name] = dev_dependency
             else:
-                value = dev_dependency.pretty_constraint
-            yield dev_dependency.pretty_name, toml_item(value)
+                # tighten the constraint to satisfy what we have seen so far
+                seen_dependency = dependencies[dev_dependency.pretty_name]
+                new_constraint = dev_dependency.constraint.intersect(seen_dependency.constraint)
+                dependencies[dev_dependency.pretty_name] = seen_dependency.with_constraint(
+                    new_constraint
+                )
+
+    for name, dependency in dependencies.items():
+        if isinstance(dependency, PathDependency):
+            value: Any = tomlkit.inline_table()
+            value.append(
+                "path",
+                str(dependency.full_path.relative_to(project.project_path)),
+            )
+        else:
+            value = dependency.pretty_constraint
+        yield dependency.pretty_name, toml_item(value)

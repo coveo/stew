@@ -51,6 +51,7 @@ coveo-testing = "^2.0.0"
 flake8 = "^7.0.0"
 isort = "*"
 mypy = "1.12"
+poetry-plugin-export = "*"
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
@@ -71,13 +72,16 @@ black = true
 flake8 = { check-args = "--ignore=E203,E501,E701,E704,W503" }
 
 [tool.stew.ci.custom-runners.isort]
-check-args = ["--check", "--profile", "black", "."]
-autofix-args = ["--profile", "black", "."]
+check-args = ["--check", "."]
+autofix-args = ["."]
 
 
 [tool.black]
 line-length = 100
 
+[tool.isort]
+profile = "black"
+extend_skip =  [".poetry"]
 
 [build-system]
 requires = ["poetry_core>=2.0"]

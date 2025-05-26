@@ -83,6 +83,9 @@ class _OfflinePublish:
         if not self.project.poetry.locker.is_locked():
             raise LockNotFound("Project isn't locked; can't proceed.")
 
+        if not self.wheelhouse.exists():
+            self.wheelhouse.mkdir(parents=True, exist_ok=True)
+
         # build the wheels for the current project unless `package-mode: false` is specified.
         # ref: https://python-poetry.org/docs/basic-usage/#operating-modes
         if self.project.poetry.is_package_mode:

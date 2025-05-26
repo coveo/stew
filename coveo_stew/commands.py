@@ -180,6 +180,7 @@ def build(
     """
     if not project_name:
         exact_match = False  # if you write `stew build` we build all.
+
     try:
         for project in _discover_pyprojects(
             io, query=project_name, exact_match=exact_match, verbose=verbose
