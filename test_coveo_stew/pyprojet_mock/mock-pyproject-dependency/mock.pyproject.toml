@@ -6,7 +6,7 @@ authors = ["Jonathan piché <tools@coveo.com>"]
 
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.9,<4"
 
 black = "*"
 
@@ -19,5 +19,5 @@ setuptools-scm = "*"
 
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
+requires = ["poetry_core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"

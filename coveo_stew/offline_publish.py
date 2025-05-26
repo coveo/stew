@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import List, Optional, Set
 
+from cleo.io.io import IO
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.platforms import WINDOWS
 from coveo_systools.subprocess import check_output
@@ -35,6 +36,7 @@ LOCAL_REQUIREMENT_PATTERN = re.compile(rf"^(?P<library_name>.+) @ {FILE_IDENTIFI
 
 
 def offline_publish(
+    io: IO,
     project: PythonProject,
     wheelhouse: Path,
     environment: PythonEnvironment,
@@ -48,7 +50,7 @@ def offline_publish(
     to use the right environment here because the files may differ and `pip install --no-index` will not work.
     """
     try:
-        _OfflinePublish(project, wheelhouse, environment).perform_offline_install(quiet=quiet)
+        _OfflinePublish(io, project, wheelhouse, environment).perform_offline_install(quiet=quiet)
     except LockNotFound as exception:
         raise ExitWithFailure(
             suggestions="Run `stew bump` or `poetry lock` and try again."
@@ -59,16 +61,17 @@ class _OfflinePublish:
     """Handles the offline publish."""
 
     def __init__(
-        self, project: PythonProject, wheelhouse: Path, environment: PythonEnvironment
+        self, io: IO, project: PythonProject, wheelhouse: Path, environment: PythonEnvironment
     ) -> None:
+        self.io = io
         self.project = project
         self.environment = environment
         self.wheelhouse = wheelhouse
         self._valid_packages: Optional[Set[str]] = None
         self._local_projects: Set[str] = {
-            name
-            for (name, package) in self.project.package.all_dependencies.items()
-            if package.path
+            dependency.name
+            for dependency in self.project.all_dependencies
+            if dependency.is_file() or dependency.is_directory()
         }
 
     @property
@@ -77,20 +80,22 @@ class _OfflinePublish:
 
     def perform_offline_install(self, *, quiet: bool = False) -> None:
         """Performs all the operation for the offline install."""
-        if not self.project.lock_path.exists():
+        if not self.project.poetry.locker.is_locked():
             raise LockNotFound("Project isn't locked; can't proceed.")
 
         # build the wheels for the current project unless `package-mode: false` is specified.
         # ref: https://python-poetry.org/docs/basic-usage/#operating-modes
-        if self.project.package.package_mode:
+        if self.project.poetry.is_package_mode:
             self.project.build(self.wheelhouse)
         self._store_setup_dependencies_in_wheelhouse()
         self._store_dependencies_in_wheelhouse()
 
         # validate the wheelhouse; this will exit in error if something's amiss or result in a noop if all is right.
         # if package mode is disabled, we expect the package to be missing.
-        if self.project.package.package_mode:
-            self._validate_package(f"{self.project.package.name}=={self.project.package.version}")
+        if self.project.poetry.is_package_mode:
+            self._validate_package(
+                f"{self.project.poetry.package.pretty_name}=={self.project.poetry.package.pretty_version}"
+            )
 
     def _store_setup_dependencies_in_wheelhouse(
         self, project: Optional[PythonProject] = None
@@ -144,7 +149,7 @@ class _OfflinePublish:
                 # this is a local dependency. Since poetry locks all transitive dependencies,
                 # we're only interested in the setup dependencies and the local dependency.
                 try:
-                    dependency = find_pyproject(dependency_name, path=dependency_location)
+                    dependency = find_pyproject(self.io, dependency_name, path=dependency_location)
                 except PythonProjectNotFound as exception:
                     raise ExitWithFailure(
                         failures=f"There was no poetry project for {dependency_name} in {dependency_location}"

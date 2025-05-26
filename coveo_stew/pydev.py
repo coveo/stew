@@ -5,12 +5,16 @@ python projects in a repository for developer convenience.
 It has some additional features and tricks that do not apply to other projects. This is centralized here.
 """
 
-from typing import Any, Dict, Generator, Set, Tuple
+from typing import Any, Dict, Generator, Tuple
 
 import tomlkit
+from cleo.io.io import IO
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import safe_text_write
 from packaging.version import Version
+from poetry.core.packages.dependency import Dependency
+from poetry.core.packages.path_dependency import PathDependency
+from poetry.poetry import Poetry
 from tomlkit.items import Item as TomlItem
 from tomlkit.items import Table
 from tomlkit.items import item as toml_item
@@ -23,23 +27,40 @@ from coveo_stew.stew import PythonProject
 class NotPyDevProject(StewException): ...
 
 
-def is_pydev_project(project: PythonProject) -> bool:
+def is_pydev_project(poetry: Poetry) -> bool:
     """Returns true when a project is a pydev project. Typically used as a predicate for `discover_pyprojects`."""
-    return project.options.pydev
+    try:
+        return poetry.pyproject.data["tool"]["stew"]["pydev"] is True  # type: ignore[index]
+    except KeyError:
+        return False
+    except TypeError as ex:
+        raise ExitWithFailure(
+            failures=[
+                poetry.pyproject_path,
+                "Error while checking if the project is a pydev project.",
+                "The [tool.stew] section of the `pyproject.toml` file is malformed.",
+            ],
+            suggestions=[
+                f"Ensure the {poetry.pyproject_path} file has a valid [tool.stew] section.",
+                "For instance, this specifies a pydev project:\n\n[tool.stew]\npydev = true\n\n",
+            ],
+        ) from ex
 
 
-def pull_and_write_dev_requirements(project: PythonProject, *, dry_run: bool = False) -> bool:
+def pull_and_write_dev_requirements(
+    io: IO, project: PythonProject, *, dry_run: bool = False
+) -> bool:
     """Pulls the dev requirement from dependencies into pydev's dev requirements."""
     if not project.options.pydev:
         raise NotPyDevProject(f"{project.project_path}: Not a PyDev project.")
 
     # prepare a toml container for our data
-    toml: Dict[str, Any] = tomlkit.loads(project.toml_path.read_text())
+    toml: Dict[str, Any] = tomlkit.loads(project.poetry.pyproject_path.read_text())
 
     all_dev_dependencies: Table = tomlkit.table()
 
     # extract the dev requirements from the local dependencies
-    for item in sorted(_dev_dependencies_of_dependencies(project)):
+    for item in sorted(_dev_dependencies_of_dependencies(io, project)):
         all_dev_dependencies.add(*item)
 
     # the py dev environment package has no code, no tests, no entrypoints, no nothin'!
@@ -55,7 +76,7 @@ def pull_and_write_dev_requirements(project: PythonProject, *, dry_run: bool = F
         toml["tool"]["poetry"].pop("dev-dependencies", None)
 
     if safe_text_write(
-        project.toml_path,
+        project.poetry.pyproject_path,
         "\n".join(_format_toml(tomlkit.dumps(toml))),
         only_if_changed=True,
         dry_run=dry_run,
@@ -78,32 +99,36 @@ def _format_toml(toml_content: str) -> Generator[str, None, None]:
 
 
 def _dev_dependencies_of_dependencies(
+    io: IO,
     project: PythonProject,
 ) -> Generator[Tuple[str, TomlItem], None, None]:
     """Yields the dev dependencies of this project's dependencies."""
-    # we mark our direct dependencies as seen, so that we don't duplicate them in the dev section.
-    seen: Set[str] = set(project.package.dependencies)
-    # we only care about local non-dev dependencies from the project.
-    for dependency in filter(lambda _: _.is_local, project.package.dependencies.values()):
-        assert not dependency.path.is_absolute()
+    # we mark our dependencies as seen, so that we don't duplicate them in the dev section.
+    seen: set[Dependency] = set(project.dependencies)
+    # we only care about local dependencies (non-dev)
+    local_dependencies: set[PathDependency] = {
+        d for d in project.dependencies if isinstance(d, PathDependency)
+    }
+    for local_dependency in local_dependencies:
+        assert not local_dependency.path.is_absolute()
         try:
             local_project = PythonProject(
-                project.project_path / dependency.path, verbose=project.verbose
+                io, project.project_path / local_dependency.path, verbose=project.verbose
             )
         except NotAPoetryProject as exception:
             raise ExitWithFailure(
-                suggestions=f"Add a `pyproject.toml` file in {dependency.path}",
+                suggestions=f"Add a `pyproject.toml` file in {local_dependency.path}",
                 failures="Local dependencies must also be poetry projects.",
             ) from exception
-        new = set(local_project.package.dev_dependencies).difference(seen)
-        seen.update(new)
-        for dev_dependency in (local_project.package.dev_dependencies[_] for _ in new):
-            if dev_dependency.is_local:
+        unseen_dev_dependencies = local_project.dev_dependencies.difference(seen)
+        seen.update(unseen_dev_dependencies)
+        for dev_dependency in unseen_dev_dependencies:
+            if isinstance(dev_dependency, PathDependency):
                 value: Any = tomlkit.inline_table()
                 value.append(
                     "path",
                     str(dev_dependency.path.relative_to(local_project.project_path)),
                 )
             else:
-                value = dev_dependency.version
-            yield dev_dependency.name, toml_item(value)
+                value = dev_dependency.pretty_constraint
+            yield dev_dependency.pretty_name, toml_item(value)

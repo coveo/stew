@@ -6,15 +6,17 @@ authors = ["Jonathan piché <tools@coveo.com>"]
 
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.9,<4"
 mock-pyproject-dependency = "*"
 requests = "*"
 
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 mock-pyproject-dependency = { path = "../mock-pyproject-dependency/", develop = true }
 mypy = "*"
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = "*"
 
 [tool.stew]
 pydev = false
@@ -30,5 +32,5 @@ wheel = "*"
 
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
+requires = ["poetry_core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"

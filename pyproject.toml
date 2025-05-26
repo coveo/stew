@@ -1,33 +1,51 @@
-[tool.poetry]
+[project]
 name = "coveo-stew"
-version = "3.1.0"
+version = "4.0.0"
 description = "Opinionated python packaging and development utilities"
-license = "Apache-2.0"
+requires-python = ">=3.9,<4"
+license = { text = "Apache-2.0" }
 readme = "README.md"
-repository = "https://github.com/coveo/stew"
-authors = ["Jonathan Piché <tools@coveo.com>"]
-
-packages = [
-    { include = "coveo_stew/**/*" },
+authors = [
+    { name = "Jonathan Piché", email = "tools@coveo.com" },
 ]
 
+keywords = [ "packaging", "poetry", "plugin", "ci", "tests" ]
+
+dependencies = [
+    "click >=8",  # might be able to remove this?
+    "coveo-functools >=2",
+    "coveo-itertools >=2",
+    "coveo-systools >=2",
+    "coveo-styles >=2",
+    "junit-xml >=1",
+    "packaging >=25",
+    "poetry >=2",
+    "setuptools >=80",
+    "toml >=0.10",
+    "tomlkit >=0.13",
+    "importlib-resources >=6"
+]
+
+[project.urls]
+repository = "https://github.com/coveo/stew"
+
+[tool.poetry.plugins."poetry.application.plugin"]
+stew = "coveo_stew.poetry_plugin:StewPlugin"
+
+#[project.scripts]
+#stew = "coveo_stew.commands:stew"
+
+#[tool.poetry.scripts]
+#stew = "coveo_stew.commands:stew"
+
+
+[tool.poetry]
+packages = [{ include = "coveo_stew/**/*" }]
 
 [tool.poetry.dependencies]
-python = ">3.9,<4"
-click = "^8.1.0"
-coveo-functools = "^2.0.0"
-coveo-itertools = "^2.0.0"
-coveo-systools = "^2.0.13"
-coveo-styles = "^2.1.2"
-junit-xml = "*"
-packaging = "*"
-setuptools = "^80.0.0"
-toml = "*"
-tomlkit = "*"
-importlib-resources = "^6.1.1"
+python = ">=3.9,<4"
 
-
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.test.dependencies]
 black = "24.10"
 coveo-testing = "^2.0.0"
 flake8 = "^7.0.0"
@@ -37,9 +55,9 @@ pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = "*"
 
-[tool.poetry.scripts]
-stew = "coveo_stew.commands:stew"
 
 [tool.stew]
 build-without-hashes = true
@@ -48,7 +66,6 @@ build-without-hashes = true
 pytest = true
 offline-build = true
 black = true
-
 
 [tool.stew.ci.custom-runners]
 flake8 = { check-args = "--ignore=E203,E501,E701,E704,W503" }
@@ -63,5 +80,5 @@ line-length = 100
 
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
+requires = ["poetry_core>=2.0"]
 build-backend = "poetry.core.masonry.api"

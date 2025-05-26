@@ -16,7 +16,7 @@ class Dependency:
         optional: bool = False,
         path: Union[Path, str] = None,
         version: str = "*",
-        extras: List[str] = None,
+        extras: Iterable[str] = None,
         source: str = None,
         allow_prerelease: bool = None,
     ) -> None:
@@ -52,8 +52,8 @@ class PoetryAPI:
         version: str,
         description: str,
         authors: Iterable[str],
-        dependencies: Mapping[str, Any] = None,
-        dev_dependencies: Mapping[str, Any] = None,
+        dependencies: Optional[Union[Mapping[str, Any], List[Dependency]]] = None,
+        dev_dependencies: Optional[Union[Mapping[str, Any], List[Dependency]]] = None,
         group: Mapping[str, Any] = None,
         package_mode: bool = True,
         **extra: Any,
@@ -65,8 +65,15 @@ class PoetryAPI:
         self.description: Final[str] = description
         self.package_mode: Final[bool] = package_mode
 
-        deps = dependencies_factory(dependencies)
-        dev_deps = dependencies_factory(dev_dependencies)
+        if isinstance(dependencies, list):
+            deps = {d.name: d for d in dependencies}
+        else:
+            deps = dependencies_factory(dependencies)
+
+        if isinstance(dev_dependencies, list):
+            dev_deps = {d.name: d for d in dev_dependencies}
+        else:
+            dev_deps = dependencies_factory(dev_dependencies)
 
         if group:
             # poetry 1.2 adds dependency groups.

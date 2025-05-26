@@ -24,16 +24,17 @@ from typing import (
     Union,
 )
 
+from cleo.io.io import IO
 from coveo_functools.casing import flexfactory
 from coveo_itertools.lookups import dict_lookup
 from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import check_run
+from poetry.factory import Factory
+from poetry.poetry import Poetry
 
 from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
 from coveo_stew.exceptions import NotAPoetryProject, StewException, UsageError
-from coveo_stew.metadata.poetry_api import PoetryAPI
-from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.metadata.stew_api import StewPackage
 from coveo_stew.poetry_backward_compatibility import get_install_sync_command
 from coveo_stew.utils import load_toml_from_path
@@ -52,26 +53,39 @@ class EnvironmentCreationBehavior(Enum):
 class PythonProject:
     """Access the information within a pyproject.toml file and operate on them."""
 
-    def __init__(self, project_path: Path, *, verbose: bool = False) -> None:
+    def __init__(
+        self,
+        io: IO,
+        poetry: Union[Poetry, Path],
+        *,
+        verbose: bool = False,
+    ) -> None:
+        self.io = io
         self.verbose = verbose
-        self.project_path: Path = (
-            project_path if project_path.is_dir() else project_path.parent
-        ).absolute()
-        self.toml_path: Path = self.project_path / PythonFile.PyProjectToml
-        self.lock_path: Path = self.project_path / PythonFile.PoetryLock
 
-        toml_content = load_toml_from_path(self.toml_path)
+        if isinstance(poetry, Path):
+            try:
+                self.poetry = Factory().create_poetry(
+                    cwd=poetry.parent if poetry.is_file() else poetry,
+                    io=io,
+                    disable_plugins=False,
+                    # todo: propagate disable_cache from the command line
+                    disable_cache=False,
+                )
+            except RuntimeError as ex:
+                raise NotAPoetryProject(poetry) from ex
+        else:
+            self.poetry = poetry
 
-        try:
-            self.package: PoetryAPI = flexfactory(
-                PoetryAPI, **dict_lookup(toml_content, "tool", "poetry")
-            )
-        except (KeyError, TypeError) as exception:
-            raise NotAPoetryProject(
-                f"The pyproject.toml file at {self.toml_path} doesn't seem to include a poetry project."
-            ) from exception
+        self.project_path = self.poetry.pyproject_path.parent
 
-        self.egg_path: Path = self.project_path / f"{self.package.safe_name}.egg-info"
+        self.dependencies = set(self.poetry.package.requires)
+        self.all_dependencies = set(self.poetry.package.all_requires)  # todo: group support
+        self.dev_dependencies = self.all_dependencies - self.dependencies
+
+        toml_content = load_toml_from_path(self.poetry.pyproject_path)
+
+        self.egg_path: Path = self.project_path / f"{self.poetry.package.name}.egg-info"
 
         self.options: StewPackage = flexfactory(
             StewPackage,
@@ -84,12 +98,18 @@ class PythonProject:
         if self.options.pydev:
             # ensure no steps are repeated. pydev projects only receive basic poetry/lock checks
             self.ci: ContinuousIntegrationConfig = ContinuousIntegrationConfig(
-                check_outdated=True, poetry_check=True, mypy=False, _pyproject=self
+                check_outdated=True,
+                poetry_check=True,
+                mypy=False,
+                _pyproject=self,
+                io=self.io,
             )
         else:
+            # todo: lazy load everything
             self.ci = flexfactory(
                 ContinuousIntegrationConfig,
                 **dict_lookup(toml_content, "tool", "stew", "ci", default={}),
+                io=self.io,
                 _pyproject=self,
             )
 
@@ -140,7 +160,7 @@ class PythonProject:
 
     def lock_is_outdated(self) -> bool:
         """True if the toml file has pending changes that were not applied to poetry.lock"""
-        if not self.lock_path.exists():
+        if not self.poetry.locker.is_locked():
             return False
 
         # yolo: use the dry run output to determine if the lock is too old
@@ -202,19 +222,21 @@ class PythonProject:
         self, install: EnvironmentCreationBehavior = EnvironmentCreationBehavior.Full
     ) -> PythonEnvironment:
         """To be used only when no environments exist. Creates a default one by calling "poetry install"."""
+        command: list[str] = []
         if install is EnvironmentCreationBehavior.Full:
             command = self._generate_poetry_install_command()
         elif install is EnvironmentCreationBehavior.NoDev:
             command = self._generate_poetry_install_command()
             command.append("--no-dev")
+
+        if command:
+            self.poetry_run(*command)
         else:
             assert install is EnvironmentCreationBehavior.Empty
             try:
-                command = ["env", "use", "python3"]
+                self.poetry_run("env", "use", "python")
             except CalledProcessError:
-                command = ["env", "use", "python"]
-
-        self.poetry_run(*command)
+                self.poetry_run("env", "use", "python3")
 
         del self._virtual_environments_cache  # force cache refresh
         activated_environment = self.activated_environment()
@@ -250,12 +272,14 @@ class PythonProject:
 
     def bump(self) -> bool:
         """Bump (update) all dependencies to the lock file. Return True if changed."""
-        if not self.lock_path.exists():
+        if not self.poetry.locker.is_locked():
             return self.lock_if_needed()
 
-        content = self.lock_path.read_text()
+        # todo: the poetry.locker already has the content, no need to read it from disk again?
+        content = self.poetry.locker.lock.read_text()
         self.poetry_run("update", "--lock", breakout_of_venv=True)
-        if content != self.lock_path.read_text():
+        # todo: need to refresh the internal object
+        if content != self.poetry.locker.lock.read_text():
             return True
         return False
 
@@ -279,12 +303,14 @@ class PythonProject:
                 f"Unable able to find a wheel filename in poetry's output:\n{poetry_output}"
             )
 
+        extracted_distribution = wheel_match["distribution"].casefold()
+        expected_distribution = self.poetry.package.name.replace("-", "_").casefold()
         assert (
-            wheel_match["distribution"].casefold() == self.package.safe_name.casefold()
-        ), f"{wheel_match['distribution']} does not match {self.package.safe_name}"
-        assert wheel_match["version"] == str(
-            self.package.version
-        ), f"{wheel_match['version']} does not match {self.package.version}"
+            extracted_distribution == expected_distribution
+        ), f"{wheel_match['distribution']} does not match {self.poetry.package.pretty_name}"
+        assert (
+            wheel_match["version"] == self.poetry.package.pretty_version
+        ), f"{wheel_match['version']} does not match {self.poetry.package.pretty_version}"
         wheel = (
             self.project_path / "dist" / Path(wheel_match.group())
         )  # group() gives the complete match
@@ -396,7 +422,7 @@ class PythonProject:
 
     def lock_if_needed(self) -> bool:
         """Lock if needed, return True if ran."""
-        if not self.lock_path.exists() or self.lock_is_outdated():
+        if not (self.poetry.locker.is_locked() and self.poetry.locker.is_fresh()):
             self.poetry_run("lock", breakout_of_venv=True)
             return True
         return False
@@ -451,4 +477,4 @@ class PythonProject:
                 self.poetry_run("env", "use", current_environment.python_executable)
 
     def __str__(self) -> str:
-        return f"{self.package.name} [{self.toml_path}]"
+        return f"{self.poetry.package.pretty_name} [{self.poetry.pyproject_path}]"
