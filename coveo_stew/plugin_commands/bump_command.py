@@ -10,10 +10,19 @@ class BumpCommand(StewBaseCommand):
 
     help = "Updates lock files."
 
-    arguments = [Argument("project-name", required=False, description="The name of the project to bump version. If not provided, all projects will be processed.")]
+    arguments = [
+        Argument(
+            "project-name",
+            required=False,
+            description="The name of the project to bump version. If not provided, all projects will be processed.",
+        )
+    ]
 
     options = [
-        Option("exact-match", description="Only match projects with the exact specified name rather than substring matching."),
+        Option(
+            "exact-match",
+            description="Only match projects with the exact specified name rather than substring matching.",
+        ),
     ]
 
     def run_stew_command(self) -> int:
@@ -24,5 +33,3 @@ class BumpCommand(StewBaseCommand):
             verbose=self.io.is_verbose(),
         )
         return 0
-
-

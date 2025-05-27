@@ -30,7 +30,7 @@ dependencies = [
 [project.urls]
 repository = "https://github.com/coveo/stew"
 
-[tool.poetry.plugins."poetry.application.plugin"]
+[project.entry-points."poetry.application.plugin"]
 stew = "coveo_stew.poetry_plugin:StewPlugin"
 
 [tool.poetry]
