@@ -7,8 +7,10 @@ from coveo_stew.plugin_commands.base_command import StewBaseCommand
 class PullDevRequirementsCommand(StewBaseCommand):
     name = "stew pull-dev-requirements"
 
+    help = "For Multiple Libraries: Pulls the development requirements from all local projects in the workspace into the pydev project at the root."
+
     options = [
-        Option("dry-run"),
+        Option("dry-run", description="Show what would be done without making any changes."),
     ]
 
     def run_stew_command(self) -> int:

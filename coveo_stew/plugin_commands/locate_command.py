@@ -7,7 +7,9 @@ from coveo_stew.plugin_commands.base_command import StewBaseCommand
 class LocateCommand(StewBaseCommand):
     name = "stew locate"
 
-    arguments = [Argument("project-name", required=True, is_list=False)]
+    help = "Locate a project in the workspace."
+
+    arguments = [Argument("project-name", required=True, is_list=False, description="The name of the project to locate in the workspace.")]
 
     def run_stew_command(self) -> int:
         project_name = self.argument("project-name")

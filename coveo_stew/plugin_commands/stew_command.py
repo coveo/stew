@@ -8,6 +8,8 @@ from coveo_stew.plugin_commands.base_command import StewBaseCommand
 class StewCommand(StewBaseCommand):
     name = "stew"
 
+    help = "Opinionated python development utilities."
+
     application: Application
     io: IO
 

@@ -23,6 +23,12 @@ You can check your installed version with:
 poetry self show plugins
 ```
 
+Or you can use the builtin command, especially if you need a machine-readable output:
+
+```bash
+poetry stew version
+```
+
 ## Installation Issues
 
 ### Poetry can't find the stew plugin

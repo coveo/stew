@@ -45,9 +45,7 @@ class StewBaseCommand(Command):
             #    or directory specified using --directory option if used.
             #
             # In our case, the `--directory` option is already applied by poetry (it's already the cwd).
-            # Therefore, we only need to handle `--project`.
-            #
-            #
+            # Therefore, we only need to handle `--project`:
             project_location = Path(os.getcwd()) / self.option("project")
 
             if not project_location.exists():

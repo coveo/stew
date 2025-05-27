@@ -8,10 +8,12 @@ from coveo_stew.plugin_commands.base_command import StewBaseCommand
 class CheckOutdatedCommand(StewBaseCommand):
     name = "stew check-outdated"
 
-    arguments = [Argument("project-name", required=False, is_list=False)]
+    help = "Check for out-of-date files."
+
+    arguments = [Argument("project-name", required=False, is_list=False, description="The name of the project to check for outdated dependencies. If not provided, all projects will be checked.")]
 
     options = [
-        Option("exact-match"),
+        Option("exact-match", description="Only match projects with the exact specified name rather than substring matching."),
     ]
 
     def run_stew_command(self) -> int:

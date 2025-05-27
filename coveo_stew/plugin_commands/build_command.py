@@ -9,13 +9,15 @@ from coveo_stew.plugin_commands.base_command import StewBaseCommand
 class BuildCommand(StewBaseCommand):
     name = "stew build"
 
-    arguments = [Argument("project-name", required=False, is_list=False)]
+    help = "Store the project and its locked dependencies to disk for offline installation."
+
+    arguments = [Argument("project-name", required=False, is_list=False, description="The name of the project to build. If not provided, all projects will be built.")]
 
     options = [
         # Option("directory", "C", flag=False),  # this one is built-in, poetry will chdir before calling us.
         # Option("project", "P", flag=False),  # this one is built-in, but we need to handle it ourselves.
-        Option("python", flag=False),
-        Option("target", flag=False),
+        Option("python", flag=False, description="The python executable to use."),
+        Option("target", flag=False, description="Directory where the built wheels should be stored."),
     ]
 
     def run_stew_command(self) -> int:

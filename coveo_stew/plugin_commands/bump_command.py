@@ -8,10 +8,12 @@ from coveo_stew.plugin_commands.base_command import StewBaseCommand
 class BumpCommand(StewBaseCommand):
     name = "stew bump"
 
-    arguments = [Argument("project-name", required=False)]
+    help = "Updates lock files."
+
+    arguments = [Argument("project-name", required=False, description="The name of the project to bump version. If not provided, all projects will be processed.")]
 
     options = [
-        Option("exact-match"),
+        Option("exact-match", description="Only match projects with the exact specified name rather than substring matching."),
     ]
 
     def run_stew_command(self) -> int:
@@ -22,3 +24,5 @@ class BumpCommand(StewBaseCommand):
             verbose=self.io.is_verbose(),
         )
         return 0
+
+
