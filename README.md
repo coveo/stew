@@ -1,3 +1,11 @@
+# Upgrading from 3.x?
+
+The 4.0 update is a major breaking change, 
+as `coveo-stew` was rewritten as a Poetry plugin instead of a standalone CLI tool.
+
+Please refer to the [upgrade guide](./README_UPGRADE.md#upgrading-from-3x-to-4x) for more information and resolution steps.
+
+
 # Upgrading from 2.x?
 
 The 3.0 update contains breaking changes:
@@ -38,13 +46,13 @@ Similar to: nothing! it's unique! 😎
 
 
 # Prerequisites
-*Changed in 3.1*: You need python 3.9+ to run stew, but you can still use it on projects requiring older versions of python. 
+*Changed in 4.0*: You need poetry 2.0 or higher.
+*Changed in 4.0*: Poetry must have been installed with python 3.9 or higher, but you can still use it on projects requiring older versions of python.
 
+*Changed in 3.1*: You need python 3.9 or higher, but you can still use it on projects requiring older versions of python.
 *Changed in 3.0*: `poetry` is no longer provided out-of-the-box.
 
 You need [poetry](https://python-poetry.org/) installed on your system, and it must be available through the `PATH`.
-
-The `3.0` version of `coveo-stew` is designed to work with modern versions of `poetry`.
 
 While it is compatible with older versions, old poetry issues
 such as [this](https://github.com/python-poetry/poetry/issues/3189)
@@ -57,36 +65,61 @@ consider using `coveo-stew < 3.0` which had workarounds implemented around these
 
 # Installation
 
-Just like poetry, `stew` is a CLI tool that you install in your system.
+Coveo-stew is a poetry plugin.
 
-It is recommended to install using [pipx](https://github.com/pipxproject/pipx) in order to isolate this into a nice little space:
+Depending on how you installed poetry, you may need to install it differently.
 
+See the [poetry documentation](https://python-poetry.org/docs/plugins/#using-plugins) for more information 
+and alternative installation methods.
+
+It is recommended to install using [pipx](https://github.com/pipxproject/pipx):
+
+```shell
+pipx install poetry
+pipx inject poetry coveo-stew
 ```
-pip install pipx --user
-pipx install coveo-stew
-```
-
-If you don't use pipx, make sure to isolate the installation into a virtual environment.
 
 
 # GitHub Action
 
 This action checkouts the code, installs python, poetry and stew, and proceeds to run "stew ci" on a python project.
 
+*Changed in 4.0*: `pipx` is no longer installed by default, since it is built into to the GitHub runners.
+If you need to install it manually (e.g.: self-hosted runners), here's how we used to do it:
+
+```yaml
+    - name: Prepare pipx path
+      shell: bash
+      run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Upgrade python tools and install pipx
+      shell: bash
+      run: python -m pip install --upgrade pip wheel setuptools pipx --user --disable-pip-version-check
+
+    - name: poetry, poetry export, and stew
+      shell: bash
+      run: |
+        python -m pipx install "poetry$POETRY_VERSION"
+        python -m pipx inject poetry poetry-plugin-export
+        python -m pipx install "coveo-stew$COVEO_STEW_VERSION"
+```
+
 ## Usage
+
+*Changed in 4.0*: The action was renamed to `coveo/stew/plugin`.
 
 ```yml
 jobs:
   stew-ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: coveo/stew@main
+      - uses: coveo/stew/plugin@main
         with:
           python-version: "3.10"
           project-name: your-project-name
 ```
 
-See additional options and documentation in [the action file.](action.yml)
+See additional options and documentation in [the action file.](plugin/action.yml)
 
 
 ## GitHub Action Step Report
@@ -94,7 +127,7 @@ See additional options and documentation in [the action file.](action.yml)
 When running in a GitHub context, a step summary will automatically be generated.
 This summary can be seen in the `Summary` tab of a workflow run view in GitHub.
 
-You can disable this feature by launching `stew ci` with `--no-github-step-report`.
+*Changed in 4.0*: It is no longer possible to disable the step report generation.
 
 
 # Repository Structure
@@ -111,21 +144,21 @@ Please read these guides in order to learn how to organize your repository for m
 
 Unless a project name is specified, commands will operate on all projects in a git repository based on the current working folder:
 
-- `stew <command>`
+- `poetry stew <command>`
     - Perform a command on all projects
-- `stew <command> --help`
+- `poetry stew <command> --help`
     - Obtain help about a particular command
 
 
 Some commands allow specifying a project name:
 
-- `stew <command> <project-name>`
+- `poetry stew <command> <project-name>`
     - Perform the command on all projects with `<project-name>` in their name (partial, case-insensitive)
     - e.g.: `stew ci tools` will run on `tools`, `tools-common`, `my-tools`, etc.
-- `stew <command> <project-name> --exact-match`
+- `poetry stew <command> <project-name> --exact-match`
     - Disable partial project name matching
     - e.g.: `stew ci tools --exact-match` will run on `tools` but not on `tools-common`, `my-tools`, etc.
-- `stew <command> .<path>`
+- `poetry stew <command> .<path>`
     - **v3.1.3** Only consider the project at this location
     - The path must start with `.`
     - Nested projects will not run
@@ -135,7 +168,7 @@ Some commands allow specifying a project name:
 The main commands are explained below.
 
 
-## `stew ci`
+## `poetry stew ci`
 
 The main show; it runs all CI tools on one or multiple projects.
 
@@ -155,14 +188,13 @@ Options:
 - `--skip <runner>` will skip that runner. Takes precedence over `--check`. This option can be repeated.
 - `--quick` skips running `poetry install --remove-untracked` before running the checks.
   - **v3.0.30**: You can now customize which checks to run when `--quick` is specified. See the [quick](#configuration) configuration option.
-- `--no-github-step-report` can be used to disable Step Report generation when running in a GitHub context.
 - `--extra <extra>` *(v3.1.1)* will install the specified extra(s) for this run. Can be specified multiple times.
 - `--all-extras` *(v3.1.1)* will install all extras for this run.
 - `--no-extras` *(v3.1.1)* will not install any extra for this run.
 
 The configuration for this feature is explained in more details in the [runners](#runners-stew-ci) section.
 
-## `stew build`
+## `poetry stew build`
 
 Store the project and its **locked dependencies** to disk, so it can be installed without contacting a `pypi` server.
 
@@ -173,55 +205,59 @@ The folder can later be installed offline with `pip install --no-index --find-li
 
 Options:
 
-- `--directory` specifies where the wheels should be downloaded.
+- `--target` specifies where the wheels should be downloaded. (*Changed in v4.0*: renamed `--directory` to `--target`) 
 - `--python` may be used to target a different python. It's important to use the same python version, architecture and OS than the target system.
 
 **Make sure your target `<folder>` is clean**: Keep in mind that `pip` will still use the `pyproject.toml` constraints when installing, not `poetry.lock`.
-The locked version system works when the locked version is the only thing that `pip` can find in the `<folder>`.
+
+*The locked version system works when the locked version is the only thing that `pip` can find in the `<folder>`.*
 
 
-## `stew check-outdated` and `stew fix-outdated`
+## `poetry stew check-outdated` and `poetry stew fix-outdated`
 
 Checks for out-of-date files or automatically update them.
 
 Summary of actions:
 - `poetry lock` if `pyproject.toml` changed but not the `poetry.lock`
-- `stew pull-dev-requirements` if a pydev project's dev-requirements are out of sync
+- `poetry stew pull-dev-requirements` if a pydev project's dev-requirements are out of sync
 
 
-## `stew pull-dev-requirements`
+## `poetry stew pull-dev-requirements`
 
 Only useful on `pydev` projects (see about [multiple-libraries](README_MULTIPLE_LIBRARIES.md)).
-It pulls the dev requirements from the local projects in order to aggregate them into the dev requirements of the root project.
+It pulls the group requirements from the local projects in order to aggregate them into the requirements of the root project.
 
-Note: This command uses the `dev` group to identify test dependencies.
-This can be defined as `tool.poetry.dev-dependencies` (poetry 1.1.15) or `tool.poetry.group.dev.dependencies`.
-The group name cannot be customized, feel free to contribute the feature if that's useful to you.
+Note: This command uses the non-optional groups to find dependencies (Changed in v4.0, previously it only looked at the group named dev).
+These can be defined as `tool.poetry.group.<group-name>.dependencies`.
+
+*Changed in 4.0*: 
+- All non-optional groups will be pulled (not only the one named `dev`)
+- The generated group in the pydev project is named `stew-pydev` instead of `dev`
 
 
-## `stew bump`
+## `poetry stew bump`
 
 Calls `poetry lock` on all projects.
 
 
-## `stew refresh`
+## `poetry stew refresh`
 
 Calls `poetry install` on all projects.
 
 
-## `stew fresh-eggs`
+## `poetry stew fresh-eggs`
 
 Clears the `.egg-info` folder from your projects. Usually followed by a `poetry install` or a `stew refresh`.
 
 Use this if you change a `[tool.poetry.scripts]` section, else the changes will not be honored.
 
 
-## `stew locate <project>`
+## `poetry stew locate <project>`
 
 Returns the path to a project:
 
 ```
-$ stew locate coveo-stew
+$ poetry stew locate coveo-stew
 /home/jonapich/code/stew/coveo-stew
 ```
 
@@ -281,7 +317,7 @@ In order to use a builtin or custom runner, you must have it installed. These lo
 - Alternative: The runner is installed in your system and available through the PATH
 
 We strongly suggest pinning them to your
-`pyproject.toml` file in the `[tool.poetry.dev-dependencies]` section.
+`pyproject.toml` file in the `[tool.poetry.test.dependencies]` section.
 
 This way, mypy won't surprise you with new failures when they release new versions! 😎
 
@@ -344,21 +380,21 @@ Runs `poetry check` on each project.
 
 ### check-outdated
 
-Runs `stew check-outdated`.
+Runs `poetry stew check-outdated`.
 
 Note: This runner cannot be overridden, but it can be disabled.
 
 
 ### offline-build
 
-Runs `stew build` to a temporary folder and ensures that pip is able to reinstall everything from there.
+Runs `poetry stew build` to a temporary folder and ensures that pip is able to reinstall everything from there.
 
 Note: This runner cannot be overridden, but it can be disabled.
 
 
 ## Custom Runners
 
-You can add your own runners to `stew ci`.
+You can add your own runners to `poetry stew ci`.
 You can also redefine a builtin runner completely.
 
 In this example, we create runners for flake8, bandit and isort. We also redefine the pytest runner:
@@ -437,18 +473,18 @@ When you use poetry, you cover the two scenarios above.
 The third scenario is the private business use case: you want to freeze your dependencies in time so that everything from the developer to the CI servers to the production system is identical.
 Essentially, you want `poetry install` without the dev requirements.
 
-This functionality is provided out of the box by `stew build`, which creates a pip-installable package from the lock file that you can then stash in a private storage of your choice or pass around your deployments.
+This functionality is provided out of the box by `poetry stew build`, which creates a pip-installable package from the lock file that you can then stash in a private storage of your choice or pass around your deployments.
 
 
 ## How to provision a business production system / how to freeze your project for "offline" distribution
 
-You can keep `poetry` and `stew` off your production environment by creating a frozen archive of your application or library from your CI servers (docker used as example):
+You can keep `poetry` and `coveo-stew` off your production environment by creating a frozen archive of your application or library from your CI servers (docker used as example):
 
-- Use the `stew build` tool which:
+- Use the `poetry stew build` tool which:
     - performs a `poetry build` on your project
     - calls `pip download` based on the content of the lock file
     - Moves the artifacts to the `.wheels` folder of your repo
-- Recommended: Use the `--python` switch when calling `stew build` to specify which python executable to use! Make sure to use a python interpreter that matches the os/arch/bits of the system you want to provision.
+- Recommended: Use the `--python` switch when calling `poetry stew build` to specify which python executable to use! Make sure to use a python interpreter that matches the os/arch/bits of the system you want to provision.
 
 The content in `.wheels` can then be zipped and moved around. A typical scenario is to push it into a Docker Container:
 
@@ -464,7 +500,7 @@ The content in `.wheels` can then be zipped and moved around. A typical scenario
     - You may delete the `.wheels` folder if you want. Consider keeping a copy of the lock file within the docker image, for reference.
 
 To make sure you use the python interpreter that matches the os/arch/bits of the system you want to provision, you can run `stew build` directly when building the container image.
-In order to do so without packaging `stew` in production, you can use [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/).
+In order to do so without packaging `coveo-stew` in production, you can use [multi-stage builds](https://docs.docker.com/develop/develop-images/multistage-build/).
 
 ## How to hook your IDE with the virtual environment
 

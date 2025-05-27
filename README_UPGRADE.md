@@ -1,3 +1,54 @@
+# Upgrading from 3.x to 4.x
+
+## Uninstall `coveo-stew`
+
+For instance, if you installed it with pipx:
+
+```bash
+pipx uninstall coveo-stew
+```
+
+After uninstalling, validate that the `stew` command is no longer available.
+
+
+## Install as a plugin
+
+Installing the plugin depends on how you installed poetry [docs](https://python-poetry.org/docs/plugins/#using-plugins).
+
+For instance, if you installed with `pipx`, you can install the plugin with:
+
+```bash
+pipx inject poetry coveo-stew
+```
+
+
+## Adjust usages
+
+Change all occurrences of `stew` to `poetry stew`:
+
+- `stew ci` becomes `poetry stew ci`
+- `stew pull-dev-requirements` becomes `poetry stew pull-dev-requirements`
+
+Change occurrences of `stew build --directory <dir>` to `poetry stew build --target <dir>`.
+- The `--directory` option conflicted with poetry's global `--directory` option, so it was renamed to `--target` to mimick `pip install --target`.
+
+
+## Adjust your `pyproject.toml`
+
+### Migrate to the new `[project]` section
+
+The `[tool.poetry]` section is now deprecated and replaced by the `[project]` section.
+- https://python-poetry.org/docs/pyproject/#the-project-section
+- https://packaging.python.org/en/latest/specifications/pyproject-toml/#declaring-project-metadata-the-project-table
+
+## Use the new GitHub Action
+
+If you were using the `coveo/stew` GitHub Action, you need to update it to use `coveo/stew/plugin` instead:
+
+```yaml
+- uses: coveo/stew/plugin@main
+```
+
 # Upgrading from 2.x to 3.x
 
 ## Poetry is not found
