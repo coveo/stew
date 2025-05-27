@@ -86,3 +86,5 @@ jobs:
         with:
           python-version: "3.12"
           project-name: coveo-stew
+          coveo-stew-version: '==4.0a1'
+
