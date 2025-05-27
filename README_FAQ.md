@@ -36,7 +36,7 @@ poetry stew version
 If you get an error like "No such command", make sure:
 
 1. coveo-stew is installed correctly: `poetry self show plugins` should list it
-2. You're using Poetry 1.8 or higher: `poetry --version`
+2. You're using Poetry 2.0 or higher: `poetry --version`
 3. You've installed it correctly for your Poetry installation method
 
 ### pip install fails with dependency conflicts

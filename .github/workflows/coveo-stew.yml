@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.x"]
-        poetry-version: ["==1.8.5", ""]  # empty means latest
+        poetry-version: ["==2.0", ""]  # empty means latest
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
@@ -58,7 +58,7 @@ jobs:
 
       - name: Install poetry
         shell: bash
-        run: pipx install "poetry<2.0.0"
+        run: pipx install "poetry>=2.0.0"
 
       - name: Install coveo-pypi-cli
         shell: bash

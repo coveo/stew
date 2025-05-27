@@ -39,7 +39,7 @@ Similar to: nothing! it's unique! 😎
 
 ## Prerequisites
 
-- Poetry 1.8 or higher
+- Poetry 2.0 or higher
 - Poetry must be installed with Python 3.9 or higher
 
 ## Installation
