@@ -1,14 +1,16 @@
-[tool.poetry]
+[project]
 name = "mock-poetry-groups"
 version = "0.1.1"
 description = "an internal mock for stew's tests"
-authors = ["Jonathan piché <tools@coveo.com>"]
+authors = [
+    { name = "Jonathan Piché", email = "<tools@coveo.com>" }
+]
 
+requires-python = ">=3.9,<4"
 
-[tool.poetry.dependencies]
-python = ">=3.9,<4"
-
-requests = "*"
+dependencies = [
+    "requests"
+]
 
 
 [tool.poetry.group.extra.dependencies]

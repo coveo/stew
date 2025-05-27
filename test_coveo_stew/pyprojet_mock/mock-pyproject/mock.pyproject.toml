@@ -1,14 +1,17 @@
-[tool.poetry]
+[project]
 name = "mock-pyproject"
 version = "0.1.1"
 description = "an internal mock for stew's tests"
-authors = ["Jonathan piché <tools@coveo.com>"]
+authors = [
+    { name = "Jonathan Piché", email = "tools@coveo.com" },
+]
 
+requires-python = ">=3.9,<4"
 
-[tool.poetry.dependencies]
-python = ">=3.9,<4"
-mock-pyproject-dependency = "*"
-requests = "*"
+dependencies = [
+    "requests",
+    "mock-pyproject-dependency",
+]
 
 
 [tool.poetry.group.dev.dependencies]
@@ -17,6 +20,7 @@ mypy = "*"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = "*"
+
 
 [tool.stew]
 pydev = false
