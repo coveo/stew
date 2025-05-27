@@ -25,8 +25,8 @@ runs:
       id: get-versions
       shell: bash
       run: |
-        RELEASE="$(python -m coveo_pypi_cli next-version coveo-stew --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
-        PRERELEASE="$(python -m coveo_pypi_cli next-version coveo-stew --prerelease --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
+        RELEASE="$(coveo_pypi_cli next-version coveo-stew --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
+        PRERELEASE="$(coveo_pypi_cli next-version coveo-stew --prerelease --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
         echo "release=$RELEASE" >> $GITHUB_OUTPUT
         echo "Next release: $RELEASE"
         echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
@@ -45,15 +45,15 @@ runs:
     - name: Setup poetry for publish
       shell: bash
       run: |
-        python -m poetry version ${{ steps.get-next-version.outputs.version }}
-        python -m poetry build
-        python -m poetry config pypi-token.pypi ${{ inputs.pypi-token }}
+        poetry version ${{ steps.get-next-version.outputs.version }}
+        poetry build
+        poetry config pypi-token.pypi ${{ inputs.pypi-token }}
 
     - name: Publish to pypi.org
       shell: bash
       run: |
         if [[ ${{ inputs.dry-run }} == false ]]; then
-          python -m poetry publish --no-interaction
+          poetry publish --no-interaction
         else
           echo "Just a dry run; we're not actually publishing"
         fi
