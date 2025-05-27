@@ -14,12 +14,12 @@ inputs:
   poetry-version:
     description: The pip constraint when installing poetry.
     required: false
-    default: "<2.0.0"
+    default: ">=2.0.0"
 
   coveo-stew-version:
     description: The pip constraint when installing coveo-stew.
     required: false
-    default: "<4"
+    default: ">=4"
 
   run-stew:
     description: If not "true", `stew ci` will not be ran. This is a shortcut to checkout/setup-python/poetry/stew without running it.
