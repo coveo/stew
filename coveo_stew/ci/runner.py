@@ -6,6 +6,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, Coroutine, Iterable, List, Optional, Protocol, Sequence, Tuple
 
+from cleo.io.io import IO
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase
@@ -30,8 +31,9 @@ class ContinuousIntegrationRunner:
     # implementations may provide an auto fix routine.
     _auto_fix_routine: Optional[AutoFixRoutineCallable] = None
 
-    def __init__(self, *, _pyproject: PythonProject) -> None:
+    def __init__(self, io: IO, *, _pyproject: PythonProject) -> None:
         """Implementations may add additional keyword args."""
+        self._io = io
         self._pyproject = _pyproject
         self._last_output: List[str] = []
         self._test_cases: List[TestCase] = []
@@ -40,6 +42,10 @@ class ContinuousIntegrationRunner:
     @property
     def project(self) -> PythonProject:
         return self._pyproject
+
+    @property
+    def io(self) -> IO:
+        return self._io
 
     async def launch(
         self,
@@ -122,13 +128,15 @@ class ContinuousIntegrationRunner:
                 "ci",
                 environment.pretty_python_version,
                 self.name,
-                self._pyproject.package.name,
+                self._pyproject.poetry.package.pretty_name,
                 "xml",
             )
         )
 
     def _output_generic_report(self, environment: PythonEnvironment) -> None:
-        test_case = TestCase(self.name, classname=f"ci.{self._pyproject.package.name}")
+        test_case = TestCase(
+            self.name, classname=f"ci.{self._pyproject.poetry.package.pretty_name}"
+        )
         if self.status is RunnerStatus.Error:
             test_case.add_error_info(
                 "An error occurred, the test was unable to complete.",
@@ -136,7 +144,9 @@ class ContinuousIntegrationRunner:
             )
         elif self.status is RunnerStatus.CheckFailed:
             test_case.add_failure_info("The test completed; errors were found.", self.last_output())
-        generate_report(self._pyproject.package.name, self.report_path(environment), [test_case])
+        generate_report(
+            self._pyproject.poetry.package.pretty_name, self.report_path(environment), [test_case]
+        )
 
     def __str__(self) -> str:
         return self.name
@@ -287,7 +297,7 @@ class Run:
 
             elif check.status is RunnerStatus.CheckFailed:
                 echo.warning(
-                    f"{check} [{check.project.package.name}] reported issues:",
+                    f"{check} [{check.project.poetry.package.pretty_name}] reported issues:",
                     pad_before=True,
                     pad_after=False,
                 )

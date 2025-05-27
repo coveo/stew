@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Generator, Optional, Union
 
 import importlib_resources
+from cleo.io.io import IO
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import async_check_output
 
@@ -20,8 +21,10 @@ class MypyRunner(ContinuousIntegrationRunner):
     check_failed_exit_codes = [1]
     outputs_own_report = True
 
-    def __init__(self, *, set_config: Union[str, bool] = True, _pyproject: PythonProject) -> None:
-        super().__init__(_pyproject=_pyproject)
+    def __init__(
+        self, io: IO, *, set_config: Union[str, bool] = True, _pyproject: PythonProject
+    ) -> None:
+        super().__init__(io, _pyproject=_pyproject)
         self.set_config = set_config
 
     def _mypy_config_path(self) -> Optional[Path]:

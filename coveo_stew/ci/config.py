@@ -11,6 +11,7 @@ from typing import (
     Union,
 )
 
+from cleo.io.io import IO
 from coveo_functools.casing import flexfactory
 from coveo_styles.styles import ExitWithFailure, echo
 
@@ -34,6 +35,7 @@ CIConfig = Optional[Union[Dict[str, Any], bool]]
 class ContinuousIntegrationConfig:
     def __init__(
         self,
+        io: IO,
         *,
         disabled: bool = False,
         mypy: CIConfig = True,
@@ -45,6 +47,7 @@ class ContinuousIntegrationConfig:
         custom_runners: Optional[Dict[str, CIConfig]] = None,
         _pyproject: PythonProject,
     ):
+        self._io = io
         self._pyproject = _pyproject
         self.disabled = disabled  # a master switch used by stew to skip this project.
 
@@ -82,7 +85,7 @@ class ContinuousIntegrationConfig:
             return None
         if config is True:
             config = {}
-        return flexfactory(cls, **config, **extra, _pyproject=self._pyproject)  # type: ignore
+        return flexfactory(cls, **config, **extra, _pyproject=self._pyproject, io=self._io)  # type: ignore
 
     @property
     def runners(self) -> Iterator[ContinuousIntegrationRunner]:

@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from typing import Any, Iterable, List, Optional, Tuple, Union
 
+from cleo.io.io import IO
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_repo_root
 from coveo_systools.subprocess import async_check_output
@@ -26,6 +27,7 @@ class AnyRunner(ContinuousIntegrationRunner):
 
     def __init__(
         self,
+        io: IO,
         *,
         name: str,
         args: Union[str, List[str]] = "",
@@ -39,14 +41,14 @@ class AnyRunner(ContinuousIntegrationRunner):
     ) -> None:
         if args and check_args:
             raise ExitWithFailure(
-                suggestions=f"Change all `args` for `check-args` in {_pyproject.toml_path}"
+                suggestions=f"Change all `args` for `check-args` in {_pyproject.poetry.pyproject_path}"
             ) from UsageError(
                 "Cannot use `args` and `check-args` together. They are equivalent, but `args` is deprecated."
             )
         if args:
             check_args = args
 
-        super().__init__(_pyproject=_pyproject)
+        super().__init__(io, _pyproject=_pyproject)
         self._name = name
         self._executable = executable
         self.check_failed_exit_codes = check_failed_exit_codes
@@ -61,7 +63,7 @@ class AnyRunner(ContinuousIntegrationRunner):
         except KeyError:
             raise ExitWithFailure(
                 suggestions=(
-                    f"Adjust {_pyproject.toml_path} so that [tool.stew.ci.custom-runners.{name}] has a valid `working-directory` value.",
+                    f"Adjust {_pyproject.poetry.pyproject_path} so that [tool.stew.ci.custom-runners.{name}] has a valid `working-directory` value.",
                     "Docs: https://github.com/coveo/stew/blob/main/README.md#options",
                 )
             ) from CannotLoadProject(
