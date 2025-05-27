@@ -46,7 +46,7 @@ Similar to: nothing! it's unique! 😎
 
 
 # Prerequisites
-*Changed in 4.0*: You need poetry 2.0 or higher.
+*Changed in 4.0*: You need poetry 1.8 or higher.
 *Changed in 4.0*: Poetry must have been installed with python 3.9 or higher, but you can still use it on projects requiring older versions of python.
 
 *Changed in 3.1*: You need python 3.9 or higher, but you can still use it on projects requiring older versions of python.

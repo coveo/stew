@@ -79,6 +79,9 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - uses: ./plugin
         with:
           python-version: "3.12"
