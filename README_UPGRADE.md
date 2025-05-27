@@ -41,6 +41,10 @@ The `[tool.poetry]` section is now deprecated and replaced by the `[project]` se
 - https://python-poetry.org/docs/pyproject/#the-project-section
 - https://packaging.python.org/en/latest/specifications/pyproject-toml/#declaring-project-metadata-the-project-table
 
+The ability to read different file formats is bound to the poetry version.
+At the time of writing, poetry still supports the old format.
+
+
 ## Use the new GitHub Action
 
 If you were using the `coveo/stew` GitHub Action, you need to update it to use `coveo/stew/plugin` instead:
@@ -56,7 +60,7 @@ If you were using the `coveo/stew` GitHub Action, you need to update it to use `
 You need to install poetry to the system and ensure it's available through the path as `poetry`.
 
 A common challenge is to make this work on a CI server.
-Feel free to use or refer to this [GitHub Action](README.md#GitHub-Action) ([source](action.yml)).
+Feel free to use or refer to this [GitHub Action](README.md#GitHub-Action) ([source](plugin/action.yml)).
 
 Here's an example on how to make it work within a Dockerfile, without pipx:
 
