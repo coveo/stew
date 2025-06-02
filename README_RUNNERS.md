@@ -30,7 +30,25 @@ mypy = { set-config = false }
 
 # Use a specific config file
 mypy = { set-config = "mypy.ini" }
+
+# Specify paths to type-check (overriding automatic detection)
+mypy = { check-paths = ["src", "tools"] }
+
+# Specify a single path
+mypy = { check-paths = "src" }
+
+# Exclude specific paths from type-checking
+mypy = { skip-paths = ["tests", "examples"] }
 ```
+
+By default, the mypy runner automatically detects and type-checks folders containing a `py.typed` file (as per [PEP 561](https://www.python.org/dev/peps/pep-0561/)).
+
+Options exist to control which paths are type-checked:
+
+1. **Explicit inclusion**: Use `check-paths` to specify exactly which paths should be type-checked, overriding automatic detection entirely.
+2. **Selective exclusion**: Use `skip-paths` to exclude specific paths from automatic detection.
+
+Note that `check-paths` and `skip-paths` are mutually exclusive.
 
 ### pytest Runner
 
@@ -123,46 +141,4 @@ isort = {
 | Option | Description |
 |--------|-------------|
 | `check-args` | Arguments to pass to the runner when checking |
-| `autofix-args` | Arguments to pass when fixing issues (used with `--fix` flag) |
-| `force-fix` | When `true`, run the fix command even if the check didn't fail |
-| `junit-report` | Path to write JUnit XML report (relative to project) |
-| `report-file` | Path to write the plain text report (relative to project) |
-| `fail-level` | Minimum severity level to cause failure (`error`, `warning`, `info`) |
-| `report-level` | Minimum level to report (`error`, `warning`, `info`, `debug`) |
-
-### Example: Adding pylint
-
-```toml
-[tool.stew.ci.custom-runners]
-pylint = { 
-  check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"],
-  report-file = ".ci/pylint-report.txt",
-  junit-report = ".ci/pylint-junit.xml"
-}
-```
-
-### Example: Adding isort with auto-fixing
-
-```toml
-[tool.stew.ci.custom-runners.isort]
-check-args = ["--check-only", "--profile", "black", "."]
-autofix-args = ["--profile", "black", "."]
-junit-report = ".ci/isort-junit.xml"
-```
-
-## Runtime Control
-
-You can control which runners execute during a CI run using command-line flags:
-
-```bash
-# Run only specific runners
-poetry stew ci --check mypy --check black
-
-# Skip specific runners
-poetry stew ci --skip pytest --skip black
-
-# Enable auto-fixing
-poetry stew ci --fix
-```
-
-The `--check` and `--skip` options can be repeated to specify multiple runners.
+| `autofix-args` | Arguments to pass when fixing

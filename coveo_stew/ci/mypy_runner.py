@@ -23,10 +23,34 @@ class MypyRunner(ContinuousIntegrationRunner):
     outputs_own_report = True
 
     def __init__(
-        self, io: IO, *, set_config: Union[str, bool] = True, _pyproject: PythonProject
+        self,
+        io: IO,
+        *,
+        set_config: Union[str, bool] = True,
+        check_paths: Optional[Union[str, list[str]]] = None,
+        skip_paths: Optional[Union[str, list[str]]] = None,
+        _pyproject: PythonProject,
     ) -> None:
         super().__init__(io, _pyproject=_pyproject)
         self.set_config = set_config
+
+        # Make check_paths and skip_paths mutually exclusive
+        if check_paths and skip_paths:
+            raise ValueError("check_paths and skip_paths cannot be used together")
+
+        # Process check_paths
+        if isinstance(check_paths, str):
+            check_paths = [check_paths]
+        self.check_paths: list[Path] = [
+            (self._pyproject.project_path / path) for path in (check_paths or [])
+        ]
+
+        # Process skip_paths
+        if isinstance(skip_paths, str):
+            skip_paths = [skip_paths]
+        self.skip_paths: list[Path] = [
+            (self._pyproject.project_path / path) for path in (skip_paths or [])
+        ]
 
     def _mypy_config_path(self) -> Optional[Path]:
         """Returns the path to the mypy config file."""
@@ -49,13 +73,26 @@ class MypyRunner(ContinuousIntegrationRunner):
         A folder is considered a typed package if it contains a `py.typed` file at its root.
 
         When a folder with py.typed is found, its subdirectories are skipped.
+        If skip_paths is specified, paths in that list and their subdirectories are skipped.
         """
+        if self.check_paths:
+            yield from self.check_paths
+            return
+
         project_path = self._pyproject.project_path.absolute()
         self.io.write_line(
             f"🤖 Auto detecting mypy folders from {project_path}", verbosity=Verbosity.VERBOSE
         )
 
-        skipped_dirs: set[Path] = set()
+        # skip the files inside virtual environments; for instance, when using `in-project-venv`, we don't
+        # want to check the mypy files inside the imported libraries.
+        skipped_dirs: set[Path] = {
+            *(
+                environment.environment_path
+                for environment in self._pyproject.virtual_environments()
+            ),
+            *self.skip_paths,
+        }
 
         # First collect all potential paths that contain py.typed files
         all_typed_files = list(project_path.rglob(str(PythonFile.TypedPackage)))
@@ -67,17 +104,32 @@ class MypyRunner(ContinuousIntegrationRunner):
             parent_dir = typed_file.parent
 
             # Skip if this directory is already within a directory we've yielded
+            # or if it's within a directory specified in skip_paths
             if any(parent_dir.is_relative_to(skip_dir) for skip_dir in skipped_dirs):
-                self.io.write_line(
-                    f"➖ Skipped: {typed_file.parent} (nested directory)",
-                    verbosity=Verbosity.VERBOSE,
-                )
+                if parent_dir in self.skip_paths:
+                    self.io.write_line(
+                        f"➖ Skipped: {typed_file.parent} (user-defined)",
+                        verbosity=Verbosity.VERBOSE,
+                    )
+                else:
+                    self.io.write_line(
+                        f"➖ Skipped: {typed_file.parent} (nested in a skipped directory)",
+                        verbosity=Verbosity.VERBOSE,
+                    )
                 continue
 
             # Mark this directory to skip all of its subdirectories
             skipped_dirs.add(parent_dir)
-            self.io.write_line(f"➕ Including {typed_file.parent}", verbosity=Verbosity.VERBOSE)
-            yield parent_dir
+            for environment in self._pyproject.virtual_environments():
+                if typed_file.is_relative_to(environment.environment_path):
+                    self.io.write_line(
+                        f"➖ Skipped: {typed_file.parent} (within virtual environment)",
+                        verbosity=Verbosity.VERBOSE,
+                    )
+                    break
+            else:
+                self.io.write_line(f"➕ Including {typed_file.parent}", verbosity=Verbosity.VERBOSE)
+                yield parent_dir
 
     async def _launch(
         self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
