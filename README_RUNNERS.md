@@ -4,7 +4,8 @@ This guide details the CI runners available in coveo-stew and how to configure c
 
 ## Built-in Runners
 
-By default, `poetry stew ci` includes several built-in runners that can be enabled or disabled in your `pyproject.toml` file:
+By default, `poetry stew ci` includes several built-in runners that can be enabled or disabled in your `pyproject.toml`
+file:
 
 ```toml
 [tool.stew.ci]
@@ -41,11 +42,13 @@ mypy = { check-paths = "src" }
 mypy = { skip-paths = ["tests", "examples"] }
 ```
 
-By default, the mypy runner automatically detects and type-checks folders containing a `py.typed` file (as per [PEP 561](https://www.python.org/dev/peps/pep-0561/)).
+By default, the mypy runner automatically detects and type-checks folders containing a `py.typed` file (as
+per [PEP 561](https://www.python.org/dev/peps/pep-0561/)).
 
 Options exist to control which paths are type-checked:
 
-1. **Explicit inclusion**: Use `check-paths` to specify exactly which paths should be type-checked, overriding automatic detection entirely.
+1. **Explicit inclusion**: Use `check-paths` to specify exactly which paths should be type-checked, overriding automatic
+   detection entirely.
 2. **Selective exclusion**: Use `skip-paths` to exclude specific paths from automatic detection.
 
 Note that `check-paths` and `skip-paths` are mutually exclusive.
@@ -66,10 +69,10 @@ pytest = { marker-expression = "not slow" }
 pytest = { doctest-modules = false }
 
 # Multiple configurations
-pytest = { 
-  marker-expression = "not slow", 
-  doctest-modules = false,
-  junit-report = "custom-report.xml"
+pytest = {
+marker-expression = "not slow",
+doctest-modules = false,
+junit-report = "custom-report.xml"
 }
 ```
 
@@ -119,7 +122,8 @@ offline-build = true
 
 ## Custom Runners
 
-You can define custom runners for any command-line tool. Custom runners are defined in the `[tool.stew.ci.custom-runners]` section:
+You can define custom runners for any command-line tool. Custom runners are defined in the
+`[tool.stew.ci.custom-runners]` section:
 
 ```toml
 [tool.stew.ci.custom-runners]
@@ -130,32 +134,32 @@ flake8 = true
 bandit = { check-args = ["--quiet", "--recursive", "."] }
 
 # Runner with auto-fix capability
-isort = { 
-  check-args = ["--check", ".", "--profile", "black"],
-  autofix-args = [".", "--profile", "black"]
+isort = {
+check-args = ["--check", ".", "--profile", "black"],
+autofix-args = [".", "--profile", "black"]
 }
 ```
 
 ### Custom Runner Options
 
-| Option | Description                                                          |
-|--------|----------------------------------------------------------------------|
-| `check-args` | Arguments to pass to the runner when checking                        |
+| Option         | Description                                                          |
+|----------------|----------------------------------------------------------------------|
+| `check-args`   | Arguments to pass to the runner when checking                        |
 | `autofix-args` | Arguments to pass when fixing issues (used with `--fix` flag)        |
-| `force-fix` | When `true`, run the fix command even if the check didn't fail       |
+| `force-fix`    | When `true`, run the fix command even if the check didn't fail       |
 | `junit-report` | Path to write JUnit XML report (relative to project)                 |
-| `report-file` | Path to write the plain text report (relative to project)            |
-| `fail-level` | Minimum severity level to cause failure (`error`, `warning`, `info`) |
+| `report-file`  | Path to write the plain text report (relative to project)            |
+| `fail-level`   | Minimum severity level to cause failure (`error`, `warning`, `info`) |
 | `report-level` | Minimum level to report (`error`, `warning`, `info`, `debug`)        |
 
 ### Example: Adding pylint
 
 ```toml
 [tool.stew.ci.custom-runners]
-pylint = { 
-  check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"],
-  report-file = ".ci/pylint-report.txt",
-  junit-report = ".ci/pylint-junit.xml"
+pylint = {
+check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"],
+report-file = ".ci/pylint-report.txt",
+junit-report = ".ci/pylint-junit.xml"
 }
 ```
 
