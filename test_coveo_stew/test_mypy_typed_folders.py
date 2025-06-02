@@ -5,6 +5,7 @@ from typing import Iterable, Optional
 import pytest
 from _pytest.tmpdir import TempPathFactory
 from cleo.io.null_io import NullIO
+from coveo_styles.styles import ExitWithFailure
 from coveo_testing.parametrize import parametrize
 
 from coveo_stew.ci.mypy_runner import MypyRunner
@@ -57,6 +58,45 @@ def create_folder_structure(
     for folder in untyped_folders:
         folder_path = project_path / folder
         folder_path.mkdir(parents=True, exist_ok=True)
+
+
+def setup_and_run_mypy(
+    tmp_path_factory: TempPathFactory,
+    typed_folders: Iterable[str],
+    untyped_folders: Iterable[str] = (),
+    *,
+    check_paths: Optional[list[str]] = None,
+    skip_paths: Optional[list[str]] = None,
+) -> set[str]:
+    """
+    Helper function to set up a test environment and run MypyRunner.
+
+    Args:
+        tmp_path_factory: Fixture to create temporary paths
+        typed_folders: Folders to create with py.typed files
+        untyped_folders: Folders to create without py.typed files
+        check_paths: Optional list of paths to explicitly check
+        skip_paths: Optional list of paths to skip
+
+    Returns:
+        Set of relative paths found by MypyRunner._find_typed_folders()
+    """
+    # Create mock project
+    project = create_mock_project(tmp_path_factory)
+
+    # Create the folder structure
+    create_folder_structure(project.project_path, typed_folders, untyped_folders)
+
+    # Create the MypyRunner with given parameters
+    runner = MypyRunner(
+        NullIO(), check_paths=check_paths, skip_paths=skip_paths, _pyproject=project
+    )
+
+    # Get the results from _find_typed_folders
+    found_folders = set(runner._find_typed_folders())
+
+    # Convert found paths to strings relative to project path for easier comparison
+    return {folder.relative_to(project.project_path).as_posix() for folder in found_folders}
 
 
 @parametrize(
@@ -117,22 +157,7 @@ def test_find_typed_folders(
     expected_folders: set[str],
 ) -> None:
     """Test that _find_typed_folders correctly identifies typed folders."""
-    # Create mock project
-    project = create_mock_project(tmp_path_factory)
-
-    # Create the folder structure with typed and untyped folders
-    create_folder_structure(project.project_path, typed_folders, untyped_folders)
-
-    # Create the MypyRunner
-    runner = MypyRunner(NullIO(), _pyproject=project)
-
-    # Get the results from _find_typed_folders
-    found_folders = set(runner._find_typed_folders())
-
-    # Convert found paths to strings relative to project path for easier comparison
-    found_folder_names = {
-        folder.relative_to(project.project_path).as_posix() for folder in found_folders
-    }
+    found_folder_names = setup_and_run_mypy(tmp_path_factory, typed_folders, untyped_folders)
 
     # Assert the expected folders were found
     assert (
@@ -142,51 +167,27 @@ def test_find_typed_folders(
 
 def test_check_paths_override(tmp_path_factory: TempPathFactory) -> None:
     """Test that providing check_paths overrides the automatic typed folder detection."""
-    # Create mock project
-    project = create_mock_project(tmp_path_factory)
-
-    # Create a folder structure with typed and untyped folders
-    typed_folders = {"pkg1", "pkg2", "pkg3"}
-    create_folder_structure(project.project_path, typed_folders, ())
 
     def _test(check_paths: Optional[list[str]]) -> set[str]:
-        runner = MypyRunner(NullIO(), check_paths=check_paths, _pyproject=project)
-        found_folders = set(runner._find_typed_folders())
-        assert all(
-            folder.is_absolute() for folder in found_folders
-        ), "All found folders should be absolute paths"
-        return {folder.relative_to(project.project_path).as_posix() for folder in found_folders}
+        return setup_and_run_mypy(
+            tmp_path_factory, {"pkg1", "pkg2", "pkg3"}, (), check_paths=check_paths
+        )
 
     # Validate that the automatic detection finds all typed folders
-    expected_all_paths = {"pkg1", "pkg2", "pkg3"}
-    assert _test(None) == expected_all_paths
-    assert _test([]) == expected_all_paths
+    assert _test(None) == _test([]) == {"pkg1", "pkg2", "pkg3"}
 
     # Validate that the check_paths override will exclude pkg2
-    expected_subset = {"pkg1", "pkg3"}
-    result = _test(["pkg1", "pkg3"])
-    assert result == expected_subset
+    assert _test(["pkg1", "pkg3"]) == {"pkg1", "pkg3"}
 
 
 def test_skip_paths_functionality(tmp_path_factory: TempPathFactory) -> None:
     """Test that skip_paths correctly excludes specified paths from type checking."""
-    # Create mock project
-    project = create_mock_project(tmp_path_factory)
-
-    # Create a folder structure with typed folders
-    typed_folders = {"pkg1", "pkg2/subpkg", "pkg3", "pkg4/subpkg"}
-    create_folder_structure(project.project_path, typed_folders, ())
-
-    # Create the MypyRunner with skip_paths
-    runner = MypyRunner(NullIO(), skip_paths=["pkg1", "pkg4"], _pyproject=project)
-
-    # Get the results from _find_typed_folders
-    found_folders = set(runner._find_typed_folders())
-
-    # Convert found paths to strings relative to project path for easier comparison
-    found_folder_names = {
-        folder.relative_to(project.project_path).as_posix() for folder in found_folders
-    }
+    found_folder_names = setup_and_run_mypy(
+        tmp_path_factory,
+        {"pkg1", "pkg2/subpkg", "pkg3", "pkg4/subpkg"},
+        (),
+        skip_paths=["pkg1", "pkg4"],
+    )
 
     # We expect to find only the typed folders that aren't in skip_paths
     # Both pkg1 and pkg4 folders (and subfolders) should be skipped
@@ -204,5 +205,5 @@ def test_check_paths_and_skip_paths_mutually_exclusive(tmp_path_factory: TempPat
     project = create_mock_project(tmp_path_factory)
 
     # This should raise a ValueError
-    with pytest.raises(ValueError):
+    with pytest.raises(ExitWithFailure):
         MypyRunner(NullIO(), check_paths="yes", skip_paths="yes", _pyproject=project)

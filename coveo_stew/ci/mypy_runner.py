@@ -7,7 +7,7 @@ from typing import Any, Generator, Optional, Union
 import importlib_resources
 from cleo.io.io import IO
 from cleo.io.outputs.output import Verbosity
-from coveo_styles.styles import echo
+from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.subprocess import async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
@@ -36,7 +36,14 @@ class MypyRunner(ContinuousIntegrationRunner):
 
         # Make check_paths and skip_paths mutually exclusive
         if check_paths and skip_paths:
-            raise ValueError("check_paths and skip_paths cannot be used together")
+            raise ExitWithFailure(
+                failures="`check-paths` and `skip-paths` cannot be used together",
+                suggestions=[
+                    "Recommended: Use only `skip-paths` to instruct the automatic detection to skip specific directories.",
+                    "Use only `check-paths` to disable the automatic detection, and enumerate the folders to check.",
+                    "Any specified path must be relative to the `pyproject.toml` file.",
+                ],
+            )
 
         # Process check_paths
         if isinstance(check_paths, str):
