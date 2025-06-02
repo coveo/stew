@@ -135,42 +135,42 @@ class MypyRunner(ContinuousIntegrationRunner):
         all_typed_files.sort(key=lambda p: len(str(p)))
 
         for typed_file in all_typed_files:
-            parent_dir = typed_file.parent
+            typed_path = typed_file.parent
 
             # Skip if this directory is already within a directory we've yielded
             # or if it's within a directory specified in skip_paths
-            if any(parent_dir.is_relative_to(skip_dir) for skip_dir in skipped_dirs):
-                if parent_dir in self.skip_paths:
-                    self.io.write_line(
-                        f"➖ Skipped: {typed_file.parent} (user-defined)",
-                        verbosity=Verbosity.VERBOSE,
-                    )
-                else:
-                    self.io.write_line(
-                        f"➖ Skipped: {typed_file.parent} (nested in a skipped directory)",
-                        verbosity=Verbosity.VERBOSE,
-                    )
+            if any(typed_path.is_relative_to(skip_dir) for skip_dir in skipped_dirs):
+                self.io.write_line(
+                    f"➖ Skipped: {typed_file.parent} (parent already included or skipped)",
+                    verbosity=Verbosity.VERBOSE,
+                )
                 continue
 
             # Mark this directory to skip all of its subdirectories
-            skipped_dirs.add(parent_dir)
-            self.io.write_line(f"➕ Including {typed_file.parent}", verbosity=Verbosity.VERBOSE)
-            yield parent_dir
+            skipped_dirs.add(typed_path)
+            self.io.write_line(f"➕ Including {typed_path}", verbosity=Verbosity.VERBOSE)
+            yield typed_path
 
     async def _launch(
         self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
     ) -> RunnerStatus:
         working_directory = self._pyproject.project_path
 
+        # restore absolute paths into relative ones
         typed_folders = tuple(
             folder.relative_to(working_directory) for folder in self._find_typed_folders()
         )
 
         if not typed_folders:
-            self._last_output = [
+            raise ExitWithFailure(
+                suggestions=[
+                    "Add an empty `py.typed` file in the root of each package.",
+                    "Do the same thing in test folders if you want to type-check them.",
+                    "Read more: https://www.python.org/dev/peps/pep-0561/",
+                ]
+            ) from Exception(
                 "Cannot find a py.typed file: https://www.python.org/dev/peps/pep-0561/"
-            ]
-            return RunnerStatus.Error
+            )
 
         args = [
             # the --python-executable switch tells mypy in which environment the imports should be followed.
