@@ -6,6 +6,7 @@ from typing import Any, Generator, Optional, Union
 
 import importlib_resources
 from cleo.io.io import IO
+from cleo.io.outputs.output import Verbosity
 from coveo_styles.styles import echo
 from coveo_systools.subprocess import async_check_output
 
@@ -43,16 +44,49 @@ class MypyRunner(ContinuousIntegrationRunner):
         return self._pyproject.project_path / self.set_config
 
     def _find_typed_folders(self) -> Generator[Path, None, None]:
-        """Yield the folders of this project that should be type-checked."""
-        yield from filter(
-            lambda path: (path / PythonFile.TypedPackage).exists(),
-            self._pyproject.project_path.iterdir(),
+        """
+        Yield the folders of this project that should be type-checked.
+        A folder is considered a typed package if it contains a `py.typed` file at its root.
+
+        When a folder with py.typed is found, its subdirectories are skipped.
+        """
+        project_path = self._pyproject.project_path.absolute()
+        self.io.write_line(
+            f"🤖 Auto detecting mypy folders from {project_path}", verbosity=Verbosity.VERBOSE
         )
+
+        skipped_dirs: set[Path] = set()
+
+        # First collect all potential paths that contain py.typed files
+        all_typed_files = list(project_path.rglob(str(PythonFile.TypedPackage)))
+
+        # Sort by path length to process parent directories before their subdirectories.
+        all_typed_files.sort(key=lambda p: len(str(p)))
+
+        for typed_file in all_typed_files:
+            parent_dir = typed_file.parent
+
+            # Skip if this directory is already within a directory we've yielded
+            if any(parent_dir.is_relative_to(skip_dir) for skip_dir in skipped_dirs):
+                self.io.write_line(
+                    f"➖ Skipped: {typed_file.parent} (nested directory)",
+                    verbosity=Verbosity.VERBOSE,
+                )
+                continue
+
+            # Mark this directory to skip all of its subdirectories
+            skipped_dirs.add(parent_dir)
+            self.io.write_line(f"➕ Including {typed_file.parent}", verbosity=Verbosity.VERBOSE)
+            yield parent_dir
 
     async def _launch(
         self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
     ) -> RunnerStatus:
-        typed_folders = tuple(folder.name for folder in self._find_typed_folders())
+        working_directory = self._pyproject.project_path
+
+        typed_folders = tuple(
+            folder.relative_to(working_directory) for folder in self._find_typed_folders()
+        )
 
         if not typed_folders:
             self._last_output = [
