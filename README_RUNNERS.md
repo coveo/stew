@@ -32,14 +32,11 @@ mypy.set-config = false
 # Use a specific config file
 mypy.set-config = "mypy.ini"
 
-# Specify paths to type-check (overriding automatic detection)
+# Exclude a specific path from the automatic typed folders detection:
+mypy.skip-paths = "examples"
+
+# Disable automatic typed folders detection in favor of specific paths:
 mypy.check-paths = ["src", "tools"]
-
-# Specify a single path
-mypy.check-paths = "src"
-
-# Exclude specific paths from type-checking
-mypy.skip-paths = ["tests", "examples"]
 ```
 
 By default, the mypy runner automatically detects and type-checks folders containing a `py.typed` file (as
@@ -52,6 +49,7 @@ Options exist to control which paths are type-checked:
 2. **Selective exclusion**: Use `skip-paths` to exclude specific paths from automatic detection.
 
 Note that `check-paths` and `skip-paths` are mutually exclusive.
+Both options support the string (single path) or the list of strings.
 
 ### pytest Runner
 
@@ -126,7 +124,7 @@ offline-build = true
 
 ## Custom Runners
 
-You can define custom runners for any command-line tool. Custom runners are defined in the
+You can define custom runners for any command-line or python-module tool. Custom runners are defined in the
 `[tool.stew.ci.custom-runners]` section:
 
 ```toml

@@ -207,3 +207,21 @@ def test_check_paths_and_skip_paths_mutually_exclusive(tmp_path_factory: TempPat
     # This should raise a ValueError
     with pytest.raises(ExitWithFailure):
         MypyRunner(NullIO(), check_paths="yes", skip_paths="yes", _pyproject=project)
+
+
+def test_check_paths_must_contain_py_typed(tmp_path_factory: TempPathFactory) -> None:
+    """Test that check_paths only accepts paths containing py.typed files."""
+    # Create mock project
+    project = create_mock_project(tmp_path_factory)
+
+    # Create some folders with py.typed and some without
+    typed_folders = {"pkg1", "pkg2"}
+    untyped_folders = {"pkg3", "pkg4"}
+    create_folder_structure(project.project_path, typed_folders, untyped_folders)
+
+    # These paths should work (they have py.typed files)
+    _ = MypyRunner(NullIO(), check_paths=["pkg1", "pkg2"], _pyproject=project)
+
+    # This should raise ExitWithFailure because pkg3 doesn't have a py.typed file
+    with pytest.raises(ExitWithFailure):
+        _ = MypyRunner(NullIO(), check_paths=["pkg1", "pkg3"], _pyproject=project)

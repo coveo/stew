@@ -34,10 +34,12 @@ class MypyRunner(ContinuousIntegrationRunner):
         super().__init__(io, _pyproject=_pyproject)
         self.set_config = set_config
 
-        # Make check_paths and skip_paths mutually exclusive
         if check_paths and skip_paths:
             raise ExitWithFailure(
-                failures="`check-paths` and `skip-paths` cannot be used together",
+                failures=[
+                    "`check-paths` and `skip-paths` cannot be used together",
+                    f"Got: {check_paths=} {skip_paths=}",
+                ],
                 suggestions=[
                     "Recommended: Use only `skip-paths` to instruct the automatic detection to skip specific directories.",
                     "Use only `check-paths` to disable the automatic detection, and enumerate the folders to check.",
@@ -45,19 +47,43 @@ class MypyRunner(ContinuousIntegrationRunner):
                 ],
             )
 
+        project_path = self._pyproject.project_path
+
         # Process check_paths
+        check_paths = check_paths or []
         if isinstance(check_paths, str):
             check_paths = [check_paths]
-        self.check_paths: list[Path] = [
-            (self._pyproject.project_path / path) for path in (check_paths or [])
-        ]
+
+        self.check_paths: list[Path] = [(project_path / path) for path in check_paths]
 
         # Process skip_paths
+        skip_paths = skip_paths or []
         if isinstance(skip_paths, str):
             skip_paths = [skip_paths]
-        self.skip_paths: list[Path] = [
-            (self._pyproject.project_path / path) for path in (skip_paths or [])
-        ]
+        self.skip_paths: list[Path] = [(project_path / path) for path in skip_paths]
+
+        # validate inputs
+        for path in check_paths:
+            if Path(path).is_absolute():
+                raise ExitWithFailure(
+                    failures="`check-paths` contains absolute paths.",
+                    suggestions="Use a path relative to the project's `pyproject.toml` file.",
+                )
+            if not (project_path / path / PythonFile.TypedPackage).exists():
+                raise ExitWithFailure(
+                    failures=f"No py.typed file found in {path}",
+                    suggestions=(
+                        "Ensure the path is relative to the `pyproject.toml` file and contains a py.typed file, "
+                        "or remove it from `check-paths`."
+                    ),
+                )
+
+        for path in skip_paths:
+            if Path(path).is_absolute():
+                raise ExitWithFailure(
+                    failures="`skip-paths` contains absolute paths.",
+                    suggestions="Use a path relative to the project's `pyproject.toml` file.",
+                )
 
     def _mypy_config_path(self) -> Optional[Path]:
         """Returns the path to the mypy config file."""
@@ -83,6 +109,7 @@ class MypyRunner(ContinuousIntegrationRunner):
         If skip_paths is specified, paths in that list and their subdirectories are skipped.
         """
         if self.check_paths:
+            # the paths were validated at initialization
             yield from self.check_paths
             return
 
@@ -127,16 +154,8 @@ class MypyRunner(ContinuousIntegrationRunner):
 
             # Mark this directory to skip all of its subdirectories
             skipped_dirs.add(parent_dir)
-            for environment in self._pyproject.virtual_environments():
-                if typed_file.is_relative_to(environment.environment_path):
-                    self.io.write_line(
-                        f"➖ Skipped: {typed_file.parent} (within virtual environment)",
-                        verbosity=Verbosity.VERBOSE,
-                    )
-                    break
-            else:
-                self.io.write_line(f"➕ Including {typed_file.parent}", verbosity=Verbosity.VERBOSE)
-                yield parent_dir
+            self.io.write_line(f"➕ Including {typed_file.parent}", verbosity=Verbosity.VERBOSE)
+            yield parent_dir
 
     async def _launch(
         self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
