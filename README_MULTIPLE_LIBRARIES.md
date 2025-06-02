@@ -96,7 +96,7 @@ dependencies = [
 ]
 
 [tool.poetry.group.test.dependencies]
-my-package = { path = "../my-package/" }
+my-package.path = "../my-package/"
 ```
 
 Essentially, the behavior we're looking for:

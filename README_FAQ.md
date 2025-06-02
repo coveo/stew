@@ -148,7 +148,17 @@ Create a custom runner in your `pyproject.toml`:
 
 ```toml
 [tool.stew.ci.custom-runners]
-my-tool = { check-args = ["--check", "--path", "."] }
+my-tool.check-args = ["--check", "--path", "."]
+```
+
+_(Alternative toml syntax)_:
+
+```toml
+[tool.stew.ci.custom-runners.my-tool]
+check-args = ["--check", "--path", "."]
+```
+
+Then run it with:
 ```
 
 ### How to debug issues in stew commands

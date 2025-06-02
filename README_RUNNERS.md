@@ -27,19 +27,19 @@ Runs mypy type checking on your codebase with strict checking enabled by default
 mypy = true
 
 # Disable strict config (use project's mypy.ini/setup.cfg)
-mypy = { set-config = false }
+mypy.set-config = false
 
 # Use a specific config file
-mypy = { set-config = "mypy.ini" }
+mypy.set-config = "mypy.ini"
 
 # Specify paths to type-check (overriding automatic detection)
-mypy = { check-paths = ["src", "tools"] }
+mypy.check-paths = ["src", "tools"]
 
 # Specify a single path
-mypy = { check-paths = "src" }
+mypy.check-paths = "src"
 
 # Exclude specific paths from type-checking
-mypy = { skip-paths = ["tests", "examples"] }
+mypy.skip-paths = ["tests", "examples"]
 ```
 
 By default, the mypy runner automatically detects and type-checks folders containing a `py.typed` file (as
@@ -63,17 +63,21 @@ Runs your test suite using pytest.
 pytest = true
 
 # Configure markers
-pytest = { marker-expression = "not slow" }
+pytest.marker-expression = "not slow"
 
 # Disable doctest
-pytest = { doctest-modules = false }
+pytest.doctest-modules = false
 
 # Multiple configurations
-pytest = {
-marker-expression = "not slow",
-doctest-modules = false,
+pytest.marker-expression = "not slow"
+pytest.doctest-modules = false
+pytest.junit-report = "custom-report.xml"
+
+# Alternative syntax
+[tool.stew.ci.pytest]
+marker-expression = "not slow"
+doctest-modules = false
 junit-report = "custom-report.xml"
-}
 ```
 
 ### black Runner
@@ -131,13 +135,11 @@ You can define custom runners for any command-line tool. Custom runners are defi
 flake8 = true
 
 # Specify command-line arguments
-bandit = { check-args = ["--quiet", "--recursive", "."] }
+bandit.check-args = ["--quiet", "--recursive", "."]
 
 # Runner with auto-fix capability
-isort = {
-check-args = ["--check", ".", "--profile", "black"],
-autofix-args = [".", "--profile", "black"]
-}
+isort.check-args = ["--check", ".", "--profile", "black"]
+isort.autofix-args = [".", "--profile", "black"]
 ```
 
 ### Custom Runner Options
@@ -155,12 +157,10 @@ autofix-args = [".", "--profile", "black"]
 ### Example: Adding pylint
 
 ```toml
-[tool.stew.ci.custom-runners]
-pylint = {
-check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"],
-report-file = ".ci/pylint-report.txt",
+[tool.stew.ci.custom-runners.pylint]
+check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"]
+report-file = ".ci/pylint-report.txt"
 junit-report = ".ci/pylint-junit.xml"
-}
 ```
 
 ### Example: Adding isort with auto-fixing
