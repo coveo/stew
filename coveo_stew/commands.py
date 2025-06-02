@@ -1,10 +1,9 @@
 """Automates poetry operations in the repo."""
 
-import re
 from collections import defaultdict
 from importlib.metadata import version as package_version
 from pathlib import Path
-from typing import Final, Generator, Iterable, Optional, Set, Tuple, Union
+from typing import Final, Generator, Optional, Set, Tuple, Union
 
 import click
 from cleo.io.io import IO
@@ -260,31 +259,6 @@ def pull_dev_requirements(io: IO, dry_run: bool = False, verbose: bool = False) 
         list(_pull_dev_requirements(io, dry_run=dry_run, verbose=verbose))
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
-
-
-def _beautify_mypy_output(
-    project: PythonProject, output: Iterable[str], *, full_paths: bool = False
-) -> None:
-    """Main use: guide IDEs by showing full paths to the files vs the current working directory.
-    Bonus: highlight errors in red and display a slightly shortened version of the error output."""
-    pattern = re.compile(
-        rf"^(?P<path>{project.poetry.package.name}.+):(?P<line>\d+):(?P<column>\d+(?::)| )"
-        rf"(?:\s?error:\s?)(?P<detail>.+)$"
-    )
-    for line in output:
-        match = pattern.fullmatch(line)
-        if match:
-            adjusted_path = project.project_path / Path(match["path"])
-            adjusted_path = (
-                adjusted_path.resolve()
-                if full_paths
-                else adjusted_path.relative_to(Path(".").resolve())
-            )
-            echo.error_details(
-                f'{adjusted_path}:{match["line"]}:{match["column"]} {match["detail"]}'
-            )
-        else:
-            echo.noise(line)
 
 
 def locate(io: IO, project_name: str, verbose: bool = False) -> None:
