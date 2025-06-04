@@ -63,8 +63,8 @@ def create_folder_structure(
 def setup_and_run_mypy(
     tmp_path_factory: TempPathFactory,
     typed_folders: Iterable[str],
-    untyped_folders: Iterable[str] = (),
     *,
+    untyped_folders: Iterable[str] = (),
     check_paths: Optional[list[str]] = None,
     skip_paths: Optional[list[str]] = None,
 ) -> set[str]:
@@ -157,7 +157,7 @@ def test_find_typed_folders(
     expected_folders: set[str],
 ) -> None:
     """Test that _find_typed_folders correctly identifies typed folders."""
-    found_folder_names = setup_and_run_mypy(tmp_path_factory, typed_folders, untyped_folders)
+    found_folder_names = setup_and_run_mypy(tmp_path_factory, typed_folders, untyped_folders=untyped_folders)
 
     # Assert the expected folders were found
     assert (
@@ -170,7 +170,7 @@ def test_check_paths_override(tmp_path_factory: TempPathFactory) -> None:
 
     def _test(check_paths: Optional[list[str]]) -> set[str]:
         return setup_and_run_mypy(
-            tmp_path_factory, {"pkg1", "pkg2", "pkg3"}, (), check_paths=check_paths
+            tmp_path_factory, {"pkg1", "pkg2", "pkg3"}, check_paths=check_paths
         )
 
     # Validate that the automatic detection finds all typed folders
@@ -185,7 +185,6 @@ def test_skip_paths_functionality(tmp_path_factory: TempPathFactory) -> None:
     found_folder_names = setup_and_run_mypy(
         tmp_path_factory,
         {"pkg1", "pkg2/subpkg", "pkg3", "pkg4/subpkg"},
-        (),
         skip_paths=["pkg1", "pkg4"],
     )
 

@@ -180,10 +180,10 @@ class MypyRunner(ContinuousIntegrationRunner):
                 suggestions=[
                     "Add an empty `py.typed` file in the root of each package.",
                     "Do the same thing in test folders if you want to type-check them.",
-                    "Read more: https://www.python.org/dev/peps/pep-0561/",
+                    "Read more: https://typing.python.org/en/latest/spec/distributing.html#packaging-typed-libraries",
                 ]
             ) from Exception(
-                "Cannot find a py.typed file: https://www.python.org/dev/peps/pep-0561/"
+                "Cannot find a py.typed file."
             )
 
         args = [
