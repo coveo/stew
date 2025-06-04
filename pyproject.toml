@@ -12,7 +12,6 @@ authors = [
 keywords = [ "packaging", "poetry", "plugin", "ci", "tests" ]
 
 dependencies = [
-    "click >=8",  # might be able to remove this?
     "coveo-functools >=2",
     "coveo-itertools >=2",
     "coveo-systools >=2",

@@ -4,12 +4,11 @@ import re
 from collections import defaultdict
 from importlib.metadata import version as package_version
 from pathlib import Path
-from typing import Final, Generator, Iterable, Optional, Set, Tuple, Union
+from typing import Generator, Iterable, Optional, Set, Tuple, Union
 
-import click
 from cleo.io.io import IO
 from coveo_functools.finalizer import finalizer
-from coveo_styles.styles import ExitWithFailure, echo, install_pretty_exception_hook
+from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.filesystem import find_repo_root
 
 from coveo_stew.ci.runner_status import RunnerStatus
@@ -26,12 +25,6 @@ from coveo_stew.stew import (
     PythonEnvironment,
     PythonProject,
 )
-
-_COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate", "version"]
-
-PROJECT_NAME_ARG: Final = click.argument("project_name", default=None, required=False)
-EXACT_MATCH_ARG: Final = click.option("--exact-match/--no-exact-match", default=False)
-VERBOSE_ARG: Final = click.option("--verbose", is_flag=True, default=False)
 
 
 def _echo_updated(updated: Set[Path]) -> None:
@@ -66,15 +59,6 @@ def _pull_dev_requirements(
             echo.success(
                 f"{pydev_project.poetry.package.pretty_name}'s dev requirements were up to date."
             )
-
-
-@click.group()
-@click.pass_context
-def stew(ctx: click.Context) -> None:
-    """The 'stew' cli entry point."""
-    install_pretty_exception_hook()
-    if ctx.invoked_subcommand not in _COMMANDS_THAT_SKIP_INTRO_EMOJIS:
-        echo.step("!!sparkles!! !!snake!! !!sparkles!!")
 
 
 def version(io: IO) -> None:

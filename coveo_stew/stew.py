@@ -80,7 +80,7 @@ class PythonProject:
         self.project_path = self.poetry.pyproject_path.parent
 
         self.dependencies = set(self.poetry.package.requires)
-        self.all_dependencies = set(self.poetry.package.all_requires)  # todo: group support
+        self.all_dependencies = set(self.poetry.package.all_requires)
         self.dev_dependencies = self.all_dependencies - self.dependencies
 
         toml_content = load_toml_from_path(self.poetry.pyproject_path)
