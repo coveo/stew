@@ -4,8 +4,17 @@ description: Launch "stew ci" on a python project
 inputs:
 
   project-name:
-    description: The project name, from the pyproject.toml file.
-    required: true
+    description: |
+      When empty, all projects in the repository will be targeted.
+      When set to '.', the project at the root of the repository will be targeted.
+      When set to any other string, only that project will be targeted.
+    required: false
+    default: ''  # find and run all python projects
+
+  working-directory:
+    description: The working directory where stew will run. Defaults to the root of the repository.
+    required: false
+    default: '.'
 
   python-version:
     description: The python version number, such as "3.10". See `actions/setup-python` for documentation.
@@ -31,10 +40,6 @@ inputs:
     required: false
     default: "true"
 
-  python-exec:
-    description: (Deprecated/unused) The name of the python executable
-    required: false
-
 
 runs:
   using: 'composite'
@@ -46,7 +51,7 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: poetry and stew
+    - name: install poetry and stew
       shell: bash
       env:
         POETRY_VERSION: ${{ inputs.poetry-version }}
@@ -56,9 +61,25 @@ runs:
         pipx install "poetry$POETRY_VERSION"
         pipx inject poetry "coveo-stew$COVEO_STEW_VERSION"
 
-    - name: Run stew ci
-      if: inputs.run-stew == 'true'
+    - name: Target all projects in the repository
+      if: inputs.run-stew == 'true' && inputs.project-name == ''
+      shell: bash
+      run: echo "Stew will run on all projects in the repository."
+
+    - name: Target specific project by name
+      if: inputs.run-stew == 'true' && inputs.project-name != '' && inputs.project-name != '.'
       shell: bash
       env:
         PROJECT_NAME: ${{ inputs.project-name }}
-      run: poetry stew ci $PROJECT_NAME --exact-match
+      run: echo "STEW_CI_ARGS=$PROJECT_NAME --exact-match" >> $GITHUB_ENV
+
+    - name: Target the project at the root of the repository
+      if: inputs.run-stew == 'true' && inputs.project-name == '.'
+      shell: bash
+      run: echo "STEW_CI_ARGS=." >> $GITHUB_ENV
+
+    - name: "Run stew ci"
+      if: inputs.run-stew == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: poetry stew ci ${{ env.STEW_CI_ARGS }}
