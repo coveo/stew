@@ -70,6 +70,7 @@ autofix-args = ["."]
 
 [tool.black]
 line-length = 100
+target-version = ["py39"]
 
 [tool.isort]
 profile = "black"

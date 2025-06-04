@@ -3,7 +3,7 @@
 from collections import defaultdict
 from importlib.metadata import version as package_version
 from pathlib import Path
-from typing import Generator, Iterable, Optional, Set, Tuple, Union
+from typing import Generator, Optional, Set, Tuple, Union
 
 from cleo.io.io import IO
 from coveo_functools.finalizer import finalizer

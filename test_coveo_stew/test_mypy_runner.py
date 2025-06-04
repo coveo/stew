@@ -1,6 +1,6 @@
 from pathlib import Path
 from textwrap import dedent
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -212,7 +212,7 @@ def tmp_project(tmp_path: Path) -> MagicMock:
     ],
 )
 def test_check_and_skip_paths_mutually_exclusive(
-    tmp_project: MagicMock, check_paths: list[str] | str, skip_paths: list[str] | str
+    tmp_project: MagicMock, check_paths: Union[list[str], str], skip_paths: Union[list[str], str]
 ) -> None:
     """Test that check_paths and skip_paths cannot be used together."""
     with pytest.raises(ExitWithFailure, match="cannot be used together"):
