@@ -1,6 +1,7 @@
 .idea
 .ci
 .pytest_cache
+.poetry
 dist
 __pycache__
 .vscode/

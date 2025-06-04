@@ -3,6 +3,7 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
+from cleo.io.null_io import NullIO
 from coveo_systools.filesystem import pushd
 from coveo_testing.markers import Integration, UnitTest
 from coveo_testing.parametrize import parametrize
@@ -19,8 +20,8 @@ _ = pyproject_mock  # mark the fixture as used
 def test_pyproject_mock_initial_state(pyproject_mock: PythonProject) -> None:
     """A few basic checks on the project's initial state."""
     assert pyproject_mock.project_path.exists()
-    assert pyproject_mock.lock_path.exists()
-    assert pyproject_mock.toml_path.exists()
+    assert pyproject_mock.poetry.locker.is_locked()
+    assert pyproject_mock.poetry.pyproject_path.exists()
     assert not pyproject_mock.egg_path.exists()
     assert pyproject_mock.repo_root is None  # not a git root
 
@@ -35,10 +36,10 @@ def test_pyproject_mock_initial_state_integration(
 @UnitTest
 @parametrize("package_name", ("requests", "mock-pyproject-dependency"))
 def test_pyproject_dependencies(pyproject_mock: PythonProject, package_name: str) -> None:
-    dependency = pyproject_mock.package.dependencies[package_name]
-    assert dependency.version == "*"
+    dependency = next(d for d in pyproject_mock.dependencies if d.pretty_name == package_name)
+    assert dependency.pretty_constraint == "*"
     assert dependency.name == package_name
-    assert not dependency.optional
+    assert not dependency.is_optional()
     assert not dependency.extras
 
 
@@ -57,6 +58,7 @@ def test_pyproject_publish(pyproject_mock: PythonProject, tmpdir: PathLike) -> N
     with pushd(Path(tmpdir)):
         # note: local directories are found from working folder or git root
         offline_publish(
+            NullIO(),
             pyproject_mock,
             publish_location,
             next(pyproject_mock.virtual_environments(create_default_if_missing=True)),
@@ -91,4 +93,4 @@ def test_toml_not_a_poetry_project(tmp_path: Path) -> None:
         )
     )
     with pytest.raises(NotAPoetryProject):
-        _ = PythonProject(pyproject)
+        _ = PythonProject(NullIO(), pyproject)

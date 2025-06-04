@@ -1,5 +1,6 @@
 from typing import Any
 
+from cleo.io.io import IO
 from coveo_systools.subprocess import DetailedCalledProcessError, async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
@@ -12,8 +13,8 @@ class BlackRunner(ContinuousIntegrationRunner):
     name: str = "black"
     check_failed_exit_codes = [1]
 
-    def __init__(self, *, _pyproject: PythonProject) -> None:
-        super().__init__(_pyproject=_pyproject)
+    def __init__(self, io: IO, *, _pyproject: PythonProject) -> None:
+        super().__init__(io, _pyproject=_pyproject)
         self._auto_fix_routine = self.reformat_files
 
     async def _launch(

@@ -1,5 +1,6 @@
 from typing import Any
 
+from cleo.io.io import IO
 from coveo_systools.subprocess import async_check_output
 
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
@@ -15,12 +16,13 @@ class PytestRunner(ContinuousIntegrationRunner):
 
     def __init__(
         self,
+        io: IO,
         *,
         marker_expression: str = None,
         doctest_modules: bool = True,
         _pyproject: PythonProject,
     ) -> None:
-        super().__init__(_pyproject=_pyproject)
+        super().__init__(io, _pyproject=_pyproject)
         self.marker_expression = marker_expression
         self.doctest_modules: bool = doctest_modules
 
