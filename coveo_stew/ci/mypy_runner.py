@@ -182,9 +182,7 @@ class MypyRunner(ContinuousIntegrationRunner):
                     "Do the same thing in test folders if you want to type-check them.",
                     "Read more: https://typing.python.org/en/latest/spec/distributing.html#packaging-typed-libraries",
                 ]
-            ) from Exception(
-                "Cannot find a py.typed file."
-            )
+            ) from Exception("Cannot find a py.typed file.")
 
         args = [
             # the --python-executable switch tells mypy in which environment the imports should be followed.
