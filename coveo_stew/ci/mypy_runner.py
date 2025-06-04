@@ -32,8 +32,6 @@ class MypyRunner(ContinuousIntegrationRunner):
         _pyproject: PythonProject,
     ) -> None:
         super().__init__(io, _pyproject=_pyproject)
-        self.set_config = set_config
-
         if check_paths and skip_paths:
             raise ExitWithFailure(
                 failures=[
@@ -47,43 +45,59 @@ class MypyRunner(ContinuousIntegrationRunner):
                 ],
             )
 
-        project_path = self._pyproject.project_path
+        self.set_config = set_config
 
-        # Process check_paths
+        project_path = self._pyproject.project_path
+        self.check_paths = self._process_check_paths(check_paths, project_path)
+        self.skip_paths = self._process_skip_paths(skip_paths, project_path)
+
+    def _process_check_paths(
+        self, check_paths: Optional[Union[str, list[str]]], project_path: Path
+    ) -> list[Path]:
+        """Process and validate check_paths."""
         check_paths = check_paths or []
         if isinstance(check_paths, str):
             check_paths = [check_paths]
 
-        self.check_paths: list[Path] = [(project_path / path) for path in check_paths]
+        # validate
+        for path in check_paths:
+            self._validate_path_is_relative(path, "check-paths")
+            self._validate_typed_package(project_path / path)
 
-        # Process skip_paths
+        return [(project_path / path) for path in check_paths]
+
+    def _process_skip_paths(
+        self, skip_paths: Optional[Union[str, list[str]]], project_path: Path
+    ) -> list[Path]:
+        """Process and validate skip_paths."""
         skip_paths = skip_paths or []
         if isinstance(skip_paths, str):
             skip_paths = [skip_paths]
-        self.skip_paths: list[Path] = [(project_path / path) for path in skip_paths]
 
-        # validate inputs
-        for path in check_paths:
-            if Path(path).is_absolute():
-                raise ExitWithFailure(
-                    failures="`check-paths` contains absolute paths.",
-                    suggestions="Use a path relative to the project's `pyproject.toml` file.",
-                )
-            if not (project_path / path / PythonFile.TypedPackage).exists():
-                raise ExitWithFailure(
-                    failures=f"No py.typed file found in {path}",
-                    suggestions=(
-                        "Ensure the path is relative to the `pyproject.toml` file and contains a py.typed file, "
-                        "or remove it from `check-paths`."
-                    ),
-                )
-
+        # validate
         for path in skip_paths:
-            if Path(path).is_absolute():
-                raise ExitWithFailure(
-                    failures="`skip-paths` contains absolute paths.",
-                    suggestions="Use a path relative to the project's `pyproject.toml` file.",
-                )
+            self._validate_path_is_relative(path, "skip-paths")
+
+        return [(project_path / path) for path in skip_paths]
+
+    def _validate_path_is_relative(self, path: str, param_name: str) -> None:
+        """Validate that a path is relative."""
+        if Path(path).is_absolute():
+            raise ExitWithFailure(
+                failures=f"`{param_name}` contains absolute paths.",
+                suggestions="Use a path relative to the project's `pyproject.toml` file.",
+            )
+
+    def _validate_typed_package(self, path: Path) -> None:
+        """Validate that a path contains a py.typed file."""
+        if not (path / PythonFile.TypedPackage).exists():
+            raise ExitWithFailure(
+                failures=f"No py.typed file found in {path.name}",
+                suggestions=(
+                    "Ensure the path is relative to the `pyproject.toml` file and contains a py.typed file, "
+                    "or remove it from `check-paths`."
+                ),
+            )
 
     def _mypy_config_path(self) -> Optional[Path]:
         """Returns the path to the mypy config file."""
