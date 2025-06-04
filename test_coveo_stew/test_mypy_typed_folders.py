@@ -74,20 +74,15 @@ def setup_and_run_mypy(
     Args:
         tmp_path_factory: Fixture to create temporary paths
         typed_folders: Folders to create with py.typed files
-        untyped_folders: Folders to create without py.typed files
+        untyped_folders: Optional list of folders to create without py.typed files
         check_paths: Optional list of paths to explicitly check
         skip_paths: Optional list of paths to skip
 
     Returns:
         Set of relative paths found by MypyRunner._find_typed_folders()
     """
-    # Create mock project
     project = create_mock_project(tmp_path_factory)
-
-    # Create the folder structure
     create_folder_structure(project.project_path, typed_folders, untyped_folders)
-
-    # Create the MypyRunner with given parameters
     runner = MypyRunner(
         NullIO(), check_paths=check_paths, skip_paths=skip_paths, _pyproject=project
     )
@@ -191,8 +186,6 @@ def test_skip_paths_functionality(tmp_path_factory: TempPathFactory) -> None:
     # We expect to find only the typed folders that aren't in skip_paths
     # Both pkg1 and pkg4 folders (and subfolders) should be skipped
     expected_folder_set = {"pkg2/subpkg", "pkg3"}
-
-    # Assert the expected folders were found
     assert (
         found_folder_names == expected_folder_set
     ), f"Expected folders {expected_folder_set}, but found {found_folder_names}"
@@ -200,20 +193,15 @@ def test_skip_paths_functionality(tmp_path_factory: TempPathFactory) -> None:
 
 def test_check_paths_and_skip_paths_mutually_exclusive(tmp_path_factory: TempPathFactory) -> None:
     """Test that check_paths and skip_paths cannot be used together."""
-    # Create mock project
     project = create_mock_project(tmp_path_factory)
 
-    # This should raise a ValueError
     with pytest.raises(ExitWithFailure):
         MypyRunner(NullIO(), check_paths="yes", skip_paths="yes", _pyproject=project)
 
 
 def test_check_paths_must_contain_py_typed(tmp_path_factory: TempPathFactory) -> None:
     """Test that check_paths only accepts paths containing py.typed files."""
-    # Create mock project
     project = create_mock_project(tmp_path_factory)
-
-    # Create some folders with py.typed and some without
     typed_folders = {"pkg1", "pkg2"}
     untyped_folders = {"pkg3", "pkg4"}
     create_folder_structure(project.project_path, typed_folders, untyped_folders)

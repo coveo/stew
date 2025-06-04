@@ -61,9 +61,11 @@ def test_check_paths_must_have_py_typed(tmp_project: MagicMock) -> None:
     """Test that check_paths must point to a directory containing a py.typed file."""
     pkg: Path = tmp_project.project_path / "foo"
     pkg.mkdir()
+
     # Should fail if py.typed is missing
     with pytest.raises(ExitWithFailure, match="No py.typed file found"):
         MypyRunner(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
+
     # Should succeed if py.typed exists
     (pkg / "py.typed").touch()
     try:
