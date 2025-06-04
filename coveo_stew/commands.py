@@ -19,6 +19,7 @@ from coveo_stew.exceptions import (
     RequirementsOutdated,
 )
 from coveo_stew.offline_publish import offline_publish
+from coveo_stew.presets.presets_list import STEW_PRESETS_LIST
 from coveo_stew.pydev import is_pydev_project, pull_and_write_dev_requirements
 from coveo_stew.stew import (
     EnvironmentCreationBehavior,
@@ -383,3 +384,11 @@ def _discover_pyprojects(
         yield from discover_pyprojects(
             io, query=query, exact_match=exact_match, verbose=verbose, predicate=predicate
         )
+
+
+def presets_list(io: IO) -> None:
+    """List the builtin stew presets."""
+    io.write_line("\n<fg=green>Presets:</>")
+    for preset_fn, description in STEW_PRESETS_LIST:
+        io.write_line(f"  <fg=yellow>{preset_fn.__name__.replace('_', "-"):<20}</>: {description}")
+    io.write_line("")

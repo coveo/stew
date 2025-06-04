@@ -13,10 +13,11 @@ class StewPackage:
         *,
         build_without_hashes: bool = False,
         pydev: bool = False,
-        build_dependencies: Optional[Mapping[str, Any]] = None,
-        extras: Optional[List[str]] = None,
-        quick: Optional[Dict[str, Any]] = None,
+        build_dependencies: Optional[dict[str, Any]] = None,
+        extras: Optional[list[str]] = None,
+        quick: Optional[dict[str, Any]] = None,
         all_extras: bool = False,
+        presets: Optional[list[str]] = None,
     ) -> None:
         # poetry sometimes fail at getting hashes, in which case the export cannot work because pip will complain
         # that some files have a hash and some don't. This fixes it.
@@ -27,6 +28,7 @@ class StewPackage:
         self.extras = extras
         self.all_extras = all_extras
         self.quick = quick or {}
+        self.presets = presets or []
 
         if extras and all_extras:
             echo.suggest(

@@ -29,7 +29,7 @@ from coveo_stew.stew import PythonProject
 
 T = TypeVar("T")
 
-CIConfig = Optional[Union[Dict[str, Any], bool]]
+CIConfig = Optional[Union[dict[str, Any], bool]]
 
 
 class ContinuousIntegrationConfig:
@@ -44,7 +44,7 @@ class ContinuousIntegrationConfig:
         pytest: CIConfig = False,
         offline_build: CIConfig = False,
         black: CIConfig = False,
-        custom_runners: Optional[Dict[str, CIConfig]] = None,
+        custom_runners: Optional[dict[str, CIConfig]] = None,
         _pyproject: PythonProject,
     ):
         self._io = io

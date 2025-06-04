@@ -27,6 +27,7 @@ class StewPlugin(ApplicationPlugin):
         from coveo_stew.plugin_commands.fix_outdated_command import FixOutdatedCommand
         from coveo_stew.plugin_commands.fresh_eggs_command import FreshEggsCommand
         from coveo_stew.plugin_commands.locate_command import LocateCommand
+        from coveo_stew.plugin_commands.presets_list import PresetsListCommand
         from coveo_stew.plugin_commands.pull_dev_requirements_command import (
             PullDevRequirementsCommand,
         )
@@ -46,5 +47,6 @@ class StewPlugin(ApplicationPlugin):
             LocateCommand,
             RefreshCommand,
             CiCommand,
+            PresetsListCommand,
         ]:
             application.command_loader.register_factory(command_class.name, command_class)
