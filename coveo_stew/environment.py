@@ -50,14 +50,20 @@ class PythonEnvironment:
 
         python_path = Path(environment_path)
         if python_path.is_dir():
-            python_path = (python_path / self._prefix / "python").with_suffix(self._suffix)
+            # assume we were given the root virtual env path, as given by `poetry env info --path`
+            self.python_executable = (python_path / self._prefix / "python").with_suffix(
+                self._suffix
+            )
+            self.environment_path = python_path
+        else:
+            # assume we were given the python executable path within the environment
+            self.python_executable = python_path
+            self.environment_path = python_path.parent.parent
 
-        if not python_path.exists():
+        if not self.python_executable.exists():
             raise ExitWithFailure(
                 suggestions="Launch `poetry env use /path/to/python`"
             ) from FileNotFoundError(f"Cannot find a python executable in {environment_path}")
-
-        self.python_executable: Path = python_path
 
     def build_command(self, tool: Union[PythonTool, str], *args: Any) -> List[Any]:
         """

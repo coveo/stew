@@ -37,7 +37,7 @@ class ContinuousIntegrationRunner:
         self._pyproject = _pyproject
         self._last_output: List[str] = []
         self._test_cases: List[TestCase] = []
-        self._last_exception: Optional[DetailedCalledProcessError] = None
+        self._last_exception: Optional[Exception] = None
 
     @property
     def project(self) -> PythonProject:
@@ -114,7 +114,7 @@ class ContinuousIntegrationRunner:
         return "\n".join(self._last_output).strip()
 
     @property
-    def last_exception(self) -> Optional[DetailedCalledProcessError]:
+    def last_exception(self) -> Optional[Exception]:
         return self._last_exception
 
     def report_path(self, environment: PythonEnvironment) -> Path:
@@ -223,7 +223,7 @@ class Run:
     @cached_property
     def exceptions(
         self,
-    ) -> List[Tuple[ContinuousIntegrationRunner, DetailedCalledProcessError]]:
+    ) -> List[Tuple[Optional[ContinuousIntegrationRunner], Exception]]:
         """Exceptions are stored here after the run. Exceptions are cleared when `run_and_report` is called."""
         return []
 
@@ -246,7 +246,14 @@ class Run:
             for next_result in asyncio.as_completed(
                 [runner.launch(self.environment, auto_fix=False) for runner in self.checks]
             ):
-                self._report(await next_result, feedback=feedback)
+                try:
+                    result = await next_result
+                except Exception as exc:
+                    self.exceptions.append((None, exc))
+                    continue
+
+                self._report(result, feedback=feedback)
+
         else:
             for runner in self.checks:
                 self._report(
@@ -256,8 +263,12 @@ class Run:
 
         if self.exceptions:
             for check, exception in self.exceptions:
-                echo.error(f"The runner {check} created an exception: ", pad_before=True)
-                echo.noise(exception, pad_after=True)
+                if check is None:
+                    echo.error("A runner created an exception: ", pad_before=True)
+                    echo.noise(exception, pad_after=True)
+                else:
+                    echo.error(f"The runner {check} created an exception: ", pad_before=True)
+                    echo.noise(exception, pad_after=True)
 
             echo.error(
                 "One or more checks were not able to complete:",

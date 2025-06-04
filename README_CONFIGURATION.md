@@ -34,10 +34,10 @@ The `quick` option controls which checks are run or skipped when using the `--qu
 ```toml
 [tool.stew]
 # Skip these checks in quick mode
-quick = { skip = ["poetry-check", "check-outdated", "poetry-build", "pytest"] }
+quick.skip = ["poetry-check", "check-outdated", "poetry-build", "pytest"]
 
 # Or, only run these checks in quick mode
-quick = { check = ["mypy", "black"] }
+quick.check = ["mypy", "black"]
 ```
 
 ## CI Configuration
@@ -63,21 +63,21 @@ Each built-in runner can be configured with specific options:
 ```toml
 [tool.stew.ci]
 # Disable stew's strict mypy config (let mypy find its config)
-mypy = { set-config = false }
+mypy.set-config = false
 
 # Use a specific config (path relative to pyproject.toml's folder)
-mypy = { set-config = "mypy.ini" }
+mypy.set-config = "mypy.ini"
 ```
 
 #### pytest configuration
 
 ```toml
-[tool.stew.ci]
+[tool.stew.ci.pytest]
 # Configure the markers to test (i.e.: `-m`)
-pytest = { marker-expression = 'not docker_tests' }
+marker-expression = 'not docker_tests'
 
 # Disable the doctests
-pytest = { doctest-modules = false }
+doctest-modules = false
 ```
 
 #### black configuration

@@ -52,13 +52,16 @@ poetry-plugin-export = ">=1"
 [tool.stew]
 build-without-hashes = true
 
+[tool.stew.quick]
+skip = ["pytest", "check-outdated", "poetry-build", "poetry-check"]
+
 [tool.stew.ci]
 pytest = true
 offline-build = true
 black = true
 
-[tool.stew.ci.custom-runners]
-flake8 = { check-args = "--ignore=E203,E501,E701,E704,W503" }
+[tool.stew.ci.custom-runners.flake8]
+check-args = "--ignore=E203,E501,E701,E704,W503"
 
 [tool.stew.ci.custom-runners.isort]
 check-args = ["--check", "."]
@@ -67,6 +70,7 @@ autofix-args = ["."]
 
 [tool.black]
 line-length = 100
+target-version = ["py39"]
 
 [tool.isort]
 profile = "black"

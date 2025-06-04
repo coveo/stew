@@ -293,7 +293,7 @@ class PythonProject:
             # Ensure that a default environment exists.
             self._create_default_poetry_install(install=EnvironmentCreationBehavior.Empty)
 
-        _ = self.poetry_run("build", "--format", "wheel", capture_output=False)
+        _ = self.poetry_run("build", "--format", "wheel", capture_output=True)
 
         # cloudtrail_logs_firehose_ingest-0.1.0-py3-none-any.whl
         expected_distribution = self.poetry.package.name.replace("-", "_").casefold()

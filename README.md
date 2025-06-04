@@ -185,7 +185,7 @@ offline-build = false
 # Custom runners
 [tool.stew.ci.custom-runners]
 flake8 = true
-bandit = { check-args = ["--quiet", "--recursive", "."] }
+bandit.check-args = ["--quiet", "--recursive", "."]
 
 [tool.stew.ci.custom-runners.isort]
 check-args = ["--check", ".", "--profile", "black"]

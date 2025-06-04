@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Iterable, List
 
+from coveo_systools.subprocess import DetailedCalledProcessError
 from junit_xml import TestCase, TestSuite, to_xml_report_file
 
 from coveo_stew.ci.runner_status import RunnerStatus
@@ -63,11 +64,11 @@ def generate_github_step_report(ci_plans: Iterable[CIPlan]) -> None:
                     )
                     markdown.append(textwrap.indent(failed_check.last_output(), INDENT))
                     if failed_check.last_exception:
-                        markdown.append(
-                            textwrap.indent(
-                                failed_check.last_exception.format(summary=True), INDENT
-                            )
-                        )
+                        exception = failed_check.last_exception
+                        if isinstance(exception, DetailedCalledProcessError):
+                            markdown.append(textwrap.indent(exception.format(summary=True), INDENT))
+                        else:
+                            markdown.append(textwrap.indent(str(exception), INDENT))
 
         with Path(output_filename).open("a") as fd:
             fd.write("\n".join(markdown))
