@@ -76,6 +76,7 @@ class CiCommand(StewBaseCommand):
             extra=extra,
             no_extras=no_extras,
             all_extras=all_extras,
+            disable_cache=self.option("no-cache"),
         )
 
         return 0
