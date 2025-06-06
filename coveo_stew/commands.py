@@ -45,7 +45,7 @@ def _pull_dev_requirements(
 ) -> Generator[Path, None, None]:
     """Writes the dev-dependencies of pydev projects' local dependencies into pydev's pyproject.toml file."""
     dry_run_text = "(dry run) " if dry_run else ""
-    for pydev_project in _discover_pyprojects(io, predicate=is_pydev_project, verbose=verbose):
+    for pydev_project in cli_discover_projects(io, predicate=is_pydev_project, verbose=verbose):
         echo.step(f"Analyzing dev requirements for {pydev_project}")
         if pull_and_write_dev_requirements(io, pydev_project, dry_run=dry_run):
             echo.outcome(
@@ -73,7 +73,7 @@ def check_outdated(
     echo.step("Analyzing pyproject.toml files and artifacts:")
     outdated: Set[Path] = set()
     try:
-        for project in _discover_pyprojects(
+        for project in cli_discover_projects(
             io, query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.noise(project, item=True)
@@ -108,7 +108,7 @@ def fix_outdated(
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
-            for project in _discover_pyprojects(
+            for project in cli_discover_projects(
                 io, query=project_name, exact_match=exact_match, verbose=verbose
             ):
                 echo.noise(project, item=True)
@@ -131,7 +131,7 @@ def bump(
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
-            for project in _discover_pyprojects(
+            for project in cli_discover_projects(
                 io, query=project_name, exact_match=exact_match, verbose=verbose
             ):
                 echo.noise(project, item=True)
@@ -165,7 +165,7 @@ def build(
         exact_match = False  # if you write `stew build` we build all.
 
     try:
-        for project in _discover_pyprojects(
+        for project in cli_discover_projects(
             io, query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.noise(project, item=True)
@@ -221,7 +221,7 @@ def fresh_eggs(
     deleted = False
 
     try:
-        for project in _discover_pyprojects(
+        for project in cli_discover_projects(
             io, query=project_name, verbose=verbose, exact_match=exact_match
         ):
             echo.noise(project, item=True)
@@ -253,7 +253,7 @@ def locate(io: IO, project_name: str, verbose: bool = False) -> None:
         # check for partial matches to guide the user
         partial_matches = (
             project.poetry.package.pretty_name
-            for project in _discover_pyprojects(io, query=project_name, verbose=verbose)
+            for project in cli_discover_projects(io, query=project_name, verbose=verbose)
         )
         try:
             raise ExitWithFailure(
@@ -274,7 +274,7 @@ def refresh(
     echo.step("Refreshing python project environments...")
     pydev_projects = []
     try:
-        for project in _discover_pyprojects(
+        for project in cli_discover_projects(
             io, query=project_name, exact_match=exact_match, verbose=verbose
         ):
             if project.options.pydev:
@@ -313,7 +313,7 @@ def ci(
     """Run continuous integration steps on Python projects."""
     failures = defaultdict(list)
     try:
-        for project in _discover_pyprojects(
+        for project in cli_discover_projects(
             io, query=project_name, exact_match=exact_match, verbose=verbose
         ):
             echo.step(project.poetry.package.pretty_name, pad_after=False)
@@ -348,7 +348,7 @@ def ci(
         )
 
 
-def _discover_pyprojects(
+def cli_discover_projects(
     io: IO,
     query: Optional[str] = None,
     predicate: Optional[Predicate] = None,
