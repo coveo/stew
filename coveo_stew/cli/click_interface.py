@@ -9,7 +9,7 @@ from cleo.io.inputs.argv_input import ArgvInput
 from cleo.io.io import IO
 from cleo.io.outputs.output import Verbosity
 from cleo.io.outputs.stream_output import StreamOutput
-from coveo_styles.styles import echo, install_pretty_exception_hook, ExitWithFailure
+from coveo_styles.styles import ExitWithFailure, echo, install_pretty_exception_hook
 
 from coveo_stew import commands
 
@@ -18,6 +18,12 @@ _COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate", "version"]
 PROJECT_NAME_ARG: Final = click.argument("project_name", default=None, required=False)
 EXACT_MATCH_ARG: Final = click.option("--exact-match/--no-exact-match", default=False)
 VERBOSE_ARG: Final = click.option("--verbose", "-v", is_flag=True, default=False)
+NO_CACHE_ARG: Final = click.option(
+    "--no-cache",
+    is_flag=True,
+    default=False,
+    help="Adds `--no-cache` to all poetry commands.",
+)
 
 
 def create_io(verbose: bool = False) -> IO:
@@ -66,12 +72,20 @@ def version(verbose: bool = False) -> None:
 @PROJECT_NAME_ARG
 @EXACT_MATCH_ARG
 @VERBOSE_ARG
+@NO_CACHE_ARG
 def check_outdated(
-    project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+    project_name: Optional[str] = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    no_cache: bool = False,
 ) -> None:
     """Return error code 1 if toml/lock are not in sync."""
     commands.check_outdated(
-        io=create_io(verbose), project_name=project_name, exact_match=exact_match, verbose=verbose
+        io=create_io(verbose),
+        project_name=project_name,
+        exact_match=exact_match,
+        verbose=verbose,
+        disable_cache=no_cache,
     )
 
 
@@ -79,10 +93,12 @@ def check_outdated(
 @PROJECT_NAME_ARG
 @EXACT_MATCH_ARG
 @VERBOSE_ARG
+@NO_CACHE_ARG
 def fix_outdated(
     project_name: Optional[str] = None,
     exact_match: bool = False,
     verbose: bool = False,
+    no_cache: bool = False,
 ) -> None:
     """Scans the whole repo and updates outdated pyproject-related files.
 
@@ -90,7 +106,11 @@ def fix_outdated(
         - Lock files, only if their pyproject.toml was updated.
     """
     commands.fix_outdated(
-        io=create_io(verbose), project_name=project_name, exact_match=exact_match, verbose=verbose
+        io=create_io(verbose),
+        project_name=project_name,
+        exact_match=exact_match,
+        verbose=verbose,
+        disable_cache=no_cache,
     )
 
 
@@ -103,10 +123,9 @@ def fix_outdated(
 @click.option(
     "--directory", default=None, help="Deprecated: use --target instead.", deprecated=True
 )
-@click.option(
-    "--target", default=None, help="Directory where the built wheels should be stored."
-)
+@click.option("--target", default=None, help="Directory where the built wheels should be stored.")
 @click.option("--python", default=None, help="The python executable to use.")
+@NO_CACHE_ARG
 def build(
     project_name: Optional[str] = None,
     exact_match: bool = True,
@@ -114,6 +133,7 @@ def build(
     target: Union[str, Path] = None,
     python: Union[str, Path] = None,
     verbose: bool = False,
+    no_cache: bool = False,
 ) -> None:
     """
     Store all dependencies of a python project into a local directory, according to its poetry.lock,
@@ -127,7 +147,9 @@ def build(
     if not project_name:
         exact_match = False  # if you write `stew build` we build all.
 
-    target = target or directory  # Use target if provided, otherwise fallback to deprecated directory
+    target = (
+        target or directory
+    )  # Use target if provided, otherwise fallback to deprecated directory
 
     commands.build(
         io=create_io(verbose),
@@ -136,6 +158,7 @@ def build(
         directory=target,
         python=python,
         verbose=verbose,
+        disable_cache=no_cache,
     )
 
 
@@ -143,7 +166,12 @@ def build(
 @PROJECT_NAME_ARG
 @EXACT_MATCH_ARG
 @VERBOSE_ARG
-def fresh_eggs(project_name: str = None, exact_match: bool = False, verbose: bool = False) -> None:
+def fresh_eggs(
+    project_name: str = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    no_cache: bool = False,
+) -> None:
     """
     Removes the egg-info from project folders.
 
@@ -157,34 +185,56 @@ def fresh_eggs(project_name: str = None, exact_match: bool = False, verbose: boo
     won't be updated between runs. This is when this tool comes in handy.
     """
     commands.fresh_eggs(
-        io=create_io(verbose), project_name=project_name, exact_match=exact_match, verbose=verbose
+        io=create_io(verbose),
+        project_name=project_name,
+        exact_match=exact_match,
+        verbose=verbose,
+        disable_cache=no_cache,
     )
 
 
 @stew.command()
 @click.option("--dry-run/--no-dry-run", default=False)
 @VERBOSE_ARG
-def pull_dev_requirements(dry_run: bool = False, verbose: bool = False) -> None:
+@NO_CACHE_ARG
+def pull_dev_requirements(
+    dry_run: bool = False, verbose: bool = False, no_cache: bool = False
+) -> None:
     """Writes the dev-dependencies of pydev projects' local dependencies into pydev's pyproject.toml file."""
-    commands.pull_dev_requirements(io=create_io(verbose), dry_run=dry_run, verbose=verbose)
+    commands.pull_dev_requirements(
+        io=create_io(verbose), dry_run=dry_run, verbose=verbose, disable_cache=no_cache
+    )
 
 
 @stew.command()
 @click.argument("project_name")
 @click.option("--verbose", is_flag=True, default=False)
-def locate(project_name: str, verbose: bool = False) -> None:
+@NO_CACHE_ARG
+def locate(project_name: str, verbose: bool = False, no_cache: bool = False) -> None:
     """Locate a python project (in the whole git repo) and print the directory containing the pyproject.toml file."""
-    commands.locate(io=create_io(verbose), project_name=project_name, verbose=verbose)
+    commands.locate(
+        io=create_io(verbose), project_name=project_name, verbose=verbose, disable_cache=no_cache
+    )
 
 
 @stew.command()
 @PROJECT_NAME_ARG
 @EXACT_MATCH_ARG
 @VERBOSE_ARG
-def refresh(project_name: str = None, exact_match: bool = False, verbose: bool = False) -> None:
+@NO_CACHE_ARG
+def refresh(
+    project_name: str = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    no_cache: bool = False,
+) -> None:
     """Refresh python project environments."""
     commands.refresh(
-        io=create_io(verbose), project_name=project_name, exact_match=exact_match, verbose=verbose
+        io=create_io(verbose),
+        project_name=project_name,
+        exact_match=exact_match,
+        verbose=verbose,
+        disable_cache=no_cache,
     )
 
 
@@ -206,7 +256,12 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
     default=False,
     help="Do not call 'poetry install --sync' before testing.",
 )
-@click.option("--parallel", is_flag=True, help="Deprecated: Use --sequential to disable parallel checks.", deprecated=True)
+@click.option(
+    "--parallel",
+    is_flag=True,
+    help="Deprecated: Use --sequential to disable parallel checks.",
+    deprecated=True,
+)
 @click.option("--sequential", is_flag=True, help="Run checks sequentially instead of in parallel.")
 @click.option(
     "--github-step-report",
@@ -220,6 +275,7 @@ def refresh(project_name: str = None, exact_match: bool = False, verbose: bool =
 )
 @click.option("--no-extras", is_flag=True, help="Don't use any extras when testing.")
 @click.option("--all-extras", is_flag=True, help="Use all extras when testing.")
+@NO_CACHE_ARG
 def ci(
     project_name: str = None,
     exact_match: bool = False,
@@ -234,6 +290,7 @@ def ci(
     extra: Tuple[str, ...] = (),
     no_extras: bool = False,
     all_extras: bool = False,
+    no_cache: bool = False,
 ) -> None:
     """Run continuous integration steps on Python projects."""
 
@@ -245,7 +302,6 @@ def ci(
                 "The --parallel option is deprecated and does nothing anymore.",
             ],
         ) from ValueError("Both --parallel and --sequential were specified.")
-
 
     commands.ci(
         create_io(verbose),
@@ -261,6 +317,7 @@ def ci(
         extra=extra,
         no_extras=no_extras,
         all_extras=all_extras,
+        disable_cache=no_cache,
     )
 
 
@@ -268,10 +325,18 @@ def ci(
 @PROJECT_NAME_ARG
 @EXACT_MATCH_ARG
 @VERBOSE_ARG
+@NO_CACHE_ARG
 def bump(
-    project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+    project_name: Optional[str] = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    no_cache: bool = False,
 ) -> None:
     """Bumps locked versions."""
     commands.bump(
-        io=create_io(verbose), project_name=project_name, exact_match=exact_match, verbose=verbose
+        io=create_io(verbose),
+        project_name=project_name,
+        exact_match=exact_match,
+        verbose=verbose,
+        disable_cache=no_cache,
     )

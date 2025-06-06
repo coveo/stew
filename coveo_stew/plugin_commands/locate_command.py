@@ -21,5 +21,10 @@ class LocateCommand(StewBaseCommand):
     def run_stew_command(self) -> int:
         project_name = self.argument("project-name")
         verbose = self.io.is_verbose()
-        commands.locate(self.io, project_name, verbose=verbose)
+        commands.locate(
+            self.io,
+            project_name,
+            verbose=verbose,
+            disable_cache=self.option("no-cache"),
+        )
         return 0

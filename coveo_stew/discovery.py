@@ -38,6 +38,7 @@ def discover_pyprojects(
     verbose: bool = False,
     predicate: Optional[Predicate] = None,
     find_nested: bool = True,
+    disable_cache: bool = False,
 ) -> Generator[PythonProject, None, None]:
     """
     Search for Python projects in a path and return PythonProject instances.
@@ -52,6 +53,7 @@ def discover_pyprojects(
         verbose: output more details to command line
         predicate: optional inclusion filter
         find_nested: search in subdirectories
+        disable_cache: Will configure the execution to pass `--no-cache` to poetry.
     """
     assert isinstance(io, IO)
     if not path:
@@ -73,7 +75,7 @@ def discover_pyprojects(
                 cwd=file.parent,
                 io=io,
                 disable_plugins=False,
-                disable_cache=False,
+                disable_cache=disable_cache,
             )
         except PyProjectError as ex:
             # this will inform the user which pyproject.toml files were found and skipped
@@ -90,7 +92,7 @@ def discover_pyprojects(
             or (not exact_match and query.replace("-", "_").lower() in poetry.package.name.lower())
         ):
             count_projects += 1
-            yield PythonProject(io, poetry, verbose=verbose)
+            yield PythonProject(io, poetry, verbose=verbose, disable_cache=disable_cache)
 
     if count_projects == 0:
         raise PythonProjectNotFound(

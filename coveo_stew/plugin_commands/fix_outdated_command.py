@@ -30,5 +30,11 @@ class FixOutdatedCommand(StewBaseCommand):
         project_name = self.argument("project-name")
         exact_match = self.option("exact-match")
         verbose = self.io.is_verbose()
-        commands.fix_outdated(self.io, project_name, exact_match=exact_match, verbose=verbose)
+        commands.fix_outdated(
+            self.io,
+            project_name,
+            exact_match=exact_match,
+            verbose=verbose,
+            disable_cache=self.option("no-cache"),
+        )
         return 0
