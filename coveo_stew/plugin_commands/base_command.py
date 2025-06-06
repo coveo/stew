@@ -54,7 +54,7 @@ class StewBaseCommand(Command):
                     suggestions=[
                         "Make sure you are in the correct directory.",
                         "The `--project|-P` option is relative to the `--directory` option or the current working directory.",
-                        f"Stew can locate the project in nested directories using the package name: `poetry stew {self.name.split()[-1]} <package-name>`",
+                        f"Stew can locate the project in nested directories using the package name: `stew {self.name.split()[-1]} <package-name>`",
                     ],
                 )
             if not project_location.is_dir():

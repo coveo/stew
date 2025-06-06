@@ -79,7 +79,7 @@ Since all the local projects are dependencies, the `pull-dev-requirements` scrip
 in order to aggregate their dev requirements into the pydev environment.
 
 When you add or remove dev-dependencies, run `pull-dev-requirements` again.
-When you change the constraint of a dev-dependency, just run `poetry stew bump` or `poetry update` to lock the new version.
+When you change the constraint of a dev-dependency, just run `stew bump` or `poetry update` to lock the new version.
 
 
 # How to depend on a local python library
@@ -115,12 +115,12 @@ This can cause some problems, for instance if your library A and B both require 
 If you omit Z in B, your pydev environment will still have Z because it was included with A. 
 However, when you publish B, users will most likely run into an ImportError since Z was not specified there.
 
-To circumvent this, `poetry stew ci` mostly skips testing the `pydev` environment.
+To circumvent this, `stew ci` mostly skips testing the `pydev` environment.
 It will instead create an environment for A using A's `pyproject.toml` for tests.
 Then it will create the environment for B using B's `pyproject.toml` for tests.
 Technically, it should explode here if you forgot to include Z!
 
 It's a lot slower, but a lot more reliable.
 
-In other words, `poetry stew ci` treats each individual library as a product on its own, while the `pydev` environment
+In other words, `stew ci` treats each individual library as a product on its own, while the `pydev` environment
 only serves as a convenience for the developer to benefit from multiple editable python sources in a single environment.

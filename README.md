@@ -8,7 +8,8 @@ coveo-stew is a Poetry plugin that delivers simple CI/CD tools for python using 
 > [!IMPORTANT]
 > **Version 4.0 Breaking Changes**
 > 
-> Version 4.0 is a major breaking change as `coveo-stew` was rewritten as a Poetry plugin instead of a standalone CLI tool.
+> Version 4.0 is a major breaking change as `coveo-stew` was rewritten as a Poetry plugin
+> which required some changes to the command line interface.
 > 
 > If you're upgrading from a previous version, please refer to the [upgrade guide](./README_UPGRADE.md).
 
@@ -44,33 +45,56 @@ Similar to: nothing! it's unique! 😎
 
 ## Installation
 
-`coveo-stew` is a poetry plugin. Installation depends on how you installed poetry.
+`coveo-stew` can be installed either as a Poetry plugin or as a standalone CLI tool.
 
-### Using pipx (recommended)
+### As a Poetry plugin (recommended for CI servers)
+
+Starting from coveo-stew version 4.0, you can install stew as a Poetry plugin.
+
+We recommend this approach for CI servers: it's easier to inject a plugin into poetry than to install a new CLI tool
+into the path.
+Also, since poetry and stew share some common dependencies, it can translate into faster setups.
+
+Installation depends on how you installed Poetry:
+
+#### Using pipx
 
 ```shell
 pipx install poetry
-pipx inject poetry coveo-stew
+pipx inject poetry "coveo-stew>=4"
 ```
 
 See the [poetry documentation](https://python-poetry.org/docs/plugins/#using-plugins) for more information and alternative installation methods.
 
+### As a standalone CLI tool
+
+The main appeal of this approach is that it's shorter to type, making it a popular option for local development.
+
+In order to install stew as a standalone CLI tool, we recommend using `pipx`:
+
+```shell
+pipx install coveo-stew
+```
+
+> Note: Having both the plugin and the CLI won't cause issues.
+ 
+
 ## GitHub Action
 
-This action installs Python, Poetry, and Stew, then runs "poetry stew ci" on your Python project.
+This action installs Python, Poetry, and Stew, then runs "stew ci" on your Python project.
 
 ```yml
 jobs:
   stew-ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: coveo/stew/plugin@main
+      - uses: coveo/stew@main
         with:
           python-version: "3.10"
           project-name: your-project-name
 ```
 
-See additional options and documentation in [the action file](plugin/action.yml).
+See additional options and documentation in [the action file](./action.yml).
 
 ## Repository Structure
 
@@ -83,20 +107,34 @@ Please read these guides to learn how to organize your repository for maximum co
 
 ### General command usage
 
-All stew commands are now used as Poetry plugins:
+Calling coveo-stew will depend on how you installed it:
 
-```bash
-poetry stew <command> [options]
-```
+1. As a Poetry plugin:
+
+    ```bash
+    poetry stew <command> [options]
+    ```
+
+2. As a standalone CLI tool:
+
+    ```bash
+    stew <command> [options]
+    ```
+
+Both interfaces provide identical functionality. You can choose whichever approach you prefer based on your workflow.
 
 Unless a project name is specified, commands will operate on all projects in a git repository:
 
 ```bash
 # Perform a command on all projects
 poetry stew <command>
+# Or using the standalone CLI
+stew <command>
 
 # Get help about a specific command
 poetry stew <command> --help
+# Or using the standalone CLI
+stew <command> --help
 ```
 
 Some commands allow specifying a project name:
@@ -104,17 +142,25 @@ Some commands allow specifying a project name:
 ```bash
 # Run on all projects with <project-name> in their name (partial, case-insensitive)
 poetry stew <command> <project-name>
+# Or using the standalone CLI
+stew <command> <project-name>
 
 # Disable partial project name matching
 poetry stew <command> <project-name> --exact-match
+# Or using the standalone CLI
+stew <command> <project-name> --exact-match
 
 # Only consider the project at this location
 poetry stew <command> .<path>
+# Or using the standalone CLI
+stew <command> .<path>
 ```
+
+The remainder of the documentation will use `stew <command>` for brevity. Simply prefix with `poetry` if you installed it as a plugin.
 
 ## Main Commands
 
-### `poetry stew ci`
+### `stew ci`
 
 Runs all CI tools on one or multiple projects. Errors will show in the console, and JUnit XML reports will be generated inside the `.ci` folder.
 
@@ -132,12 +178,12 @@ Options:
 - `--all-extras`: Install all extras for this run
 - `--no-extras`: Don't install any extras for this run
 
-### `poetry stew build`
+### `stew build`
 
 Store the project and its **locked dependencies** to disk for offline installation:
 
 ```bash
-poetry stew build --target <folder>
+stew build --target <folder>
 ```
 
 The folder can later be installed offline with:
@@ -154,12 +200,12 @@ Options:
 
 ### Other useful commands
 
-- `poetry stew check-outdated` / `poetry stew fix-outdated`: Check for or update out-of-date files
-- `poetry stew pull-dev-requirements`: Update dev requirements in a `pydev` project
-- `poetry stew bump`: Run `poetry lock` on all projects
-- `poetry stew refresh`: Run `poetry install` on all projects
-- `poetry stew fresh-eggs`: Clear `.egg-info` folders (useful when changing `[tool.poetry.scripts]`)
-- `poetry stew locate <project>`: Return the path to a project
+- `stew check-outdated`: Check for or update out-of-date files
+- `stew pull-dev-requirements`: Update dev requirements in a `pydev` project
+- `stew bump`: Run `poetry lock` on all projects
+- `stew refresh`: Run `poetry install` on all projects
+- `stew fresh-eggs`: Clear `.egg-info` folders (useful when changing `[tool.poetry.scripts]`)
+- `stew locate <project>`: Return the path to a project
 
 ## Configuration
 

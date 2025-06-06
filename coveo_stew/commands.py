@@ -90,7 +90,7 @@ def check_outdated(
     if outdated:
         raise ExitWithFailure(
             failures=outdated,
-            suggestions='Run "poetry stew fix-outdated" to update all outdated files.',
+            suggestions='Run "stew fix-outdated" to update all outdated files.',
         ) from RequirementsOutdated(f"Found {len(outdated)} outdated file(s).")
 
     echo.success("Check complete! All scanned files are up-to-date.")

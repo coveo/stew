@@ -12,6 +12,7 @@ authors = [
 keywords = [ "packaging", "poetry", "plugin", "ci", "tests" ]
 
 dependencies = [
+    "click >=8.1",  # click 8.2 dropped support for python 3.9
     "coveo-functools >=2",
     "coveo-itertools >=2",
     "coveo-systools >=2",
@@ -28,6 +29,9 @@ dependencies = [
 
 [project.urls]
 repository = "https://github.com/coveo/stew"
+
+[project.scripts]
+stew = "coveo_stew.cli.click_interface:stew"
 
 [project.entry-points."poetry.application.plugin"]
 stew = "coveo_stew.poetry_plugin:StewPlugin"
