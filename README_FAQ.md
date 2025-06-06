@@ -4,12 +4,16 @@ This document addresses common questions and issues you might encounter when usi
 
 ## General Questions
 
-### What's the difference between `coveo-stew` v3.x and v4.x?
+### Are the plugin and CLI versions of coveo-stew the same?
 
-Version 4.0 restructured coveo-stew as a Poetry plugin instead of a standalone CLI tool. This change provides better integration with Poetry and ensures compatibility with newer Poetry versions. The main difference is that all commands now need to be prefixed with `poetry`:
+Yes, both the plugin and CLI versions of coveo-stew are functionally equivalent.
 
-- `stew ci` → `poetry stew ci`
-- `stew build` → `poetry stew build`
+There is one difference, which is the verbosity switch:
+- In the CLI version, use either `--verbose` or `-v` to enable verbose output.
+- In the plugin version, use `-v` to enable verbose output.
+
+Note: Stew only has one verbosity level (-v). Using `-vv` or `-vvv` will only increase poetry's verbosity.
+
 
 ### Can I use coveo-stew with older Python versions?
 
@@ -17,17 +21,19 @@ coveo-stew requires Python 3.9+ to run, but it can manage projects that target o
 
 ### How do I know which version of coveo-stew I'm using?
 
-You can check your installed version with:
+Plugin users may check the installed version with:
 
 ```bash
 poetry self show plugins
 ```
 
-Or you can use the builtin command, especially if you need a machine-readable output:
+If you need a machine-readable output or are using the CLI:
 
 ```bash
-poetry stew version
+stew version  # cli
+poetry stew version  # plugin
 ```
+
 
 ## Installation Issues
 
@@ -50,7 +56,7 @@ pipx inject poetry coveo-stew
 
 ## Command Issues
 
-### `poetry stew ci` fails with "command not found" errors
+### `stew ci` fails with "command not found" errors
 
 This typically happens when a tool (like mypy or black) isn't installed. Ensure these tools are:
 
@@ -62,7 +68,7 @@ This typically happens when a tool (like mypy or black) isn't installed. Ensure 
    ```
 2. Installed in your project's environment: `poetry install`
 
-### `poetry stew build` fails with missing hashes
+### `stew build` fails with missing hashes
 
 If you see an error related to missing hashes, add this to your `pyproject.toml`:
 
@@ -71,7 +77,7 @@ If you see an error related to missing hashes, add this to your `pyproject.toml`
 build-without-hashes = true
 ```
 
-### `poetry stew pull-dev-requirements` doesn't update all dependencies
+### `stew pull-dev-requirements` doesn't update all dependencies
 
 In v4.0, this command aggregates all non-optional groups from dependencies, not just the "dev" group. Make sure your dependency groups aren't marked as optional if you want them included.
 
@@ -98,16 +104,6 @@ Make sure the local dependencies are installed with `develop = true` in the path
 my-lib = { path = "./my-lib/", develop = true }
 ```
 
-## CI/CD Integration
-
-### GitHub Actions workflow fails with "stew command not found"
-
-If you're using the GitHub Actions workflow and getting errors, make sure you're using the updated plugin action:
-
-```yaml
-- uses: coveo/stew/plugin@main
-```
-
 ### How to use coveo-stew in CI pipelines other than GitHub
 
 For other CI systems, install Poetry and coveo-stew as part of your pipeline:
@@ -117,7 +113,7 @@ For other CI systems, install Poetry and coveo-stew as part of your pipeline:
 pipx install poetry
 pipx inject poetry coveo-stew
 
-# Then run stew commands
+# Then run stew commands through `poetry`
 poetry stew ci
 ```
 
@@ -127,7 +123,7 @@ poetry stew ci
 
 To create an offline-installable package:
 
-1. Run `poetry stew build --target <folder>` to create a directory with all needed wheel files
+1. Run `stew build --target <folder>` to create a directory with all needed wheel files
 2. This folder can be copied to any system and installed with:
    ```bash
    pip install --no-index --find-links <folder> your-package-name
@@ -160,13 +156,17 @@ check-args = ["--check", "--path", "."]
 
 Then run it with:
 ```
+stew ci --check my-tool  # run only my-tool
+stew ci  # run everything, including my-tool
+```
 
 ### How to debug issues in stew commands
 
-Run stew commands with verbose Poetry output:
+Run stew commands with verbose output:
 
 ```bash
-poetry -vvv stew ci
+poetry -vv stew ci  # plugin
+stew ci --verbose  # cli
 ```
 
 This will show more detailed information about what's happening behind the scenes.

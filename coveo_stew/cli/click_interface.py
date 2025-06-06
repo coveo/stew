@@ -17,7 +17,7 @@ _COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate", "version"]
 
 PROJECT_NAME_ARG: Final = click.argument("project_name", default=None, required=False)
 EXACT_MATCH_ARG: Final = click.option("--exact-match/--no-exact-match", default=False)
-VERBOSE_ARG: Final = click.option("--verbose", is_flag=True, default=False)
+VERBOSE_ARG: Final = click.option("--verbose", "-v", is_flag=True, default=False)
 
 
 def create_io(verbose: bool = False) -> IO:

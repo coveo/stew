@@ -12,6 +12,11 @@
   - It was always the default, so specifying it didn't change the functionality.
   - It can be disabled with `--sequential`, just like before.
 
+The rest of the steps in this document are optional:
+
+1. [Migrate to the Poetry plugin.](#Optional:-Migrate-to-the-Poetry-Plugin)
+2. [Adjust your `pyproject.toml` to the new format.](#Optional:-Adjust-your-pyproject.toml-to-the-new-format)
+
 
 ## Optional: Migrate to the Poetry Plugin
 

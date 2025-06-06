@@ -81,20 +81,20 @@ pipx install coveo-stew
 
 ## GitHub Action
 
-This action installs Python, Poetry, and Stew, then runs "poetry stew ci" on your Python project.
+This action installs Python, Poetry, and Stew, then runs "stew ci" on your Python project.
 
 ```yml
 jobs:
   stew-ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: coveo/stew/plugin@main
+      - uses: coveo/stew@main
         with:
           python-version: "3.10"
           project-name: your-project-name
 ```
 
-See additional options and documentation in [the action file](plugin/action.yml).
+See additional options and documentation in [the action file](./action.yml).
 
 ## Repository Structure
 
@@ -200,7 +200,7 @@ Options:
 
 ### Other useful commands
 
-- `stew check-outdated` / `poetry stew fix-outdated`: Check for or update out-of-date files
+- `stew check-outdated`: Check for or update out-of-date files
 - `stew pull-dev-requirements`: Update dev requirements in a `pydev` project
 - `stew bump`: Run `poetry lock` on all projects
 - `stew refresh`: Run `poetry install` on all projects
