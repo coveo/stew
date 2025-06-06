@@ -41,11 +41,13 @@ def _echo_updated(updated: Set[Path]) -> None:
 
 
 def _pull_dev_requirements(
-    io: IO, dry_run: bool = False, verbose: bool = False
+    io: IO, dry_run: bool = False, verbose: bool = False, disable_cache: bool = False
 ) -> Generator[Path, None, None]:
     """Writes the dev-dependencies of pydev projects' local dependencies into pydev's pyproject.toml file."""
     dry_run_text = "(dry run) " if dry_run else ""
-    for pydev_project in _discover_pyprojects(io, predicate=is_pydev_project, verbose=verbose):
+    for pydev_project in _discover_pyprojects(
+        io, predicate=is_pydev_project, verbose=verbose, disable_cache=disable_cache
+    ):
         echo.step(f"Analyzing dev requirements for {pydev_project}")
         if pull_and_write_dev_requirements(io, pydev_project, dry_run=dry_run):
             echo.outcome(
@@ -67,14 +69,22 @@ def version(io: IO) -> None:
 
 
 def check_outdated(
-    io: IO, project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+    io: IO,
+    project_name: Optional[str] = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """Return error code 1 if toml/lock are not in sync."""
     echo.step("Analyzing pyproject.toml files and artifacts:")
     outdated: Set[Path] = set()
     try:
         for project in _discover_pyprojects(
-            io, query=project_name, exact_match=exact_match, verbose=verbose
+            io,
+            query=project_name,
+            exact_match=exact_match,
+            verbose=verbose,
+            disable_cache=disable_cache,
         ):
             echo.noise(project, item=True)
             if not (project.poetry.locker.is_locked() and project.poetry.locker.is_fresh()):
@@ -83,7 +93,9 @@ def check_outdated(
         raise ExitWithFailure from exception
 
     try:
-        outdated.update(_pull_dev_requirements(io, dry_run=True, verbose=verbose))
+        outdated.update(
+            _pull_dev_requirements(io, dry_run=True, verbose=verbose, disable_cache=disable_cache)
+        )
     except PythonProjectNotFound:
         pass  # no pydev projects found.
 
@@ -97,7 +109,11 @@ def check_outdated(
 
 
 def fix_outdated(
-    io: IO, project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+    io: IO,
+    project_name: Optional[str] = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """Scans the whole repo and updates outdated pyproject-related files.
 
@@ -109,13 +125,21 @@ def fix_outdated(
     with finalizer(_echo_updated, updated):
         try:
             for project in _discover_pyprojects(
-                io, query=project_name, exact_match=exact_match, verbose=verbose
+                io,
+                query=project_name,
+                exact_match=exact_match,
+                verbose=verbose,
+                disable_cache=disable_cache,
             ):
                 echo.noise(project, item=True)
                 if project.lock_if_needed():
                     updated.add(project.poetry.locker.lock)
             try:
-                updated.update(_pull_dev_requirements(io, dry_run=False, verbose=verbose))
+                updated.update(
+                    _pull_dev_requirements(
+                        io, dry_run=False, verbose=verbose, disable_cache=disable_cache
+                    )
+                )
             except PythonProjectNotFound:
                 pass  # no pydev projects found
         except PythonProjectNotFound as exception:
@@ -125,14 +149,22 @@ def fix_outdated(
 
 
 def bump(
-    io: IO, project_name: Optional[str] = None, exact_match: bool = False, verbose: bool = False
+    io: IO,
+    project_name: Optional[str] = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """Bumps locked versions."""
     updated: Set[Path] = set()
     with finalizer(_echo_updated, updated):
         try:
             for project in _discover_pyprojects(
-                io, query=project_name, exact_match=exact_match, verbose=verbose
+                io,
+                query=project_name,
+                exact_match=exact_match,
+                verbose=verbose,
+                disable_cache=disable_cache,
             ):
                 echo.noise(project, item=True)
                 echo.step(f"Bumping {project.poetry.locker.lock}")
@@ -151,6 +183,7 @@ def build(
     directory: Union[str, Path] = None,
     python: Union[str, Path] = None,
     verbose: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """
     Store all dependencies of a python project into a local directory, according to its poetry.lock,
@@ -166,7 +199,11 @@ def build(
 
     try:
         for project in _discover_pyprojects(
-            io, query=project_name, exact_match=exact_match, verbose=verbose
+            io,
+            query=project_name,
+            exact_match=exact_match,
+            verbose=verbose,
+            disable_cache=disable_cache,
         ):
             echo.noise(project, item=True)
             _build(io, project, directory, python)
@@ -203,7 +240,11 @@ def _build(
 
 
 def fresh_eggs(
-    io: IO, project_name: str = None, exact_match: bool = False, verbose: bool = False
+    io: IO,
+    project_name: str = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """
     Removes the egg-info from project folders.
@@ -222,7 +263,11 @@ def fresh_eggs(
 
     try:
         for project in _discover_pyprojects(
-            io, query=project_name, verbose=verbose, exact_match=exact_match
+            io,
+            query=project_name,
+            verbose=verbose,
+            exact_match=exact_match,
+            disable_cache=disable_cache,
         ):
             echo.noise(project, item=True)
             if project.remove_egg_info():
@@ -237,15 +282,21 @@ def fresh_eggs(
     echo.success()
 
 
-def pull_dev_requirements(io: IO, dry_run: bool = False, verbose: bool = False) -> None:
+def pull_dev_requirements(
+    io: IO, dry_run: bool = False, verbose: bool = False, disable_cache: bool = False
+) -> None:
     """Writes the dev-dependencies of pydev projects' local dependencies into pydev's pyproject.toml file."""
     try:
-        list(_pull_dev_requirements(io, dry_run=dry_run, verbose=verbose))
+        list(
+            _pull_dev_requirements(
+                io, dry_run=dry_run, verbose=verbose, disable_cache=disable_cache
+            )
+        )
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
 
 
-def locate(io: IO, project_name: str, verbose: bool = False) -> None:
+def locate(io: IO, project_name: str, verbose: bool = False, disable_cache: bool = False) -> None:
     """Locate a python project (in the whole git repo) and print the directory containing the pyproject.toml file."""
     try:
         echo.passthrough(find_pyproject(io, project_name, verbose=verbose).project_path)
@@ -253,7 +304,9 @@ def locate(io: IO, project_name: str, verbose: bool = False) -> None:
         # check for partial matches to guide the user
         partial_matches = (
             project.poetry.package.pretty_name
-            for project in _discover_pyprojects(io, query=project_name, verbose=verbose)
+            for project in _discover_pyprojects(
+                io, query=project_name, verbose=verbose, disable_cache=disable_cache
+            )
         )
         try:
             raise ExitWithFailure(
@@ -268,14 +321,22 @@ def locate(io: IO, project_name: str, verbose: bool = False) -> None:
 
 
 def refresh(
-    io: IO, project_name: str = None, exact_match: bool = False, verbose: bool = False
+    io: IO,
+    project_name: str = None,
+    exact_match: bool = False,
+    verbose: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """Refresh python project environments."""
     echo.step("Refreshing python project environments...")
     pydev_projects = []
     try:
         for project in _discover_pyprojects(
-            io, query=project_name, exact_match=exact_match, verbose=verbose
+            io,
+            query=project_name,
+            exact_match=exact_match,
+            verbose=verbose,
+            disable_cache=disable_cache,
         ):
             if project.options.pydev:
                 pydev_projects.append(project)
@@ -309,12 +370,17 @@ def ci(
     extra: Tuple[str, ...] = (),
     no_extras: bool = False,
     all_extras: bool = False,
+    disable_cache: bool = False,
 ) -> None:
     """Run continuous integration steps on Python projects."""
     failures = defaultdict(list)
     try:
         for project in _discover_pyprojects(
-            io, query=project_name, exact_match=exact_match, verbose=verbose
+            io,
+            query=project_name,
+            exact_match=exact_match,
+            verbose=verbose,
+            disable_cache=disable_cache,
         ):
             echo.step(project.poetry.package.pretty_name, pad_after=False)
 
@@ -354,6 +420,7 @@ def _discover_pyprojects(
     predicate: Optional[Predicate] = None,
     exact_match: bool = False,
     verbose: bool = False,
+    disable_cache: bool = False,
 ) -> Generator[PythonProject, None, None]:
     if query and query.startswith("."):
         if exact_match:
@@ -361,9 +428,19 @@ def _discover_pyprojects(
                 f"--exact-match only works with project names, but we are targeting a path: {query}"
             )
         yield from discover_pyprojects(
-            io, path=Path(query), verbose=verbose, find_nested=False, predicate=predicate
+            io,
+            path=Path(query),
+            verbose=verbose,
+            find_nested=False,
+            predicate=predicate,
+            disable_cache=disable_cache,
         )
     else:
         yield from discover_pyprojects(
-            io, query=query, exact_match=exact_match, verbose=verbose, predicate=predicate
+            io,
+            query=query,
+            exact_match=exact_match,
+            verbose=verbose,
+            predicate=predicate,
+            disable_cache=disable_cache,
         )

@@ -50,8 +50,8 @@ class BuildCommand(StewBaseCommand):
             exact_match=True,
             directory=self.option("target"),
             python=self.option("python"),
-            # todo: tap into Cleo's IO so we don't need to pass this around.
             #  The `io` object is automatically configured with poetry's builtin `-vvv` flags.
             verbose=self.io.is_verbose(),
+            disable_cache=self.option("no-cache"),
         )
         return 0
