@@ -31,5 +31,6 @@ class BumpCommand(StewBaseCommand):
             self.argument("project-name"),
             exact_match=self.option("exact-match"),
             verbose=self.io.is_verbose(),
+            disable_cache=self.option("no-cache"),
         )
         return 0
