@@ -76,6 +76,11 @@ jobs:
     strategy:
       matrix:
         coveo-stew-version: ['>=4.0a4', '>=3,<4']
+        include:
+          - coveo-stew-version: '>=4.0a4'
+            run_stew: "true"
+          - coveo-stew-version: '>=3,<4'
+            run_stew: "false"  # Don't run stew directly in the action for 3.x
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
@@ -91,3 +96,19 @@ jobs:
           project-name: coveo-stew
           coveo-stew-version: ${{ matrix.coveo-stew-version }}
           poetry-version: '>=2'
+          run-stew: ${{ matrix.run_stew }}
+
+      # Special conversion steps only for coveo-stew 3.x
+      - name: Convert pyproject.toml to legacy format (for coveo-stew 3.x)
+        if: matrix.coveo-stew-version == '>=3,<4'
+        shell: bash
+        run: |
+          # Install required dependency for the conversion script and run it
+          pip install tomlkit
+          python convert_to_legacy_poetry.py
+
+          # Delete poetry.lock file
+          rm -f poetry.lock
+
+          # run stew ci
+          stew ci coveo-stew --exact-match
