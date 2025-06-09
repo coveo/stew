@@ -2,7 +2,7 @@ from cleo.io.inputs.argument import Argument
 from cleo.io.inputs.option import Option
 
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class BumpCommand(StewBaseCommand):
@@ -27,8 +27,8 @@ class BumpCommand(StewBaseCommand):
 
     def run_stew_command(self) -> int:
         commands.bump(
-            self.io,
-            self.argument("project-name"),
+            io=self.io,
+            project_name=self.argument("project-name"),
             exact_match=self.option("exact-match"),
             verbose=self.io.is_verbose(),
             disable_cache=self.option("no-cache"),

@@ -1,5 +1,5 @@
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class VersionCommand(StewBaseCommand):
@@ -8,5 +8,5 @@ class VersionCommand(StewBaseCommand):
     help = "Show the coveo-stew version"
 
     def run_stew_command(self) -> int:
-        commands.version(self.io)
+        commands.version(io=self.io)
         return 0

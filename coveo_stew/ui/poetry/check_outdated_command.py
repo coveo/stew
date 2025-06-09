@@ -2,20 +2,20 @@ from cleo.io.inputs.argument import Argument
 from cleo.io.inputs.option import Option
 
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
-class FreshEggsCommand(StewBaseCommand):
-    name = "stew fresh-eggs"
+class CheckOutdatedCommand(StewBaseCommand):
+    name = "stew check-outdated"
 
-    help = "Refreshes the `egg-info` information from the environment. For instance, use this after changing your entrypoint scripts."
+    help = "Check for out-of-date files."
 
     arguments = [
         Argument(
             "project-name",
             required=False,
             is_list=False,
-            description="The name of the project to refresh eggs for. If not provided, all projects will be processed.",
+            description="The name of the project to check for outdated dependencies. If not provided, all projects will be checked.",
         )
     ]
 
@@ -30,9 +30,9 @@ class FreshEggsCommand(StewBaseCommand):
         project_name = self.argument("project-name")
         exact_match = self.option("exact-match")
         verbose = self.io.is_verbose()
-        commands.fresh_eggs(
-            self.io,
-            project_name,
+        commands.check_outdated(
+            io=self.io,
+            project_name=project_name,
             exact_match=exact_match,
             verbose=verbose,
             disable_cache=self.option("no-cache"),
