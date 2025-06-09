@@ -4,22 +4,22 @@ from coveo_systools.filesystem import pushd
 from coveo_testing.parametrize import parametrize
 from poetry.console.application import Application
 
-from coveo_stew.plugin_commands.build_command import BuildCommand
-from coveo_stew.plugin_commands.bump_command import BumpCommand
-from coveo_stew.plugin_commands.check_outdated_command import (
+from coveo_stew.poetry_plugin import StewPlugin
+from coveo_stew.ui.poetry.build_command import BuildCommand
+from coveo_stew.ui.poetry.bump_command import BumpCommand
+from coveo_stew.ui.poetry.check_outdated_command import (
     CheckOutdatedCommand,
 )
-from coveo_stew.plugin_commands.ci_command import CiCommand
-from coveo_stew.plugin_commands.fix_outdated_command import FixOutdatedCommand
-from coveo_stew.plugin_commands.fresh_eggs_command import FreshEggsCommand
-from coveo_stew.plugin_commands.locate_command import LocateCommand
-from coveo_stew.plugin_commands.pull_dev_requirements_command import (
+from coveo_stew.ui.poetry.ci_command import CiCommand
+from coveo_stew.ui.poetry.fix_outdated_command import FixOutdatedCommand
+from coveo_stew.ui.poetry.fresh_eggs_command import FreshEggsCommand
+from coveo_stew.ui.poetry.locate_command import LocateCommand
+from coveo_stew.ui.poetry.pull_dev_requirements_command import (
     PullDevRequirementsCommand,
 )
-from coveo_stew.plugin_commands.refresh_command import RefreshCommand
-from coveo_stew.plugin_commands.stew_command import StewCommand
-from coveo_stew.plugin_commands.version_command import VersionCommand
-from coveo_stew.poetry_plugin import StewPlugin
+from coveo_stew.ui.poetry.refresh_command import RefreshCommand
+from coveo_stew.ui.poetry.stew_command import StewCommand
+from coveo_stew.ui.poetry.version_command import VersionCommand
 
 COMMANDS = [
     StewCommand,

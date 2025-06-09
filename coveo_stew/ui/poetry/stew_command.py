@@ -2,7 +2,7 @@ from cleo.descriptors.text_descriptor import TextDescriptor
 from cleo.io.io import IO
 from poetry.console.application import Application
 
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class StewCommand(StewBaseCommand):

@@ -4,7 +4,8 @@ This guide details the CI runners available in coveo-stew and how to configure c
 
 ## Built-in Runners
 
-By default, `poetry stew ci` includes several built-in runners that can be enabled or disabled in your `pyproject.toml` file:
+By default, `stew ci` includes several built-in runners that can be enabled or disabled in your `pyproject.toml`
+file:
 
 ```toml
 [tool.stew.ci]
@@ -26,11 +27,29 @@ Runs mypy type checking on your codebase with strict checking enabled by default
 mypy = true
 
 # Disable strict config (use project's mypy.ini/setup.cfg)
-mypy = { set-config = false }
+mypy.set-config = false
 
 # Use a specific config file
-mypy = { set-config = "mypy.ini" }
+mypy.set-config = "mypy.ini"
+
+# Exclude a specific path from the automatic typed folders detection:
+mypy.skip-paths = "examples"
+
+# Disable automatic typed folders detection in favor of specific paths:
+mypy.check-paths = ["src", "tools"]
 ```
+
+By default, the mypy runner automatically detects and type-checks folders containing a `py.typed` file (as
+per [PEP 561](https://www.python.org/dev/peps/pep-0561/)).
+
+Options exist to control which paths are type-checked:
+
+1. **Explicit inclusion**: Use `check-paths` to specify exactly which paths should be type-checked, overriding automatic
+   detection entirely.
+2. **Selective exclusion**: Use `skip-paths` to exclude specific paths from automatic detection.
+
+Note that `check-paths` and `skip-paths` are mutually exclusive.
+Both options support the string (single path) or the list of strings.
 
 ### pytest Runner
 
@@ -42,17 +61,21 @@ Runs your test suite using pytest.
 pytest = true
 
 # Configure markers
-pytest = { marker-expression = "not slow" }
+pytest.marker-expression = "not slow"
 
 # Disable doctest
-pytest = { doctest-modules = false }
+pytest.doctest-modules = false
 
 # Multiple configurations
-pytest = { 
-  marker-expression = "not slow", 
-  doctest-modules = false,
-  junit-report = "custom-report.xml"
-}
+pytest.marker-expression = "not slow"
+pytest.doctest-modules = false
+pytest.junit-report = "custom-report.xml"
+
+# Alternative syntax
+[tool.stew.ci.pytest]
+marker-expression = "not slow"
+doctest-modules = false
+junit-report = "custom-report.xml"
 ```
 
 ### black Runner
@@ -101,7 +124,8 @@ offline-build = true
 
 ## Custom Runners
 
-You can define custom runners for any command-line tool. Custom runners are defined in the `[tool.stew.ci.custom-runners]` section:
+You can define custom runners for any command-line or python-module tool. Custom runners are defined in the
+`[tool.stew.ci.custom-runners]` section:
 
 ```toml
 [tool.stew.ci.custom-runners]
@@ -109,36 +133,32 @@ You can define custom runners for any command-line tool. Custom runners are defi
 flake8 = true
 
 # Specify command-line arguments
-bandit = { check-args = ["--quiet", "--recursive", "."] }
+bandit.check-args = ["--quiet", "--recursive", "."]
 
 # Runner with auto-fix capability
-isort = { 
-  check-args = ["--check", ".", "--profile", "black"],
-  autofix-args = [".", "--profile", "black"]
-}
+isort.check-args = ["--check", ".", "--profile", "black"]
+isort.autofix-args = [".", "--profile", "black"]
 ```
 
 ### Custom Runner Options
 
-| Option | Description |
-|--------|-------------|
-| `check-args` | Arguments to pass to the runner when checking |
-| `autofix-args` | Arguments to pass when fixing issues (used with `--fix` flag) |
-| `force-fix` | When `true`, run the fix command even if the check didn't fail |
-| `junit-report` | Path to write JUnit XML report (relative to project) |
-| `report-file` | Path to write the plain text report (relative to project) |
-| `fail-level` | Minimum severity level to cause failure (`error`, `warning`, `info`) |
-| `report-level` | Minimum level to report (`error`, `warning`, `info`, `debug`) |
+| Option         | Description                                                          |
+|----------------|----------------------------------------------------------------------|
+| `check-args`   | Arguments to pass to the runner when checking                        |
+| `autofix-args` | Arguments to pass when fixing issues (used with `--fix` flag)        |
+| `force-fix`    | When `true`, run the fix command even if the check didn't fail       |
+| `junit-report` | Path to write JUnit XML report (relative to project)                 |
+| `report-file`  | Path to write the plain text report (relative to project)            |
+| `fail-level`   | Minimum severity level to cause failure (`error`, `warning`, `info`) |
+| `report-level` | Minimum level to report (`error`, `warning`, `info`, `debug`)        |
 
 ### Example: Adding pylint
 
 ```toml
-[tool.stew.ci.custom-runners]
-pylint = { 
-  check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"],
-  report-file = ".ci/pylint-report.txt",
-  junit-report = ".ci/pylint-junit.xml"
-}
+[tool.stew.ci.custom-runners.pylint]
+check-args = ["--rcfile=pylintrc", "--output-format=text", "your_package"]
+report-file = ".ci/pylint-report.txt"
+junit-report = ".ci/pylint-junit.xml"
 ```
 
 ### Example: Adding isort with auto-fixing
@@ -156,13 +176,13 @@ You can control which runners execute during a CI run using command-line flags:
 
 ```bash
 # Run only specific runners
-poetry stew ci --check mypy --check black
+stew ci --check mypy --check black
 
 # Skip specific runners
-poetry stew ci --skip pytest --skip black
+stew ci --skip pytest --skip black
 
 # Enable auto-fixing
-poetry stew ci --fix
+stew ci --fix
 ```
 
 The `--check` and `--skip` options can be repeated to specify multiple runners.

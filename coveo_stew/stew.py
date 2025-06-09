@@ -59,6 +59,7 @@ class PythonProject:
         poetry: Union[Poetry, Path],
         *,
         verbose: bool = False,
+        disable_cache: bool = False,
     ) -> None:
         self.io = io
         self.verbose = verbose
@@ -69,8 +70,7 @@ class PythonProject:
                     cwd=poetry.parent if poetry.is_file() else poetry,
                     io=io,
                     disable_plugins=False,
-                    # todo: propagate disable_cache from the command line
-                    disable_cache=False,
+                    disable_cache=disable_cache,
                 )
             except RuntimeError as ex:
                 raise NotAPoetryProject(poetry) from ex
@@ -105,7 +105,6 @@ class PythonProject:
                 io=self.io,
             )
         else:
-            # todo: lazy load everything
             self.ci = flexfactory(
                 ContinuousIntegrationConfig,
                 **dict_lookup(toml_content, "tool", "stew", "ci", default={}),
@@ -275,10 +274,9 @@ class PythonProject:
         if not self.poetry.locker.is_locked():
             return self.lock_if_needed()
 
-        # todo: the poetry.locker already has the content, no need to read it from disk again?
         content = self.poetry.locker.lock.read_text()
         self.poetry_run("update", "--lock", breakout_of_venv=True)
-        # todo: need to refresh the internal object
+        self.poetry.locker._lock_data = None
         if content != self.poetry.locker.lock.read_text():
             return True
         return False
@@ -293,7 +291,7 @@ class PythonProject:
             # Ensure that a default environment exists.
             self._create_default_poetry_install(install=EnvironmentCreationBehavior.Empty)
 
-        _ = self.poetry_run("build", "--format", "wheel", capture_output=False)
+        _ = self.poetry_run("build", "--format", "wheel", capture_output=True)
 
         # cloudtrail_logs_firehose_ingest-0.1.0-py3-none-any.whl
         expected_distribution = self.poetry.package.name.replace("-", "_").casefold()
@@ -460,6 +458,7 @@ class PythonProject:
                 *find_python_tool(PythonTool.Poetry, environment=environment),
                 *commands,
                 "-vv" if self.verbose else "",
+                "--no-cache" if self.poetry.disable_cache else "",
                 working_directory=self.project_path,
                 capture_output=capture_output,
                 verbose=self.verbose,
