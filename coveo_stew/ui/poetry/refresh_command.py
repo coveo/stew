@@ -2,7 +2,7 @@ from cleo.io.inputs.argument import Argument
 from cleo.io.inputs.option import Option
 
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class RefreshCommand(StewBaseCommand):
@@ -31,8 +31,8 @@ class RefreshCommand(StewBaseCommand):
         exact_match = self.option("exact-match")
         verbose = self.io.is_verbose()
         commands.refresh(
-            self.io,
-            project_name,
+            io=self.io,
+            project_name=project_name,
             exact_match=exact_match,
             verbose=verbose,
             disable_cache=self.option("no-cache"),

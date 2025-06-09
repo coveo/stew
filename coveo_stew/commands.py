@@ -64,8 +64,7 @@ def _pull_dev_requirements(
 
 def version(io: IO) -> None:
     """Prints the version of the coveo-stew package."""
-    # we use print to keep the output clean for validations, etc.
-    print(f"coveo-stew {package_version('coveo-stew')}")
+    io.write_line(f"coveo-stew {package_version('coveo-stew')}")
 
 
 def check_outdated(

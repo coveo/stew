@@ -2,7 +2,7 @@ from cleo.io.inputs.argument import Argument
 from cleo.io.inputs.option import Option
 
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class CiCommand(StewBaseCommand):
@@ -63,8 +63,8 @@ class CiCommand(StewBaseCommand):
         all_extras = self.option("all-extras")
 
         commands.ci(
-            self.io,
-            project_name,
+            io=self.io,
+            project_name=project_name,
             exact_match=exact_match,
             fix=fix,
             check=check,

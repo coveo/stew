@@ -1,7 +1,7 @@
 from cleo.io.inputs.option import Option
 
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class PullDevRequirementsCommand(StewBaseCommand):
@@ -17,7 +17,7 @@ class PullDevRequirementsCommand(StewBaseCommand):
         dry_run = self.option("dry-run")
         verbose = self.io.is_verbose()
         commands.pull_dev_requirements(
-            self.io,
+            io=self.io,
             dry_run=dry_run,
             verbose=verbose,
             disable_cache=self.option("no-cache"),
