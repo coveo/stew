@@ -81,7 +81,7 @@ runs:
     - name: Target all projects in the repository
       if: inputs.run-stew == 'true' && inputs.project-name == ''
       shell: bash
-      run: echo "Stew will run on all projects in the repository."
+      run: echo "STEW_CI_ARGS=" >> $GITHUB_ENV
 
     - name: Target specific project by name
       if: inputs.run-stew == 'true' && inputs.project-name != '' && inputs.project-name != '.'
