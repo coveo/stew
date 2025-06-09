@@ -3,7 +3,7 @@ from cleo.io.inputs.option import Option
 from coveo_styles.styles import ExitWithFailure
 
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
 class BuildCommand(StewBaseCommand):
@@ -44,7 +44,7 @@ class BuildCommand(StewBaseCommand):
             )
 
         commands.build(
-            self.io,
+            io=self.io,
             project_name=self.argument("project-name"),
             # `stew build` forces `--exact-match`, unlike all other commands.
             exact_match=True,
