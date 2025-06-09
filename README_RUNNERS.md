@@ -4,7 +4,7 @@ This guide details the CI runners available in coveo-stew and how to configure c
 
 ## Built-in Runners
 
-By default, `poetry stew ci` includes several built-in runners that can be enabled or disabled in your `pyproject.toml`
+By default, `stew ci` includes several built-in runners that can be enabled or disabled in your `pyproject.toml`
 file:
 
 ```toml
@@ -176,13 +176,13 @@ You can control which runners execute during a CI run using command-line flags:
 
 ```bash
 # Run only specific runners
-poetry stew ci --check mypy --check black
+stew ci --check mypy --check black
 
 # Skip specific runners
-poetry stew ci --skip pytest --skip black
+stew ci --skip pytest --skip black
 
 # Enable auto-fixing
-poetry stew ci --fix
+stew ci --fix
 ```
 
 The `--check` and `--skip` options can be repeated to specify multiple runners.
