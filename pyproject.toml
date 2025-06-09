@@ -31,7 +31,7 @@ dependencies = [
 repository = "https://github.com/coveo/stew"
 
 [project.scripts]
-stew = "coveo_stew.cli.click_interface:stew"
+stew = "coveo_stew.ui.click.cli:stew"
 
 [project.entry-points."poetry.application.plugin"]
 stew = "coveo_stew.poetry_plugin:StewPlugin"
