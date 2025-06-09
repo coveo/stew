@@ -1,3 +1,83 @@
+# Upgrading from 3.x to 4.x
+
+## BREAKING CHANGES
+
+1. `stew build --directory` is now `stew build --target`
+   - Update your command from `build --directory <dir>` to `build --target <dir>`.
+   - The `--directory` option conflicted with Poetry's global `--directory` option.
+   - It was renamed to `--target` to mimic the behavior of `pip install --target`.
+
+2. The `--parallel` option has been removed from the `stew ci` command.
+  - Remove the `--parallel` option from your command if it was specified.
+  - It was always the default, so specifying it didn't change the functionality.
+  - It can be disabled with `--sequential`, just like before.
+
+The rest of the steps in this document are optional:
+
+1. [Migrate to the Poetry plugin.](#Optional:-Migrate-to-the-Poetry-Plugin)
+2. [Adjust your `pyproject.toml` to the new format.](#Optional:-Adjust-your-pyproject.toml-to-the-new-format)
+
+
+## Optional: Migrate to the Poetry Plugin
+
+These steps are optional. Choosing between the plugin and the standalone CLI is a matter of preference.
+
+The main advantage of the plugin is simpler installation, especially during CI. 
+All you need is a working Poetry installation in which you can inject the plugin.
+This is often easier and faster than installing a new CLI tool and add it to the path.
+
+For local operation, the command line interface is shorter to type.
+
+
+### Uninstall `coveo-stew` CLI
+
+Technically, you can have both the CLI and the plugin installed, so this step is optional.
+Uninstalling the CLI is recommended to avoid using 2 different versions of stew at the same time.
+
+For instance, if you installed it with pipx:
+
+```bash
+pipx uninstall coveo-stew
+```
+
+After uninstalling, validate that the `stew` command is no longer available.
+
+
+### Install as a plugin
+
+Installing the plugin depends on how you installed poetry [docs](https://python-poetry.org/docs/plugins/#using-plugins).
+
+For instance, if you installed with `pipx`, you can install the plugin with:
+
+```bash
+pipx inject poetry coveo-stew
+```
+
+
+### Adjust usages
+
+Change all occurrences of `stew` to `poetry stew`:
+
+- `stew ci` becomes `poetry stew ci`
+- `stew pull-dev-requirements` becomes `poetry stew pull-dev-requirements`
+
+Change occurrences of `stew build --directory <dir>` to `poetry stew build --target <dir>`.
+- The `--directory` option conflicted with poetry's global `--directory` option, so it was renamed to `--target` to mimick `pip install --target`.
+
+Remove the `--parallel` option from `stew ci` if it was specified, as it has been removed.
+
+## Optional: Adjust your `pyproject.toml` to the new format
+
+### Migrate to the new `[project]` section
+
+The `[tool.poetry]` section is now deprecated and replaced by the `[project]` section.
+- https://python-poetry.org/docs/pyproject/#the-project-section
+- https://packaging.python.org/en/latest/specifications/pyproject-toml/#declaring-project-metadata-the-project-table
+
+The ability to read different file formats is bound to the poetry version.
+At the time of writing, poetry still supports the old format.
+
+
 # Upgrading from 2.x to 3.x
 
 ## Poetry is not found
@@ -5,7 +85,7 @@
 You need to install poetry to the system and ensure it's available through the path as `poetry`.
 
 A common challenge is to make this work on a CI server.
-Feel free to use or refer to this [GitHub Action](README.md#GitHub-Action) ([source](action.yml)).
+Feel free to use or refer to this [GitHub Action](README.md#GitHub-Action) ([source](plugin/action.yml)).
 
 Here's an example on how to make it work within a Dockerfile, without pipx:
 

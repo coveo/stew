@@ -34,7 +34,8 @@ The root `pyproject.toml` needs to be designed so that:
 
 1. It's `poetry check` compliant.
 2. The `[tool.poetry.dependencies]` section should link to each subproject using a relative path reference.
-3. The `[tool.poetry.dev-dependencies]` must not be used. You will generate it.
+   - (only for the pydev project): We recommend using the `tool.poetry.dependencies` section for this, even if it's a deprecated format.
+3. The `[tool.poetry.group.stew-pydev.dependencies]` must not be used. It will be generated.
 4. The `[tool.stew]` section has `pydev=true`.
 
 Here's an example:
@@ -60,7 +61,7 @@ requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 ```
 
-You can then proceed to generate the `[poetry.tool.dev-dependencies]` section and create your virtual environment:
+You can then proceed to generate the `[poetry.tool.group.stew-pydev.dependencies]` section and create your virtual environment:
 
 ```
 $ stew pull-dev-requirements
@@ -69,11 +70,11 @@ $ poetry update
 
 The pydev environment has some caveats:
 
-- It cannot be packaged, published or even pip-installed. It's dev only, meant to be use with `poetry install`. 
+- It cannot be packaged, published or even pip-installed. It's dev only, meant to be used with `poetry install`. 
 - `stew ci` will skip it.
-- the `tool.poetry.dev-dependencies` section is reserved, can be generated and updated through stew's `pull-dev-requirements` and `fix-outdated` commands.
+- the `tool.poetry.group.stew-pydev.dependencies` section is reserved, can be generated and updated through stew's `pull-dev-requirements` and `fix-outdated` commands.
 
-The reason we generate dev requirements is that `poetry install` will not install `dev-requirements` of dependencies.
+The reason we generate dev requirements is that `poetry install` will not install groups from dependencies.
 Since all the local projects are dependencies, the `pull-dev-requirements` script will inspect each of them
 in order to aggregate their dev requirements into the pydev environment.
 
@@ -89,16 +90,18 @@ This is not particularly well handled by poetry and will cause problems with som
 We leverage poetry's `path` constraint in a very specific way to make it work:
 
 ```
-[tool.poetry.dependencies]
-my-package = { version = "^2.4" }
+[project]
+dependencies = [
+    "my-package >=2.4,<3.0",
+]
 
-[tool.poetry.dev-dependencies]
-my-package = { path = "../my-package/" }
+[tool.poetry.group.test.dependencies]
+my-package.path = "../my-package/"
 ```
 
 Essentially, the behavior we're looking for:
 
-- Through `pip install`, it will obtain the latest `^2.4` from `pypi.org`
+- Through `pip install`, it will obtain `>=2.4,<3.0` from `pypi.org`
 - Through `poetry install`, which is only meant for development, the source is fetched from the disk
 
 Note: Even if your libraries are not published to a `pypi` server, you can still use `stew build` to create an offline distribution.
@@ -117,5 +120,7 @@ It will instead create an environment for A using A's `pyproject.toml` for tests
 Then it will create the environment for B using B's `pyproject.toml` for tests.
 Technically, it should explode here if you forgot to include Z!
 
-In other words, `stew` treats each individual library as a product on its own, while the `pydev` environment
+It's a lot slower, but a lot more reliable.
+
+In other words, `stew ci` treats each individual library as a product on its own, while the `pydev` environment
 only serves as a convenience for the developer to benefit from multiple editable python sources in a single environment.

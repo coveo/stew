@@ -3,6 +3,7 @@ from pathlib import Path
 from shutil import copytree, rmtree
 
 import pytest
+from cleo.io.null_io import NullIO
 
 from coveo_stew.stew import PythonProject
 
@@ -41,4 +42,4 @@ def prepare_mock_project(main_project: Path, *subprojects: Path, tmpdir: PathLik
         pyproject_file.rename(pyproject_file.with_name("pyproject.toml"))
 
     # the main project's is provided, not the dependency mock.
-    return PythonProject(tmpdir / main_project)
+    return PythonProject(NullIO(), tmpdir / main_project)
