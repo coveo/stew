@@ -21,7 +21,7 @@ from coveo_stew.plugin_commands.stew_command import StewCommand
 from coveo_stew.plugin_commands.version_command import VersionCommand
 from coveo_stew.poetry_plugin import StewPlugin
 
-COMMNANDS = [
+COMMANDS = [
     StewCommand,
     BumpCommand,
     VersionCommand,
@@ -49,7 +49,7 @@ def stew(app: Application) -> CommandTester:
     return CommandTester(command)
 
 
-@parametrize("command_name", (command.name for command in COMMNANDS))
+@parametrize("command_name", (command.name for command in COMMANDS))
 def test_stew_plugin_command_names(command_name: str, app: Application) -> None:
     assert command_name.islower()
     assert command_name.startswith("stew")
@@ -58,13 +58,13 @@ def test_stew_plugin_command_names(command_name: str, app: Application) -> None:
         assert len(command_name.split(" ")) == 2
 
 
-@parametrize("command_name", (command.name for command in COMMNANDS))
+@parametrize("command_name", (command.name for command in COMMANDS))
 def test_stew_plugin_commands_hooked_up(command_name: str, app: Application) -> None:
     _ = app.find(command_name)  # will crash if not registered
 
 
 def test_stew_plugin_no_duplicate_commands(app: Application) -> None:
-    command_names = [command.name for command in COMMNANDS]
+    command_names = [command.name for command in COMMANDS]
     assert len(command_names) == len(set(command_names)), "Duplicate commands found!"
 
 
