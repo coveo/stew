@@ -49,10 +49,6 @@ pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1"
-
-
 [tool.stew]
 build-without-hashes = true
 
