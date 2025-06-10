@@ -46,6 +46,7 @@ class CiCommand(StewBaseCommand):
         ),
         Option("no-extras", description="Don't use any extras when testing."),
         Option("all-extras", description="Use all extras when testing."),
+        Option("raise", description="Raise exceptions instead of logging them."),
     ]
 
     def run_stew_command(self) -> int:
@@ -61,6 +62,7 @@ class CiCommand(StewBaseCommand):
         extra = self.option("extra")
         no_extras = self.option("no-extras")
         all_extras = self.option("all-extras")
+        raise_exceptions = self.option("raise")
 
         commands.ci(
             io=self.io,
@@ -77,6 +79,7 @@ class CiCommand(StewBaseCommand):
             no_extras=no_extras,
             all_extras=all_extras,
             disable_cache=self.option("no-cache"),
+            raise_exceptions=raise_exceptions,
         )
 
         return 0

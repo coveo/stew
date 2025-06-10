@@ -1,6 +1,5 @@
 """Interact with python projects programmatically."""
 
-import asyncio
 import os
 import re
 import shutil
@@ -15,7 +14,6 @@ from typing import (
     Any,
     Final,
     Generator,
-    Iterable,
     Iterator,
     List,
     Optional,
@@ -32,7 +30,6 @@ from coveo_systools.subprocess import check_run
 from poetry.factory import Factory
 from poetry.poetry import Poetry
 
-from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.config import load_config_from_presets
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
 from coveo_stew.exceptions import NotAPoetryProject, StewException, UsageError
@@ -91,11 +88,11 @@ class PythonProject:
         stew_config, ci_config = load_config_from_presets(io, toml_content)
         self.options = flex.deserialize(stew_config, hint=StewPackage, errors="raise")
 
-        from coveo_stew.ci.config import ContinuousIntegrationConfig  # circular import
+        from coveo_stew.ci.config import StewCIConfig  # circular import
 
         if self.options.pydev:
             # ensure no steps are repeated. pydev projects only receive basic poetry/lock checks
-            self.ci: ContinuousIntegrationConfig = ContinuousIntegrationConfig(
+            self.ci: StewCIConfig = StewCIConfig(
                 check_outdated=True,
                 poetry_check=True,
                 mypy=False,
@@ -103,9 +100,7 @@ class PythonProject:
                 io=self.io,
             )
         else:
-            self.ci = flexfactory(
-                ContinuousIntegrationConfig, **ci_config, io=self.io, _pyproject=self
-            )
+            self.ci = flexfactory(StewCIConfig, **ci_config, io=self.io, _pyproject=self)
 
         try:
             repo_root: Optional[Path] = find_repo_root(self.project_path)
@@ -340,27 +335,6 @@ class PythonProject:
             command.append("--without-hashes")
 
         return self.poetry_run(*command, capture_output=True)
-
-    def launch_continuous_integration(
-        self,
-        auto_fix: bool = False,
-        checks: Optional[Iterable[str]] = None,
-        skips: Optional[Iterable[str]] = None,
-        quick: bool = False,
-        parallel: bool = True,
-        github: bool = False,
-    ) -> RunnerStatus:
-        """Launch all continuous integration runners on the project."""
-        return asyncio.run(
-            self.ci.launch_continuous_integration(
-                auto_fix=auto_fix,
-                checks=checks,
-                skips=skips,
-                quick=quick,
-                parallel=parallel,
-                github=github,
-            )
-        )
 
     def install(
         self,

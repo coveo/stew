@@ -81,6 +81,46 @@ build-without-hashes = true
 
 In v4.0, this command aggregates all non-optional groups from dependencies, not just the "dev" group. Make sure your dependency groups aren't marked as optional if you want them included.
 
+### Cancelling stew with Ctrl+C prints a traceback
+
+This is a known issue with asyncio, particularly on Windows. 
+It happens because the asyncio event loop doesn't handle cancellation gracefully.
+
+You can safely ignore the traceback, as it doesn't affect the functionality of stew.
+
+e.g.:
+
+```bash
+Aborted!
+Exception ignored in: <function BaseSubprocessTransport.__del__ at 0x0000020DEC7ECD60>
+Traceback (most recent call last):
+  File "C:\py\3.12\Lib\asyncio\base_subprocess.py", line 126, in __del__
+    self.close()
+  File "C:\py\3.12\Lib\asyncio\base_subprocess.py", line 104, in close
+    proto.pipe.close()
+  File "C:\py\3.12\Lib\asyncio\proactor_events.py", line 109, in close
+    self._loop.call_soon(self._call_connection_lost, None)
+  File "C:\py\3.12\Lib\asyncio\base_events.py", line 795, in call_soon
+    self._check_closed()
+  File "C:\py\3.12\Lib\asyncio\base_events.py", line 541, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+```
+
+```bash
+Exception ignored in: <function _ProactorBasePipeTransport.__del__ at 0x0000020DEC7EE520>
+Traceback (most recent call last):
+  File "C:\py\3.12\Lib\asyncio\proactor_events.py", line 116, in __del__
+    _warn(f"unclosed transport {self!r}", ResourceWarning, source=self)
+                               ^^^^^^^^
+  File "C:\py\3.12\Lib\asyncio\proactor_events.py", line 80, in __repr__
+    info.append(f'fd={self._sock.fileno()}')
+                      ^^^^^^^^^^^^^^^^^^^
+  File "C:\py\3.12\Lib\asyncio\windows_utils.py", line 102, in fileno
+    raise ValueError("I/O operation on closed pipe")
+ValueError: I/O operation on closed pipe
+```
+
 ## Multiple Projects Issues
 
 ### Can't find local projects in multi-project setup

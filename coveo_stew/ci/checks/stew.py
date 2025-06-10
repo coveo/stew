@@ -1,4 +1,3 @@
-import asyncio
 import shutil
 import tempfile
 from pathlib import Path
@@ -8,43 +7,47 @@ from coveo_styles.styles import echo
 from coveo_systools.filesystem import pushd
 from coveo_systools.subprocess import async_check_output
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner
-from coveo_stew.ci.runner_status import RunnerStatus
+from coveo_stew.ci.checks.lib.base_check import BaseCheck
+from coveo_stew.ci.checks.lib.status import CheckStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
-from coveo_stew.offline_publish import offline_publish
 
 
-class CheckOutdatedRunner(ContinuousIntegrationRunner):
+class CheckOutdated(BaseCheck):
     name: str = "check-outdated"
 
-    async def _launch(
-        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
-    ) -> RunnerStatus:
+    async def _do_check(self, environment: PythonEnvironment, **kwargs: Any) -> CheckStatus:
         if self._pyproject.lock_is_outdated():
-            self._last_output = ['The lock file is out of date: run "stew fix-outdated"']
-            return RunnerStatus.CheckFailed
-        return RunnerStatus.Success
+            self.result.output.append('The lock file is out of date: run "stew fix-outdated"')
+            return CheckStatus.CheckFailed
+        return CheckStatus.Success
 
 
-class OfflineInstallRunner(ContinuousIntegrationRunner):
+class CheckOfflineBuild(BaseCheck):
     name: str = "poetry-build"
 
-    async def _launch(
-        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
-    ) -> RunnerStatus:
+    async def _do_check(self, environment: PythonEnvironment, **kwargs: Any) -> CheckStatus:
         temporary_folder = Path(tempfile.mkdtemp())
         offline_install_location = temporary_folder / "wheels"
 
         try:
-            # publish the offline wheels
-            offline_publish(
-                self.io, self._pyproject, offline_install_location, environment, quiet=False
+            output = await async_check_output(
+                *environment.build_command(
+                    PythonTool.Stew,
+                    "build",
+                    "--target",
+                    offline_install_location,
+                    "--python",
+                    environment.python_executable,
+                ),
+                remove_ansi=False,
+                **kwargs,
             )
+            self.result.output.extend(output.splitlines())
 
             # make sure pip install finds everything it needs from the offline location.
             # move out to a controlled file structure so that no folder imports are possible
             with pushd(temporary_folder):
-                await async_check_output(
+                output = await async_check_output(
                     *environment.build_command(
                         PythonTool.Pip,
                         "install",
@@ -64,8 +67,10 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                     remove_ansi=False,
                     **kwargs,
                 )
+
+            self.result.output.extend(output.splitlines())
+
         finally:
-            await asyncio.sleep(0.01)  # give a few cycles to close handles/etc
             try:
                 shutil.rmtree(temporary_folder)
             except PermissionError:
@@ -73,4 +78,4 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                     f"The temporary folder for this check could not be deleted: {temporary_folder}"
                 )
 
-        return RunnerStatus.Success
+        return CheckStatus.Success

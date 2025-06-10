@@ -6,8 +6,9 @@ from _pytest.tmpdir import TempPathFactory
 from cleo.io.null_io import NullIO
 from coveo_testing.parametrize import parametrize
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner
-from coveo_stew.ci.runner_status import RunnerStatus
+from coveo_stew.ci.checks.lib.base_check import BaseCheck
+from coveo_stew.ci.checks.lib.status import CheckStatus
+from coveo_stew.ci.stew_ci import stew_ci
 from coveo_stew.stew import PythonProject
 
 PROJECT_NAME: Final = "mock_linter_errors"
@@ -373,8 +374,8 @@ def write_code(project: PythonProject, code: str) -> Generator[None, None, None]
 @parametrize(
     ("code", "expected_outcome"),
     (
-        (BROKEN_CODE, RunnerStatus.CheckFailed),
-        (WORKING_CODE, RunnerStatus.Success),
+        (BROKEN_CODE, CheckStatus.CheckFailed),
+        (WORKING_CODE, CheckStatus.Success),
     ),
     ids=("broken", "correct"),
 )
@@ -392,34 +393,38 @@ def write_code(project: PythonProject, code: str) -> Generator[None, None, None]
 )
 def test_linters(
     code: str,
-    expected_outcome: RunnerStatus,
+    expected_outcome: CheckStatus,
     check: str,
     failure_text: str,
     linter_project: PythonProject,
 ) -> None:
     with write_code(linter_project, code):
-        outcome = linter_project.launch_continuous_integration(checks=[check], quick=True)
-        assert outcome in (RunnerStatus.Success, RunnerStatus.CheckFailed)
+        outcome = stew_ci(NullIO(), linter_project, checks=[check], quick=True)
+        assert outcome in (CheckStatus.Success, CheckStatus.CheckFailed)
         ci_runner = _check_result(outcome, expected_outcome, linter_project, check, failure_text)
-        if expected_outcome is RunnerStatus.CheckFailed and ci_runner.supports_auto_fix:
-            outcome = linter_project.launch_continuous_integration(
-                auto_fix=True, checks=[check], quick=True
+        if expected_outcome is CheckStatus.CheckFailed and ci_runner.supports_auto_fix:
+            outcome = stew_ci(
+                NullIO(),
+                linter_project,
+                auto_fix=True,
+                checks=[check],
+                quick=True,
             )
-            _ = _check_result(outcome, RunnerStatus.Success, linter_project, check, failure_text)
+            _ = _check_result(outcome, CheckStatus.Success, linter_project, check, failure_text)
 
 
 def _check_result(
-    outcome: RunnerStatus,
-    expected_outcome: RunnerStatus,
+    outcome: CheckStatus,
+    expected_outcome: CheckStatus,
     project: PythonProject,
     check_name: str,
     failure_text: str,
-) -> ContinuousIntegrationRunner:
+) -> BaseCheck:
     assert outcome is expected_outcome
-    check_instance = project.ci.get_runner(check_name)
-    assert isinstance(check_instance, ContinuousIntegrationRunner)
-    if expected_outcome is RunnerStatus.Success:
-        assert failure_text not in check_instance.last_output()
+    check_instance = project.ci.get_check(check_name)
+    assert isinstance(check_instance, BaseCheck)
+    if expected_outcome is CheckStatus.Success:
+        assert failure_text not in check_instance.result.get_output_string()
     else:
-        assert failure_text in check_instance.last_output()
+        assert failure_text in check_instance.result.get_output_string()
     return check_instance

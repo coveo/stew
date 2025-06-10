@@ -1,6 +1,7 @@
 import os
 import platform
 import re
+import sys
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
@@ -12,12 +13,14 @@ from coveo_systools.filesystem import find_application
 from coveo_systools.subprocess import check_output
 from packaging.version import Version
 
+from coveo_stew.context import context
 from coveo_stew.exceptions import ToolNotFound
 
 RUNNING_IN_WINDOWS: bool = bool(platform.system() == "Windows")
 
 
 class PythonTool(Enum):
+    Stew = "stew"
     Python = "python"
     Poetry = "poetry"
     Mypy = "mypy"
@@ -124,8 +127,15 @@ def find_python_tool(
     If it was found from the system:
         "/path/to/black"
     """
-    if environment and environment.has_tool(tool):
-        return environment.python_executable, "-m", str(tool)
+    stew = str(tool).casefold() == str(PythonTool.Stew)
+    if stew and context.is_running_as_poetry_plugin:
+        # reuse the current exec; validated through a poetry installed with pipx
+        return sys.executable, "-m", "poetry", "stew"
+
+    # the stew module is called coveo_stew, so we handle that.
+    python_tool_name = "coveo_stew" if stew else tool
+    if environment and environment.has_tool(python_tool_name):
+        return environment.python_executable, "-m", str(python_tool_name)
 
     if app := find_application(str(tool)):
         return (app,)

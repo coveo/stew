@@ -8,6 +8,8 @@ from cleo.commands.command import Command
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import pushd
 
+from coveo_stew.context import context
+
 
 class StewBaseCommand(Command, metaclass=ABCMeta):
     """Base class for all Stew commands that provides common functionality."""
@@ -27,6 +29,7 @@ class StewBaseCommand(Command, metaclass=ABCMeta):
     @contextmanager
     def _setup(self) -> Generator[None, None, None]:
         """Setup & Cleanup orchestrator."""
+        context.is_running_as_poetry_plugin = True
         with self._setup_project_directory():
             yield
 

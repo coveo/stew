@@ -10,9 +10,14 @@ from coveo_functools.finalizer import finalizer
 from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.filesystem import find_repo_root
 
-from coveo_stew.ci.runner_status import RunnerStatus
+from coveo_stew.ci.checks.lib.status import CheckStatus
+from coveo_stew.ci.reporting.reporting import (
+    random_check_failed_message,
+)
+from coveo_stew.ci.stew_ci import stew_ci
 from coveo_stew.discovery import Predicate, discover_pyprojects, find_pyproject
 from coveo_stew.exceptions import (
+    CheckError,
     CheckFailed,
     PythonProjectNotFound,
     RequirementsOutdated,
@@ -371,6 +376,7 @@ def ci(
     no_extras: bool = False,
     all_extras: bool = False,
     disable_cache: bool = False,
+    raise_exceptions: bool = False,
 ) -> None:
     """Run continuous integration steps on Python projects."""
     failures = defaultdict(list)
@@ -391,27 +397,40 @@ def ci(
             project.overrides_from_cli(extras=extra, no_extras=no_extras, all_extras=all_extras)
 
             if (
-                overall_result := project.launch_continuous_integration(
+                overall_result := stew_ci(
+                    io=io,
+                    pyproject=project,
                     auto_fix=fix,
                     checks=check,
                     skips=skip,
                     quick=quick,
                     parallel=parallel,
                     github=github_step_report,
+                    raise_exceptions=raise_exceptions,
                 )
-            ) not in (RunnerStatus.Success, RunnerStatus.NotRan):
+            ) not in (CheckStatus.Success, CheckStatus.NotRan):
                 failures[overall_result].append(project)
     except PythonProjectNotFound as exception:
         raise ExitWithFailure from exception
 
-    exit_code = (
-        2 if RunnerStatus.Error in failures else 1 if RunnerStatus.CheckFailed in failures else 0
-    )
-    if failures:
-        projects = (p for projects in failures.values() for p in projects)
-        raise ExitWithFailure(failures=projects, exit_code=exit_code) from CheckFailed(
-            f"{len(failures)} project(s) failed ci steps."
+    if CheckStatus.Error in failures:
+        check_examples_string = (
+            f"{CheckStatus.NotRan.colored()}, {CheckStatus.Success.colored()},"
+            f" {CheckStatus.CheckFailed.colored()} and {CheckStatus.Error.colored()}"
         )
+        io.write_line(
+            f"\n\n🤖 <fg=yellow><fg=light_blue>stew ci</fg> uses the exit code to determine {check_examples_string}."
+            f" To treat this error as a {CheckStatus.CheckFailed.colored()}, add its exit code to your configuration.</>"
+        )
+        raise ExitWithFailure(exit_code=2) from CheckError(
+            "At least one check return an unexpected exit code."
+        )
+
+    if CheckStatus.CheckFailed in failures:
+        suffix = next(random_check_failed_message)
+        raise ExitWithFailure(exit_code=1) from CheckFailed(f"At least one check {suffix}")
+
+    io.write_line("")  # Add a new line before the user prompt
 
 
 def _discover_pyprojects(

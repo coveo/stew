@@ -50,7 +50,7 @@ def ruff() -> dict:
     """
     Ruff is a fast linter and formatter for Python.
 
-    This preset comes with three custom runners:
+    This preset comes with three custom checks:
     - `ruff-format`: Runs ruff to check and fix formatting issues.
     - `ruff-isort`: Runs ruff check and fix import sorting issues.
     - `ruff-check`: Runs ruff to report typing issues.
