@@ -1,9 +1,9 @@
 from coveo_stew import commands
-from coveo_stew.plugin_commands.base_command import StewBaseCommand
+from coveo_stew.ui.poetry.base_command import StewBaseCommand
 
 
-class PresetsListCommand(StewBaseCommand):
-    name = "stew presets list"
+class PresetsCommand(StewBaseCommand):
+    name = "stew presets"
 
     help = "Shows the builtin stew presets."
 

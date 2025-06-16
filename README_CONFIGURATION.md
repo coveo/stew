@@ -44,7 +44,9 @@ We recommend using this syntax to configure a list of presets:
 presets = [ "clean-imports", "ruff" ]
 ```
 
-The available builtin presets can be listed by typing `poetry stew presets list` in the terminal.
+The available builtin presets can be listed by typing `poetry stew presets` in the terminal.
+
+User-defined presets are not supported at the moment [(planned)](https://github.com/coveo/stew/issues/105).
 
 
 ### Quick Mode Configuration

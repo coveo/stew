@@ -345,3 +345,10 @@ def bump(
         verbose=verbose,
         disable_cache=no_cache,
     )
+
+
+@stew.command()
+@VERBOSE_ARG
+def presets(verbose: bool = False) -> None:
+    """List available presets."""
+    commands.presets_list(io=create_io(verbose))
