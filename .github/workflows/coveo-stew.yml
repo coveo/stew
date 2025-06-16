@@ -75,9 +75,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        coveo-stew-version: ['>=4.0a4', '>=3,<4']
         include:
-          - coveo-stew-version: '>=4.0a4'
+          - coveo-stew-version: '>=4'
             run_stew: "true"
           - coveo-stew-version: '>=3,<4'
             run_stew: "false"  # Don't run stew directly in the action for 3.x
@@ -112,3 +111,4 @@ jobs:
 
           # run stew ci
           stew ci coveo-stew --exact-match
+
