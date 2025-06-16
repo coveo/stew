@@ -18,15 +18,16 @@ quick = { }
 
 ### Core Configuration Options
 
-| Option                 | Default | Description                                                                                                                                                                     |
-|------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Option | Default | Description |
+|--------|---------|-------------|
 | `build-without-hashes` | `false` | When `true`, hashes are disabled when calling `pip` to download dependencies during `stew build`. Use this if you encounter issues with missing hashes in the poetry.lock file. |
-| `pydev`                | `false` | When `true`, marks this project as a development environment for multiple projects. See the [multiple-libraries](README_MULTIPLE_LIBRARIES.md) guide.                           |
-| `build-dependencies`   | `{}`    | Additional dependencies to install during `stew build`. Format is the same as poetry dependencies: `name = "version"` or `name = { version = "version", ... }`.                 |
-| `extras`               | `[]`    | A list of extras to install during `stew build` and `stew ci`. Can be overridden at runtime with `--extra`.                                                                     |
-| `all-extras`           | `false` | When `true`, all extras will be installed during `stew build` and `stew ci`. Overrides the `extras` list. Can be specified at runtime with `--all-extras` and `--no-extras`.    |
-| `quick`                | `{}`    | Controls which checks are skipped when calling `stew ci --quick`.                                                                                                               |
-| `presets`              | `[]`    | A list of presets to use when working with this project. Presets can be used instead of configuring the `pyproject.toml` file.                                                  |  
+| `pydev` | `false` | When `true`, marks this project as a development environment for multiple projects. See the [multiple-libraries](README_MULTIPLE_LIBRARIES.md) guide. |
+| `build-dependencies` | `{}` | Additional dependencies to install during `stew build`. Format is the same as poetry dependencies: `name = "version"` or `name = { version = "version", ... }`. |
+| `extras` | `[]` | A list of extras to install during `stew build` and `stew ci`. Can be overridden at runtime with `--extra`. |
+| `all-extras` | `false` | When `true`, all extras will be installed during `stew build` and `stew ci`. Overrides the `extras` list. Can be specified at runtime with `--all-extras` and `--no-extras`. |
+| `quick` | `{}` | Controls which checks are skipped when calling `stew ci --quick`. |
+| `presets` | `[]` | A list of presets to use when working with this project. Presets can be used instead of configuring the `pyproject.toml` file. |  
+
 
 ### Presets Configuration
 
