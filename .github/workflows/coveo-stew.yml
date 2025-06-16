@@ -97,17 +97,14 @@ jobs:
           poetry-version: '>=2'
           run-stew: ${{ matrix.run_stew }}
 
-      # Special conversion steps only for coveo-stew 3.x
-      - name: Convert pyproject.toml to legacy format (for coveo-stew 3.x)
+      - name: Swap pyproject.toml for a coveo-stew 3.x compatible version
         if: matrix.coveo-stew-version == '>=3,<4'
         shell: bash
         run: |
           # Install required dependency for the conversion script and run it
-          pip install tomlkit
-          python convert_to_legacy_poetry.py
-
-          # Delete poetry.lock file
-          rm -f poetry.lock
+          rm -f ./pyproject.toml
+          rm -f ./poetry.lock
+          mv ./backward-compat-pyproject.toml ./pyproject.toml
 
           # run stew ci
           stew ci coveo-stew --exact-match
