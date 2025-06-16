@@ -22,16 +22,24 @@ def default() -> dict:
 
 def clean_imports(profile: str = "black") -> dict:
     """isort and autoflake work together to sort and clean imports"""
+    autoflake_defaults = [
+        "--recursive",
+        "--remove-all-unused-imports",
+        "--remove-unused-variables",
+    ]
+
+    isort_defaults = [f"--profile={profile}"]
+
     return {
         "ci": {
             "custom_runners": {
                 "isort": {
-                    "check-args": ["--check", ".", f"--profile={profile}"],
-                    "autofix-args": [".", f"--profile={profile}"],
+                    "check-args": ["--check", ".", *isort_defaults],
+                    "autofix-args": [".", *isort_defaults],
                 },
                 "autoflake": {
-                    "check-args": ["--check", "."],
-                    "autofix-args": ["--in-place", "."],
+                    "check-args": ["--check", ".", *autoflake_defaults],
+                    "autofix-args": ["--in-place", ".", *autoflake_defaults],
                 },
             }
         }

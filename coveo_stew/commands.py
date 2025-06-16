@@ -450,5 +450,6 @@ def presets_list(io: IO) -> None:
     """List the builtin stew presets."""
     io.write_line("\n<fg=green>Presets:</>")
     for preset_fn, description in STEW_PRESETS_LIST:
-        io.write_line(f"  <fg=yellow>{preset_fn.__name__.replace('_', "-"):<20}</>: {description}")
+        preset_name = preset_fn.__name__.replace("_", "-")
+        io.write_line(f"  <fg=yellow>{preset_name:<20}</>: {description}")
     io.write_line("")

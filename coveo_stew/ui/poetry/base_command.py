@@ -1,5 +1,5 @@
 import os
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator

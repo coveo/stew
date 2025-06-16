@@ -27,7 +27,6 @@ from typing import (
 from cleo.io.io import IO
 from coveo_functools import flex
 from coveo_functools.casing import flexfactory
-from coveo_itertools.lookups import dict_lookup
 from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import check_run
 from poetry.factory import Factory

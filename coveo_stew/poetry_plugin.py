@@ -27,14 +27,13 @@ class StewPlugin(ApplicationPlugin):
         from coveo_stew.ui.poetry.fix_outdated_command import FixOutdatedCommand
         from coveo_stew.ui.poetry.fresh_eggs_command import FreshEggsCommand
         from coveo_stew.ui.poetry.locate_command import LocateCommand
+        from coveo_stew.ui.poetry.presets_list import PresetsCommand
         from coveo_stew.ui.poetry.pull_dev_requirements_command import (
             PullDevRequirementsCommand,
         )
-        from coveo_stew.ui.poetry.presets_list import PresetsCommand
         from coveo_stew.ui.poetry.refresh_command import RefreshCommand
         from coveo_stew.ui.poetry.stew_command import StewCommand
         from coveo_stew.ui.poetry.version_command import VersionCommand
-
 
         for command_class in [
             StewCommand,
