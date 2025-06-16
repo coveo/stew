@@ -1,20 +1,27 @@
 from pathlib import Path
 from typing import Callable, Generator, Optional
 
+from cleo.io.io import IO
+from cleo.io.outputs.output import Verbosity
 from coveo_styles.styles import echo
 from coveo_systools.filesystem import find_paths, find_repo_root
+from poetry.core.pyproject.exceptions import PyProjectError
+from poetry.factory import Factory
+from poetry.poetry import Poetry
 
-from coveo_stew.exceptions import NotAPoetryProject, PythonProjectNotFound
+from coveo_stew.exceptions import PythonProjectNotFound
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.stew import PythonProject
 
-Predicate = Callable[[PythonProject], object]
+Predicate = Callable[[Poetry], object]
 
 
-def find_pyproject(project_name: str, path: Path = None, *, verbose: bool = False) -> PythonProject:
+def find_pyproject(
+    io: IO, project_name: str, path: Path = None, *, verbose: bool = False
+) -> PythonProject:
     """Find a python project in path using the exact project name"""
     project = next(
-        discover_pyprojects(path, query=project_name, exact_match=True, verbose=verbose),
+        discover_pyprojects(io, path, query=project_name, exact_match=True, verbose=verbose),
         None,
     )
     if not project:
@@ -23,6 +30,7 @@ def find_pyproject(project_name: str, path: Path = None, *, verbose: bool = Fals
 
 
 def discover_pyprojects(
+    io: IO,
     path: Path = None,
     *,
     query: Optional[str] = None,
@@ -30,6 +38,7 @@ def discover_pyprojects(
     verbose: bool = False,
     predicate: Optional[Predicate] = None,
     find_nested: bool = True,
+    disable_cache: bool = False,
 ) -> Generator[PythonProject, None, None]:
     """
     Search for Python projects in a path and return PythonProject instances.
@@ -44,7 +53,9 @@ def discover_pyprojects(
         verbose: output more details to command line
         predicate: optional inclusion filter
         find_nested: search in subdirectories
+        disable_cache: Will configure the execution to pass `--no-cache` to poetry.
     """
+    assert isinstance(io, IO)
     if not path:
         path = find_repo_root(default=".")
 
@@ -59,25 +70,29 @@ def discover_pyprojects(
     count_projects = 0
     for file in paths:
         try:
-            project = PythonProject(file, verbose=verbose)
-        except NotAPoetryProject as ex:
+            io.write_line(f"Found: {file}", verbosity=Verbosity.VERBOSE)
+            poetry = Factory().create_poetry(
+                cwd=file.parent,
+                io=io,
+                disable_plugins=False,
+                disable_cache=disable_cache,
+            )
+        except PyProjectError as ex:
             # this will inform the user which pyproject.toml files were found and skipped
-            echo.noise(ex, " It was skipped.", emoji="information")
+            if verbose:
+                echo.noise("Skipping: ", ex, emoji="information")
             continue
 
         if verbose:
-            echo.noise("PyProject found: ", project)
+            echo.noise("PyProject found: ", poetry)
 
-        if predicate(project) and (
+        if predicate(poetry) and (
             not query
-            or (exact_match and project.package.name == query)
-            or (
-                not exact_match
-                and query.replace("-", "_").lower() in project.package.safe_name.lower()
-            )
+            or (exact_match and poetry.package.pretty_name == query)
+            or (not exact_match and query.replace("-", "_").lower() in poetry.package.name.lower())
         ):
             count_projects += 1
-            yield project
+            yield PythonProject(io, poetry, verbose=verbose, disable_cache=disable_cache)
 
     if count_projects == 0:
         raise PythonProjectNotFound(
