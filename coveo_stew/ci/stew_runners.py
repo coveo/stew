@@ -37,7 +37,9 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
 
         try:
             # publish the offline wheels
-            offline_publish(self._pyproject, offline_install_location, environment, quiet=False)
+            offline_publish(
+                self.io, self._pyproject, offline_install_location, environment, quiet=False
+            )
 
             # make sure pip install finds everything it needs from the offline location.
             # move out to a controlled file structure so that no folder imports are possible
@@ -46,7 +48,7 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                     *environment.build_command(
                         PythonTool.Pip,
                         "install",
-                        self._pyproject.package.name,
+                        self._pyproject.poetry.package.name,
                         "--no-cache",
                         "--no-index",
                         "--find-links",
@@ -55,10 +57,7 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                         temporary_folder / "pip-install-test",
                         (
                             "--pre"
-                            if any(
-                                p.allow_prereleases
-                                for p in self._pyproject.package.dependencies.values()
-                            )
+                            if any(p.allows_prereleases for p in self._pyproject.dependencies)
                             else ""
                         ),
                     ),
