@@ -61,7 +61,7 @@ class PythonProject:
         poetry: Union[Poetry, Path],
         *,
         verbose: bool = False,
-        ci_config: Optional[dict] = None,
+        disable_cache: bool = False,
     ) -> None:
         self.io = io
         self.verbose = verbose
@@ -72,8 +72,7 @@ class PythonProject:
                     cwd=poetry.parent if poetry.is_file() else poetry,
                     io=io,
                     disable_plugins=False,
-                    # todo: propagate disable_cache from the command line
-                    disable_cache=False,
+                    disable_cache=disable_cache,
                 )
             except RuntimeError as ex:
                 raise NotAPoetryProject(poetry) from ex
@@ -83,7 +82,7 @@ class PythonProject:
         self.project_path = self.poetry.pyproject_path.parent
 
         self.dependencies = set(self.poetry.package.requires)
-        self.all_dependencies = set(self.poetry.package.all_requires)  # todo: group support
+        self.all_dependencies = set(self.poetry.package.all_requires)
         self.dev_dependencies = self.all_dependencies - self.dependencies
 
         toml_content = load_toml_from_path(self.poetry.pyproject_path)
@@ -105,8 +104,6 @@ class PythonProject:
                 io=self.io,
             )
         else:
-            # augment the config with io and self.
-            # use flexfactory instead of flex.deserialize since we have unsupported annotations
             self.ci = flexfactory(
                 ContinuousIntegrationConfig, **ci_config, io=self.io, _pyproject=self
             )
@@ -273,10 +270,9 @@ class PythonProject:
         if not self.poetry.locker.is_locked():
             return self.lock_if_needed()
 
-        # todo: the poetry.locker already has the content, no need to read it from disk again?
         content = self.poetry.locker.lock.read_text()
         self.poetry_run("update", "--lock", breakout_of_venv=True)
-        # todo: need to refresh the internal object
+        self.poetry.locker._lock_data = None
         if content != self.poetry.locker.lock.read_text():
             return True
         return False
@@ -458,6 +454,7 @@ class PythonProject:
                 *find_python_tool(PythonTool.Poetry, environment=environment),
                 *commands,
                 "-vv" if self.verbose else "",
+                "--no-cache" if self.poetry.disable_cache else "",
                 working_directory=self.project_path,
                 capture_output=capture_output,
                 verbose=self.verbose,

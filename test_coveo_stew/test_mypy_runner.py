@@ -1,6 +1,7 @@
 from pathlib import Path
 from textwrap import dedent
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
+from unittest.mock import MagicMock, patch
 
 import pytest
 from _pytest.tmpdir import TempPathFactory
@@ -63,8 +64,8 @@ def create_folder_structure(
 def setup_and_run_mypy(
     tmp_path_factory: TempPathFactory,
     typed_folders: Iterable[str],
-    untyped_folders: Iterable[str] = (),
     *,
+    untyped_folders: Iterable[str] = (),
     check_paths: Optional[list[str]] = None,
     skip_paths: Optional[list[str]] = None,
 ) -> set[str]:
@@ -74,20 +75,15 @@ def setup_and_run_mypy(
     Args:
         tmp_path_factory: Fixture to create temporary paths
         typed_folders: Folders to create with py.typed files
-        untyped_folders: Folders to create without py.typed files
+        untyped_folders: Optional list of folders to create without py.typed files
         check_paths: Optional list of paths to explicitly check
         skip_paths: Optional list of paths to skip
 
     Returns:
         Set of relative paths found by MypyRunner._find_typed_folders()
     """
-    # Create mock project
     project = create_mock_project(tmp_path_factory)
-
-    # Create the folder structure
     create_folder_structure(project.project_path, typed_folders, untyped_folders)
-
-    # Create the MypyRunner with given parameters
     runner = MypyRunner(
         NullIO(), check_paths=check_paths, skip_paths=skip_paths, _pyproject=project
     )
@@ -157,7 +153,9 @@ def test_find_typed_folders(
     expected_folders: set[str],
 ) -> None:
     """Test that _find_typed_folders correctly identifies typed folders."""
-    found_folder_names = setup_and_run_mypy(tmp_path_factory, typed_folders, untyped_folders)
+    found_folder_names = setup_and_run_mypy(
+        tmp_path_factory, typed_folders, untyped_folders=untyped_folders
+    )
 
     # Assert the expected folders were found
     assert (
@@ -170,7 +168,7 @@ def test_check_paths_override(tmp_path_factory: TempPathFactory) -> None:
 
     def _test(check_paths: Optional[list[str]]) -> set[str]:
         return setup_and_run_mypy(
-            tmp_path_factory, {"pkg1", "pkg2", "pkg3"}, (), check_paths=check_paths
+            tmp_path_factory, {"pkg1", "pkg2", "pkg3"}, check_paths=check_paths
         )
 
     # Validate that the automatic detection finds all typed folders
@@ -185,43 +183,76 @@ def test_skip_paths_functionality(tmp_path_factory: TempPathFactory) -> None:
     found_folder_names = setup_and_run_mypy(
         tmp_path_factory,
         {"pkg1", "pkg2/subpkg", "pkg3", "pkg4/subpkg"},
-        (),
         skip_paths=["pkg1", "pkg4"],
     )
 
     # We expect to find only the typed folders that aren't in skip_paths
     # Both pkg1 and pkg4 folders (and subfolders) should be skipped
     expected_folder_set = {"pkg2/subpkg", "pkg3"}
-
-    # Assert the expected folders were found
-    assert (
-        found_folder_names == expected_folder_set
-    ), f"Expected folders {expected_folder_set}, but found {found_folder_names}"
+    assert found_folder_names == expected_folder_set
 
 
-def test_check_paths_and_skip_paths_mutually_exclusive(tmp_path_factory: TempPathFactory) -> None:
+@pytest.fixture
+def tmp_project(tmp_path: Path) -> MagicMock:
+    """Fixture to provide a dummy Python project in a temp directory as a MagicMock."""
+    project = MagicMock()
+    project.project_path = tmp_path
+    project.verbose = False
+    project.virtual_environments.return_value = []
+    return project
+
+
+@pytest.mark.parametrize(
+    "check_paths,skip_paths",
+    [
+        (["foo"], ["bar"]),
+        ("foo", "bar"),
+        ("foo", ["bar"]),
+        (["foo"], "bar"),
+    ],
+)
+def test_check_and_skip_paths_mutually_exclusive(
+    tmp_project: MagicMock, check_paths: Union[list[str], str], skip_paths: Union[list[str], str]
+) -> None:
     """Test that check_paths and skip_paths cannot be used together."""
-    # Create mock project
-    project = create_mock_project(tmp_path_factory)
+    with pytest.raises(ExitWithFailure, match="cannot be used together"):
+        MypyRunner(
+            NullIO(),
+            check_paths=check_paths,
+            skip_paths=skip_paths,
+            set_config=False,
+            _pyproject=tmp_project,
+        )
 
-    # This should raise a ValueError
-    with pytest.raises(ExitWithFailure):
-        MypyRunner(NullIO(), check_paths="yes", skip_paths="yes", _pyproject=project)
+
+def test_check_paths_must_be_relative(tmp_project: MagicMock) -> None:
+    """Test that check_paths must be relative paths."""
+    abs_path: str = str(Path(".").absolute())
+    # Patch _validate_typed_package to skip py.typed check
+    with patch.object(MypyRunner, "_validate_typed_package", MagicMock()):
+        with pytest.raises(ExitWithFailure, match="contains absolute paths"):
+            MypyRunner(NullIO(), check_paths=[abs_path], set_config=False, _pyproject=tmp_project)
 
 
-def test_check_paths_must_contain_py_typed(tmp_path_factory: TempPathFactory) -> None:
-    """Test that check_paths only accepts paths containing py.typed files."""
-    # Create mock project
-    project = create_mock_project(tmp_path_factory)
+def test_skip_paths_must_be_relative(tmp_project: MagicMock) -> None:
+    """Test that skip_paths must be relative paths."""
+    abs_path: str = str(Path(".").absolute())
+    with pytest.raises(ExitWithFailure, match="contains absolute paths"):
+        MypyRunner(NullIO(), skip_paths=[abs_path], set_config=False, _pyproject=tmp_project)
 
-    # Create some folders with py.typed and some without
-    typed_folders = {"pkg1", "pkg2"}
-    untyped_folders = {"pkg3", "pkg4"}
-    create_folder_structure(project.project_path, typed_folders, untyped_folders)
 
-    # These paths should work (they have py.typed files)
-    _ = MypyRunner(NullIO(), check_paths=["pkg1", "pkg2"], _pyproject=project)
+def test_check_paths_must_have_py_typed(tmp_project: MagicMock) -> None:
+    """Test that check_paths must point to a directory containing a py.typed file."""
+    pkg: Path = tmp_project.project_path / "foo"
+    pkg.mkdir()
 
-    # This should raise ExitWithFailure because pkg3 doesn't have a py.typed file
-    with pytest.raises(ExitWithFailure):
-        _ = MypyRunner(NullIO(), check_paths=["pkg1", "pkg3"], _pyproject=project)
+    # Should fail if py.typed is missing
+    with pytest.raises(ExitWithFailure, match="No py.typed file found"):
+        MypyRunner(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
+
+    # Should succeed if py.typed exists
+    (pkg / "py.typed").touch()
+    try:
+        MypyRunner(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
+    except ExitWithFailure:
+        pytest.fail("Should not raise when py.typed exists")

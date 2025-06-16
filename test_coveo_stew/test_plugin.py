@@ -4,24 +4,24 @@ from coveo_systools.filesystem import pushd
 from coveo_testing.parametrize import parametrize
 from poetry.console.application import Application
 
-from coveo_stew.plugin_commands.build_command import BuildCommand
-from coveo_stew.plugin_commands.bump_command import BumpCommand
-from coveo_stew.plugin_commands.check_outdated_command import (
+from coveo_stew.poetry_plugin import StewPlugin
+from coveo_stew.ui.poetry.build_command import BuildCommand
+from coveo_stew.ui.poetry.bump_command import BumpCommand
+from coveo_stew.ui.poetry.check_outdated_command import (
     CheckOutdatedCommand,
 )
-from coveo_stew.plugin_commands.ci_command import CiCommand
-from coveo_stew.plugin_commands.fix_outdated_command import FixOutdatedCommand
-from coveo_stew.plugin_commands.fresh_eggs_command import FreshEggsCommand
-from coveo_stew.plugin_commands.locate_command import LocateCommand
-from coveo_stew.plugin_commands.pull_dev_requirements_command import (
+from coveo_stew.ui.poetry.ci_command import CiCommand
+from coveo_stew.ui.poetry.fix_outdated_command import FixOutdatedCommand
+from coveo_stew.ui.poetry.fresh_eggs_command import FreshEggsCommand
+from coveo_stew.ui.poetry.locate_command import LocateCommand
+from coveo_stew.ui.poetry.pull_dev_requirements_command import (
     PullDevRequirementsCommand,
 )
-from coveo_stew.plugin_commands.refresh_command import RefreshCommand
-from coveo_stew.plugin_commands.stew_command import StewCommand
-from coveo_stew.plugin_commands.version_command import VersionCommand
-from coveo_stew.poetry_plugin import StewPlugin
+from coveo_stew.ui.poetry.refresh_command import RefreshCommand
+from coveo_stew.ui.poetry.stew_command import StewCommand
+from coveo_stew.ui.poetry.version_command import VersionCommand
 
-COMMNANDS = [
+COMMANDS = [
     StewCommand,
     BumpCommand,
     VersionCommand,
@@ -49,7 +49,7 @@ def stew(app: Application) -> CommandTester:
     return CommandTester(command)
 
 
-@parametrize("command_name", (command.name for command in COMMNANDS))
+@parametrize("command_name", (command.name for command in COMMANDS))
 def test_stew_plugin_command_names(command_name: str, app: Application) -> None:
     assert command_name.islower()
     assert command_name.startswith("stew")
@@ -58,13 +58,13 @@ def test_stew_plugin_command_names(command_name: str, app: Application) -> None:
         assert len(command_name.split(" ")) == 2
 
 
-@parametrize("command_name", (command.name for command in COMMNANDS))
+@parametrize("command_name", (command.name for command in COMMANDS))
 def test_stew_plugin_commands_hooked_up(command_name: str, app: Application) -> None:
     _ = app.find(command_name)  # will crash if not registered
 
 
 def test_stew_plugin_no_duplicate_commands(app: Application) -> None:
-    command_names = [command.name for command in COMMNANDS]
+    command_names = [command.name for command in COMMANDS]
     assert len(command_names) == len(set(command_names)), "Duplicate commands found!"
 
 

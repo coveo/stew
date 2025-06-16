@@ -82,9 +82,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: ./plugin
+      - uses: ./
         with:
           python-version: "3.12"
           project-name: coveo-stew
-          coveo-stew-version: '==4.0a1'
-
+          coveo-stew-version: '>=4.0a3'
+          poetry-version: '>=2'
