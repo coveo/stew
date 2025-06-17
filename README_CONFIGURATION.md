@@ -10,10 +10,10 @@ All configuration for stew is done within the `pyproject.toml` file under the `[
 [tool.stew]
 build-without-hashes = false
 pydev = false
-build-dependencies = {}
+build-dependencies = { }
 extras = []
 all-extras = false
-quick = {}
+quick = { }
 ```
 
 ### Core Configuration Options
@@ -26,10 +26,33 @@ quick = {}
 | `extras` | `[]` | A list of extras to install during `stew build` and `stew ci`. Can be overridden at runtime with `--extra`. |
 | `all-extras` | `false` | When `true`, all extras will be installed during `stew build` and `stew ci`. Overrides the `extras` list. Can be specified at runtime with `--all-extras` and `--no-extras`. |
 | `quick` | `{}` | Controls which checks are skipped when calling `stew ci --quick`. |
+| `presets` | `[]` | A list of presets to use when working with this project. Presets can be used instead of configuring the `pyproject.toml` file. |  
+
+
+### Presets Configuration
+
+You can use presets to reduce the redundancy of the configuration between projects:
+
+1. Presets are applied in the order they are defined in the `pyproject.toml` file.
+2. The default preset is always loaded first.
+3. Anything specified in the `pyproject.toml` file overrides what presets may have configured.
+
+We recommend using this syntax to configure a list of presets:
+
+```toml
+[tool.stew]
+presets = [ "clean-imports", "ruff" ]
+```
+
+The available builtin presets can be listed by typing `poetry stew presets` in the terminal.
+
+User-defined presets are not supported at the moment [(planned)](https://github.com/coveo/stew/issues/105).
+
 
 ### Quick Mode Configuration
 
-The `quick` option controls which checks are run or skipped when using the `--quick` flag with `stew ci`. It accepts either a `check` or `skip` key followed by a list of runners:
+The `quick` option controls which checks are run or skipped when using the `--quick` flag with `stew ci`. It accepts
+either a `check` or `skip` key followed by a list of runners:
 
 ```toml
 [tool.stew]
@@ -91,4 +114,5 @@ line-length = 100
 
 ## Custom Runners
 
-Define custom runners in the `[tool.stew.ci.custom-runners]` section. See [README_RUNNERS.md](README_RUNNERS.md) for detailed information.
+Define custom runners in the `[tool.stew.ci.custom-runners]` section. See [README_RUNNERS.md](README_RUNNERS.md) for
+detailed information.

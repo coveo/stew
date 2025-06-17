@@ -1,5 +1,5 @@
 import os
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator
@@ -9,7 +9,7 @@ from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import pushd
 
 
-class StewBaseCommand(Command):
+class StewBaseCommand(Command, metaclass=ABCMeta):
     """Base class for all Stew commands that provides common functionality."""
 
     @abstractmethod

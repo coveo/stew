@@ -40,9 +40,10 @@ stew = "coveo_stew.poetry_plugin:StewPlugin"
 packages = [{ include = "coveo_stew/**/*" }]
 
 [tool.poetry.group.test.dependencies]
+autoflake = "2.3.1"
 black = "24.10"
 coveo-testing = "^2.0.0"
-flake8 = "^7.0.0"
+flake8 = "7.2"
 isort = "*"
 mypy = "1.12"
 pytest = "*"
@@ -54,6 +55,7 @@ poetry-plugin-export = ">=1"
 
 
 [tool.stew]
+presets = ['clean-imports']
 build-without-hashes = true
 
 [tool.stew.quick]
@@ -66,10 +68,6 @@ black = true
 
 [tool.stew.ci.custom-runners.flake8]
 check-args = "--ignore=E203,E501,E701,E704,W503"
-
-[tool.stew.ci.custom-runners.isort]
-check-args = ["--check", "."]
-autofix-args = ["."]
 
 
 [tool.black]

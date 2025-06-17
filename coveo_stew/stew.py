@@ -25,14 +25,15 @@ from typing import (
 )
 
 from cleo.io.io import IO
+from coveo_functools import flex
 from coveo_functools.casing import flexfactory
-from coveo_itertools.lookups import dict_lookup
 from coveo_systools.filesystem import CannotFindRepoRoot, find_repo_root
 from coveo_systools.subprocess import check_run
 from poetry.factory import Factory
 from poetry.poetry import Poetry
 
 from coveo_stew.ci.runner_status import RunnerStatus
+from coveo_stew.config import load_config_from_presets
 from coveo_stew.environment import PythonEnvironment, PythonTool, find_python_tool
 from coveo_stew.exceptions import NotAPoetryProject, StewException, UsageError
 from coveo_stew.metadata.stew_api import StewPackage
@@ -87,11 +88,8 @@ class PythonProject:
 
         self.egg_path: Path = self.project_path / f"{self.poetry.package.name}.egg-info"
 
-        self.options: StewPackage = flexfactory(
-            StewPackage,
-            **dict_lookup(toml_content, "tool", "stew", default={}),
-            _pyproject=self,
-        )
+        stew_config, ci_config = load_config_from_presets(io, toml_content)
+        self.options = flex.deserialize(stew_config, hint=StewPackage, errors="raise")
 
         from coveo_stew.ci.config import ContinuousIntegrationConfig  # circular import
 
@@ -106,10 +104,7 @@ class PythonProject:
             )
         else:
             self.ci = flexfactory(
-                ContinuousIntegrationConfig,
-                **dict_lookup(toml_content, "tool", "stew", "ci", default={}),
-                io=self.io,
-                _pyproject=self,
+                ContinuousIntegrationConfig, **ci_config, io=self.io, _pyproject=self
             )
 
         try:
