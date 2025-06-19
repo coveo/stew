@@ -31,6 +31,7 @@ class PytestRunner(ContinuousIntegrationRunner):
     ) -> RunnerStatus:
         command = environment.build_command(
             PythonTool.Pytest,
+            "--color=yes",
             "--durations=5",
             "--tb=short",
             f"--junitxml={self.report_path(environment)}",
@@ -46,6 +47,7 @@ class PytestRunner(ContinuousIntegrationRunner):
             *extra_args,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
+            remove_ansi=False,
             **kwargs,
         )
 

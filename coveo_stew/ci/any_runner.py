@@ -87,6 +87,7 @@ class AnyRunner(ContinuousIntegrationRunner):
                     *extra_args,
                     working_directory=working_directory,
                     verbose=self._pyproject.verbose,
+                    remove_ansi=False,
                     **kwargs,
                 )
             ).split("\n")
@@ -116,6 +117,7 @@ class AnyRunner(ContinuousIntegrationRunner):
                     *command,
                     working_directory=working_directory,
                     verbose=self._pyproject.verbose,
+                    remove_ansi=False,
                     **kwargs,
                 )
             ).split("\n")

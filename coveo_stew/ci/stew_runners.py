@@ -61,6 +61,7 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                             else ""
                         ),
                     ),
+                    remove_ansi=False,
                     **kwargs,
                 )
         finally:
