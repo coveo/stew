@@ -6,7 +6,7 @@ inputs:
   project-name:
     description: |
       When empty, all projects in the repository will be targeted.
-      When set to '.', the project at the root of the repository will be targeted.
+      When set to a value starting with '.', the project at that path will be targeted.
       When set to any other string, only that project will be targeted.
     required: false
     default: ''  # find and run all python projects
@@ -84,16 +84,18 @@ runs:
       run: echo "STEW_CI_ARGS=" >> $GITHUB_ENV
 
     - name: Target specific project by name
-      if: inputs.run-stew == 'true' && inputs.project-name != '' && inputs.project-name != '.'
+      if: inputs.run-stew == 'true' && inputs.project-name != '' && !startsWith(inputs.project-name, '.')
       shell: bash
       env:
         PROJECT_NAME: ${{ inputs.project-name }}
       run: echo "STEW_CI_ARGS=$PROJECT_NAME --exact-match" >> $GITHUB_ENV
 
     - name: Target the project at the root of the repository
-      if: inputs.run-stew == 'true' && inputs.project-name == '.'
+      if: inputs.run-stew == 'true' && startsWith(inputs.project-name, '.')
       shell: bash
-      run: echo "STEW_CI_ARGS=." >> $GITHUB_ENV
+      env:
+        PROJECT_PATH: ${{ inputs.project-name }}
+      run: echo "STEW_CI_ARGS=$PROJECT_PATH" >> $GITHUB_ENV
 
     - name: Run stew ci
       if: inputs.run-stew == 'true'
