@@ -6,7 +6,7 @@ inputs:
   project-name:
     description: |
       When empty, all projects in the repository will be targeted.
-      When set to '.', the project at the root of the repository will be targeted.
+      When set to a value starting with '.', the project at that path will be targeted.
       When set to any other string, only that project will be targeted.
     required: false
     default: ''  # find and run all python projects
