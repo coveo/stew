@@ -469,14 +469,14 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-systools"
-version = "3.0"
+version = "3.0.2a1"
 description = "Filesystem, language and OS related tools."
 optional = false
 python-versions = "<4,>=3.9"
 groups = ["main"]
 files = [
-    {file = "coveo_systools-3.0-py3-none-any.whl", hash = "sha256:f1704fe6173ba8cca09f49c2e096b6441c67960a9a3fccb9d9889364119e976f"},
-    {file = "coveo_systools-3.0.tar.gz", hash = "sha256:c8efcbc6bb4907c5459805a398fcec3f84077c2f9fbccd7ebd205ba29e836825"},
+    {file = "coveo_systools-3.0.2a1-py3-none-any.whl", hash = "sha256:59a6802d380b43ff2a06f4de1a9d9c2f6eb3bdb8ca984093fb6c6e5be5c19ab2"},
+    {file = "coveo_systools-3.0.2a1.tar.gz", hash = "sha256:ef8abd58585d997f006c6007c5a3c264f18ce98f50995cbd01b6c58b7586dbe2"},
 ]
 
 [package.dependencies]
@@ -2039,4 +2039,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<4"
-content-hash = "9e6e3629158b25fa18ef7a78d0083def8eb75567ffbdef29dfcdca4a4e165864"
+content-hash = "19d753d3080ae1725215c71aa96794695d0396090baf68ff8c7a53c953d1485d"

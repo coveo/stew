@@ -213,6 +213,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
+            remove_ansi=False,
             **kwargs,
         )
         return RunnerStatus.Success

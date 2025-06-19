@@ -60,6 +60,17 @@ class ContinuousIntegrationRunner:
         self._last_output.clear()
         self._test_cases.clear()
         environment_variables = os.environ.copy()
+
+        # without this, some tools like black will not display emojis correctly
+        environment_variables["PYTHONIOENCODING"] = "utf-8"
+
+        # try to set the terminal width if available
+        if os.isatty(0):
+            try:
+                environment_variables["COLUMNS"] = str(os.get_terminal_size().columns)
+            except OSError:
+                pass
+
         try:
             self.status = await self._launch(environment, *extra_args, env=environment_variables)
         except DetailedCalledProcessError as exception:

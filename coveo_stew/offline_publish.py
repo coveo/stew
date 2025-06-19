@@ -118,6 +118,7 @@ class _OfflinePublish:
                 working_directory=self.wheelhouse,
                 verbose=self.verbose,
                 env=os.environ.copy(),
+                remove_ansi=False,
             )
 
     def _store_dependencies_in_wheelhouse(self, project: Optional[PythonProject] = None) -> None:
@@ -180,7 +181,12 @@ class _OfflinePublish:
         )
 
         try:
-            _ = check_output(*command, verbose=self.verbose, env=os.environ.copy())
+            _ = check_output(
+                *command,
+                verbose=self.verbose,
+                env=os.environ.copy(),
+                remove_ansi=False,
+            )
         finally:
             try:
                 Path(requirements_file_path).unlink(missing_ok=True)
@@ -207,4 +213,5 @@ class _OfflinePublish:
             working_directory=self.wheelhouse,
             verbose=self.verbose,
             env=os.environ.copy(),
+            remove_ansi=False,
         )

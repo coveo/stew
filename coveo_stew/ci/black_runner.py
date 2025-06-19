@@ -35,9 +35,11 @@ class BlackRunner(ContinuousIntegrationRunner):
     ) -> None:
         # projects may opt to use coveo-stew's black version by not including black in their dependencies.
         command = environment.build_command(PythonTool.Black, ".", *extra_args)
+
         await async_check_output(
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
+            remove_ansi=False,
             **kwargs,
         )
