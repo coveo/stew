@@ -9,7 +9,7 @@ from cleo.io.null_io import NullIO
 from coveo_styles.styles import ExitWithFailure
 from coveo_testing.parametrize import parametrize
 
-from coveo_stew.ci.mypy_runner import MypyRunner
+from coveo_stew.ci.checks.mypy import CheckMypy
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.stew import PythonProject
 
@@ -84,9 +84,7 @@ def setup_and_run_mypy(
     """
     project = create_mock_project(tmp_path_factory)
     create_folder_structure(project.project_path, typed_folders, untyped_folders)
-    runner = MypyRunner(
-        NullIO(), check_paths=check_paths, skip_paths=skip_paths, _pyproject=project
-    )
+    runner = CheckMypy(NullIO(), check_paths=check_paths, skip_paths=skip_paths, _pyproject=project)
 
     # Get the results from _find_typed_folders
     found_folders = set(runner._find_typed_folders())
@@ -216,7 +214,7 @@ def test_check_and_skip_paths_mutually_exclusive(
 ) -> None:
     """Test that check_paths and skip_paths cannot be used together."""
     with pytest.raises(ExitWithFailure, match="cannot be used together"):
-        MypyRunner(
+        CheckMypy(
             NullIO(),
             check_paths=check_paths,
             skip_paths=skip_paths,
@@ -229,16 +227,16 @@ def test_check_paths_must_be_relative(tmp_project: MagicMock) -> None:
     """Test that check_paths must be relative paths."""
     abs_path: str = str(Path(".").absolute())
     # Patch _validate_typed_package to skip py.typed check
-    with patch.object(MypyRunner, "_validate_typed_package", MagicMock()):
+    with patch.object(CheckMypy, "_validate_typed_package", MagicMock()):
         with pytest.raises(ExitWithFailure, match="contains absolute paths"):
-            MypyRunner(NullIO(), check_paths=[abs_path], set_config=False, _pyproject=tmp_project)
+            CheckMypy(NullIO(), check_paths=[abs_path], set_config=False, _pyproject=tmp_project)
 
 
 def test_skip_paths_must_be_relative(tmp_project: MagicMock) -> None:
     """Test that skip_paths must be relative paths."""
     abs_path: str = str(Path(".").absolute())
     with pytest.raises(ExitWithFailure, match="contains absolute paths"):
-        MypyRunner(NullIO(), skip_paths=[abs_path], set_config=False, _pyproject=tmp_project)
+        CheckMypy(NullIO(), skip_paths=[abs_path], set_config=False, _pyproject=tmp_project)
 
 
 def test_check_paths_must_have_py_typed(tmp_project: MagicMock) -> None:
@@ -248,11 +246,11 @@ def test_check_paths_must_have_py_typed(tmp_project: MagicMock) -> None:
 
     # Should fail if py.typed is missing
     with pytest.raises(ExitWithFailure, match="No py.typed file found"):
-        MypyRunner(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
+        CheckMypy(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
 
     # Should succeed if py.typed exists
     (pkg / "py.typed").touch()
     try:
-        MypyRunner(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
+        CheckMypy(NullIO(), check_paths=["foo"], set_config=False, _pyproject=tmp_project)
     except ExitWithFailure:
         pytest.fail("Should not raise when py.typed exists")

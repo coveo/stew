@@ -280,6 +280,9 @@ def refresh(
 )
 @click.option("--no-extras", is_flag=True, help="Don't use any extras when testing.")
 @click.option("--all-extras", is_flag=True, help="Use all extras when testing.")
+@click.option(
+    "--raise", "raise_exceptions", is_flag=True, help="Raise exceptions instead of logging them."
+)
 @NO_CACHE_ARG
 def ci(
     project_name: str = None,
@@ -296,6 +299,7 @@ def ci(
     no_extras: bool = False,
     all_extras: bool = False,
     no_cache: bool = False,
+    raise_exceptions: bool = False,
 ) -> None:
     """Run continuous integration steps on Python projects."""
 
@@ -323,6 +327,7 @@ def ci(
         no_extras=no_extras,
         all_extras=all_extras,
         disable_cache=no_cache,
+        raise_exceptions=raise_exceptions,
     )
 
 
