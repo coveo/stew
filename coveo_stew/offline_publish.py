@@ -182,10 +182,7 @@ class _OfflinePublish:
 
         try:
             _ = check_output(
-                *command,
-                verbose=self.verbose,
-                env=os.environ.copy(),
-                remove_ansi=False,
+                *command, verbose=self.verbose, env=os.environ.copy(), remove_ansi=False
             )
         finally:
             try:

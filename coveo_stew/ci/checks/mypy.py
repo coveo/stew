@@ -1,5 +1,4 @@
 import atexit
-import re
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, Generator, Optional, Union
@@ -10,14 +9,14 @@ from cleo.io.outputs.output import Verbosity
 from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.subprocess import async_check_output
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner
-from coveo_stew.ci.runner_status import RunnerStatus
+from coveo_stew.ci.checks.lib.base_check_cli import BaseCheckCLI
+from coveo_stew.ci.checks.lib.status import CheckStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.stew import PythonProject
 
 
-class MypyRunner(ContinuousIntegrationRunner):
+class CheckMypy(BaseCheckCLI):
     name: str = "mypy"
     check_failed_exit_codes = [1]
     outputs_own_report = True
@@ -165,9 +164,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             self.io.write_line(f"➕ Including {typed_path}", verbosity=Verbosity.VERBOSE)
             yield typed_path
 
-    async def _launch(
-        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
-    ) -> RunnerStatus:
+    async def _do_check(self, environment: PythonEnvironment, **kwargs: Any) -> CheckStatus:
         working_directory = self._pyproject.project_path
 
         # restore absolute paths into relative ones
@@ -191,7 +188,7 @@ class MypyRunner(ContinuousIntegrationRunner):
             "--cache-dir",
             self._pyproject.project_path / ".mypy_cache",
             "--show-error-codes",
-            f"--junit-xml={self.report_path(environment)}",
+            f"--junit-xml={self.report_path(self.result)}",
         ]
 
         mypy_config = self._mypy_config_path()
@@ -202,37 +199,38 @@ class MypyRunner(ContinuousIntegrationRunner):
         command = environment.build_command(
             PythonTool.Mypy,
             *args,
-            *extra_args,  # any extra argument provided by the caller
             *typed_folders,  # what to lint
         )
 
         if self._pyproject.verbose:
             echo.normal(command)
 
-        await async_check_output(
+        output = await async_check_output(
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
             remove_ansi=False,
             **kwargs,
         )
-        return RunnerStatus.Success
+        self.result.output.extend(output.split("\n"))
+        return CheckStatus.Success
 
-    def echo_last_failures(self) -> None:
-        if not self._last_output:
-            return
-
-        pattern = re.compile(
-            r"^(?P<path>.+\.py):(?P<line>\d+):(?P<column>\d+(?::)| )"
-            r"(?:\s?error:\s?)(?P<detail>.+)$"
-        )
-
-        for line in self._last_output:
-            match = pattern.fullmatch(line)
-            if match:
-                adjusted_path = (self._pyproject.project_path / Path(match["path"])).resolve()
-                echo.error_details(
-                    f'{adjusted_path}:{match["line"]}:{match["column"]} {match["detail"]}'
-                )
-            else:
-                echo.noise(line)
+    # def echo_last_failures(self) -> None:
+    #     if not self.result.output:
+    #         return
+    #
+    #     pattern = re.compile(
+    #         r"^(?P<path>.+\.py):(?P<line>\d+):(?P<column>\d+(?::)| )"
+    #         r"(?:\s?error:\s?)(?P<detail>.+)$"
+    #     )
+    #
+    #     for line in self.result.output:
+    #         match = pattern.fullmatch(line)
+    #         if match:
+    #             adjusted_path = (self._pyproject.project_path / Path(match["path"])).resolve()
+    #             echo.error_details(
+    #                 f'{adjusted_path}:{match["line"]}:{match["column"]} {match["detail"]}'
+    #             )
+    #         else:
+    #             echo.noise(line)
+    #

@@ -4,10 +4,9 @@ from typing import Any, Iterable, List, Optional, Tuple, Union
 from cleo.io.io import IO
 from coveo_styles.styles import ExitWithFailure
 from coveo_systools.filesystem import find_repo_root
-from coveo_systools.subprocess import async_check_output
 
-from coveo_stew.ci.runner import ContinuousIntegrationRunner
-from coveo_stew.ci.runner_status import RunnerStatus
+from coveo_stew.ci.checks.lib.base_check_cli import BaseCheckCLI
+from coveo_stew.ci.checks.lib.status import CheckStatus
 from coveo_stew.environment import PythonEnvironment
 from coveo_stew.exceptions import CannotLoadProject, UsageError
 from coveo_stew.stew import PythonProject
@@ -22,8 +21,11 @@ class WorkingDirectoryKind(Enum):
         return tuple(kind.name for kind in cls)
 
 
-class AnyRunner(ContinuousIntegrationRunner):
-    """Custom runners"""
+class CLICheck(BaseCheckCLI):
+    """
+    The custom checks written in the `pyproject.toml` file are handled through here.
+    However, we also use it for simple builtin checks, such as black and pytest.
+    """
 
     def __init__(
         self,
@@ -48,77 +50,54 @@ class AnyRunner(ContinuousIntegrationRunner):
         if args:
             check_args = args
 
+        self.name = name
         super().__init__(io, _pyproject=_pyproject)
-        self._name = name
+
         self._executable = executable
         self.check_failed_exit_codes = check_failed_exit_codes
         self.outputs_own_report = not create_generic_report
         self.check_args = [] if check_args is None else check_args
+
         self.autofix_args = autofix_args
-        if self.autofix_args is not None:
-            self._auto_fix_routine = self._custom_autofix
+        if self.autofix_args is not None:  # some tools might autofix without any arguments
+            self.supports_auto_fix = True
 
         try:
             self.working_directory = WorkingDirectoryKind[working_directory.title()]
         except KeyError:
             raise ExitWithFailure(
                 suggestions=(
-                    f"Adjust {_pyproject.poetry.pyproject_path} so that [tool.stew.ci.custom-runners.{name}] has a valid `working-directory` value.",
+                    f"Adjust {_pyproject.poetry.pyproject_path} so that [tool.stew.ci.custom-checks.{name}] has a valid `working-directory` value.",
                     "Docs: https://github.com/coveo/stew/blob/main/README.md#options",
                 )
             ) from CannotLoadProject(
                 f"Working directory for {self.name} should be within {WorkingDirectoryKind.valid_values()}"
             )
 
-    async def _launch(
-        self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
-    ) -> RunnerStatus:
+    async def _do_check(self, environment: PythonEnvironment, **kwargs: Any) -> CheckStatus:
+        """Run the command with check arguments."""
         args = [self.check_args] if isinstance(self.check_args, str) else self.check_args
+        return await self._run(environment, *args, **kwargs)
+
+    async def _do_autofix(self, environment: PythonEnvironment, **kwargs: Any) -> CheckStatus:
+        """Run the command with autofix arguments."""
+        args = [self.autofix_args] if isinstance(self.autofix_args, str) else self.autofix_args
+        return await self._run(environment, *args, **kwargs)
+
+    async def _run(self, environment: PythonEnvironment, *args: Any, **kwargs: Any) -> CheckStatus:
         command = environment.build_command(self.executable, *args)
 
         working_directory = self._pyproject.project_path
         if self.working_directory is WorkingDirectoryKind.Repository:
             working_directory = find_repo_root(working_directory)
 
-        self._last_output.extend(
-            (
-                await async_check_output(
-                    *command,
-                    *extra_args,
-                    working_directory=working_directory,
-                    verbose=self._pyproject.verbose,
-                    remove_ansi=False,
-                    **kwargs,
-                )
-            ).split("\n")
+        output = await self._run_command(
+            command, working_directory=working_directory, env=kwargs.get("env")
         )
+        self.result.output.extend(output)
 
-        return RunnerStatus.Success
-
-    @property
-    def name(self) -> str:
-        return self._name
+        return CheckStatus.Success
 
     @property
     def executable(self) -> str:
         return self._executable or self.name
-
-    async def _custom_autofix(self, environment: PythonEnvironment, **kwargs: Any) -> None:
-        args = [self.autofix_args] if isinstance(self.autofix_args, str) else self.autofix_args
-        command = environment.build_command(self.executable, *args)
-
-        working_directory = self._pyproject.project_path
-        if self.working_directory is WorkingDirectoryKind.Repository:
-            working_directory = find_repo_root(working_directory)
-
-        self._last_output.extend(
-            (
-                await async_check_output(
-                    *command,
-                    working_directory=working_directory,
-                    verbose=self._pyproject.verbose,
-                    remove_ansi=False,
-                    **kwargs,
-                )
-            ).split("\n")
-        )
