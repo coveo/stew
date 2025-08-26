@@ -115,8 +115,8 @@ class ContinuousIntegrationRunner:
     ) -> RunnerStatus:
         """Launch the continuous integration check using the given environment and store the output."""
 
-    def echo_last_failures(self) -> None:
-        """Echo the failures of the last run to the user. If there was no failure, do nothing."""
+    def echo_output(self) -> None:
+        """Echo the output of the run(s) to the user."""
         if not self._last_output:
             return
         echo.noise(self.last_output(), pad_after=True)
@@ -159,6 +159,10 @@ class ContinuousIntegrationRunner:
             self._pyproject.poetry.package.pretty_name, self.report_path(environment), [test_case]
         )
 
+    def store_output(self, output: str | None) -> None:
+        if output:
+            self._last_output.extend(output.strip().splitlines())
+
     def __str__(self) -> str:
         return self.name
 
@@ -186,7 +190,7 @@ class CIPlan:
     def non_autofix_checks(self) -> List[ContinuousIntegrationRunner]:
         return [check for check in self.checks if check not in self.autofix_checks]
 
-    async def orchestrate(self, auto_fix: bool = False) -> None:
+    async def orchestrate(self, auto_fix: bool = False, show_success_output: bool = False) -> None:
         """Orchestrates this CIPlan by launching runners in the correct order."""
         runs: List[Run] = []
         echo.step(
@@ -196,19 +200,27 @@ class CIPlan:
         if auto_fix:
             # run autofix first, in parallel
             runs.append(run := Run(self.environment, self.autofix_checks))
-            await run.run_and_report(parallel=self.parallel)
+            await run.run_and_report(
+                parallel=self.parallel, show_success_output=show_success_output
+            )
 
             if run.overall_status is RunnerStatus.CheckFailed:
                 await run.run_and_report(auto_fix=True, feedback=False, parallel=False)
-                await run.run_and_report(parallel=self.parallel)  # verify that autofix worked
+                await run.run_and_report(
+                    parallel=self.parallel, show_success_output=show_success_output
+                )  # verify that autofix worked
 
             # run all other runners
             runs.append(run := Run(self.environment, self.non_autofix_checks))
-            await run.run_and_report(parallel=self.parallel)
+            await run.run_and_report(
+                parallel=self.parallel, show_success_output=show_success_output
+            )
 
         else:
             runs.append(run := Run(self.environment, self.checks))
-            await run.run_and_report(parallel=self.parallel)
+            await run.run_and_report(
+                parallel=self.parallel, show_success_output=show_success_output
+            )
 
         overall_status = get_overall_run_status(*runs)
 
@@ -243,7 +255,11 @@ class Run:
         return get_overall_run_status(self)
 
     async def run_and_report(
-        self, auto_fix: bool = False, feedback: bool = True, parallel: bool = True
+        self,
+        auto_fix: bool = False,
+        feedback: bool = True,
+        parallel: bool = True,
+        show_success_output: bool = False,
     ) -> None:
         """Launch the runners and report the results to the user."""
         self.exceptions.clear()
@@ -263,7 +279,7 @@ class Run:
                     self.exceptions.append((None, exc))
                     continue
 
-                self._report(result, feedback=feedback)
+                self._report(result, feedback=feedback, show_success_output=show_success_output)
 
         else:
             for runner in self.checks:
@@ -306,7 +322,12 @@ class Run:
                 pad_after=True,
             )
 
-    def _report(self, check: ContinuousIntegrationRunner, feedback: bool = True) -> None:
+    def _report(
+        self,
+        check: ContinuousIntegrationRunner,
+        feedback: bool = True,
+        show_success_output: bool = False,
+    ) -> None:
         """Reports on a completed check."""
         if check.status is RunnerStatus.Error:
             self.exceptions.append((check, check.last_exception))
@@ -314,8 +335,8 @@ class Run:
         if feedback:
             if check.status is RunnerStatus.Success:
                 echo.normal(f"PASSED: {check}", emoji="heavy_check_mark", fg="green")
-                if check.project.verbose:
-                    check.echo_last_failures()
+                if show_success_output or check.project.verbose:
+                    check.echo_output()
 
             elif check.status is RunnerStatus.CheckFailed:
                 echo.warning(
@@ -323,14 +344,14 @@ class Run:
                     pad_before=True,
                     pad_after=False,
                 )
-                check.echo_last_failures()
+                check.echo_output()
 
             elif check.status is RunnerStatus.Error:
                 echo.error(
                     f"The ci runner {check} failed to complete "
                     f"due to an environment or configuration error."
                 )
-                check.echo_last_failures()
+                check.echo_output()
 
 
 def get_overall_run_status(*runs: Run) -> RunnerStatus:

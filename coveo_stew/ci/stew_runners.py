@@ -44,7 +44,7 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
             # make sure pip install finds everything it needs from the offline location.
             # move out to a controlled file structure so that no folder imports are possible
             with pushd(temporary_folder):
-                await async_check_output(
+                output = await async_check_output(
                     *environment.build_command(
                         PythonTool.Pip,
                         "install",
@@ -64,6 +64,7 @@ class OfflineInstallRunner(ContinuousIntegrationRunner):
                     remove_ansi=False,
                     **kwargs,
                 )
+                self.store_output(output)
         finally:
             await asyncio.sleep(0.01)  # give a few cycles to close handles/etc
             try:

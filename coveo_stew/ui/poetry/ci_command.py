@@ -38,6 +38,7 @@ class CiCommand(StewBaseCommand):
         ),
         Option("sequential", description="Run checks sequentially instead of in parallel."),
         Option("github-step-report", description="Generate GitHub step report output."),
+        Option("show-success-output", description="Show the output of successful checks."),
         Option(
             "extra",
             is_list=True,
@@ -58,6 +59,7 @@ class CiCommand(StewBaseCommand):
         quick = self.option("quick")
         parallel = not self.option("sequential")
         github_step_report = self.option("github-step-report")
+        show_success_output = self.option("show-success-output")
         extra = self.option("extra")
         no_extras = self.option("no-extras")
         all_extras = self.option("all-extras")
@@ -73,6 +75,7 @@ class CiCommand(StewBaseCommand):
             quick=quick,
             parallel=parallel,
             github_step_report=github_step_report,
+            show_success_output=show_success_output,
             extra=extra,
             no_extras=no_extras,
             all_extras=all_extras,

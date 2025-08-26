@@ -132,6 +132,7 @@ class ContinuousIntegrationConfig:
         quick: bool,
         parallel: bool,
         github: bool,
+        show_success_output: bool,
     ) -> RunnerStatus:
         if self.disabled:
             return RunnerStatus.NotRan
@@ -140,7 +141,7 @@ class ContinuousIntegrationConfig:
         for plan in ci_plans:
             if not quick:
                 self._pyproject.install(environment=plan.environment, sync=True)
-            await plan.orchestrate(auto_fix)
+            await plan.orchestrate(auto_fix, show_success_output=show_success_output)
 
         if github:
             generate_github_step_report(ci_plans)

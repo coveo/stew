@@ -14,10 +14,11 @@ class PoetryCheckRunner(ContinuousIntegrationRunner):
     async def _launch(
         self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
     ) -> RunnerStatus:
-        await async_check_output(
+        output = await async_check_output(
             *environment.build_command(PythonTool.Poetry, "check"),
             working_directory=self._pyproject.project_path,
             remove_ansi=False,
             **kwargs,
         )
+        self.store_output(output)
         return RunnerStatus.Success

@@ -371,6 +371,7 @@ def ci(
     no_extras: bool = False,
     all_extras: bool = False,
     disable_cache: bool = False,
+    show_success_output: bool = False,
 ) -> None:
     """Run continuous integration steps on Python projects."""
     failures = defaultdict(list)
@@ -398,6 +399,7 @@ def ci(
                     quick=quick,
                     parallel=parallel,
                     github=github_step_report,
+                    show_success_output=show_success_output,
                 )
             ) not in (RunnerStatus.Success, RunnerStatus.NotRan):
                 failures[overall_result].append(project)
