@@ -115,9 +115,12 @@ class ContinuousIntegrationRunner:
     ) -> RunnerStatus:
         """Launch the continuous integration check using the given environment and store the output."""
 
+    def has_output(self) -> bool:
+        return bool(self._last_output)
+
     def echo_output(self) -> None:
         """Echo the output of the run(s) to the user."""
-        if not self._last_output:
+        if not self.has_output():
             return
         echo.noise(self.last_output(), pad_after=True)
 
@@ -334,9 +337,12 @@ class Run:
 
         if feedback:
             if check.status is RunnerStatus.Success:
-                echo.normal(f"PASSED: {check}", emoji="heavy_check_mark", fg="green")
+                echo.normal(f" PASSED: {check}", emoji="heavy_check_mark", fg="green")
                 if show_success_output or check.project.verbose:
-                    check.echo_output()
+                    if not check.has_output():
+                        echo.noise(f"({check.name} produced no output)", pad_after=True)
+                    else:
+                        check.echo_output()
 
             elif check.status is RunnerStatus.CheckFailed:
                 echo.warning(
