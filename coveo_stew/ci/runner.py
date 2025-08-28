@@ -162,7 +162,7 @@ class ContinuousIntegrationRunner:
             self._pyproject.poetry.package.pretty_name, self.report_path(environment), [test_case]
         )
 
-    def store_output(self, output: str | None) -> None:
+    def store_output(self, output: Optional[str]) -> None:
         if output:
             self._last_output.extend(output.strip().splitlines())
 
