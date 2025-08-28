@@ -1,3 +1,5 @@
+import os
+
 from cleo.io.inputs.argument import Argument
 from cleo.io.inputs.option import Option
 
@@ -58,8 +60,15 @@ class CiCommand(StewBaseCommand):
         verbose = self.io.is_verbose()
         quick = self.option("quick")
         parallel = not self.option("sequential")
-        github_step_report = self.option("github-step-report")
+
         show_success_output = self.option("show-success-output")
+        if not show_success_output:
+            show_success_output = os.environ.get("GITHUB_ACTIONS", "false") == 'true'
+
+        github_step_report = self.option("github-step-report")
+        if not github_step_report:
+            github_step_report = os.environ.get("GITHUB_ACTIONS", "false") == 'true'
+
         extra = self.option("extra")
         no_extras = self.option("no-extras")
         all_extras = self.option("all-extras")
