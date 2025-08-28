@@ -349,6 +349,7 @@ class PythonProject:
         quick: bool = False,
         parallel: bool = True,
         github: bool = False,
+        show_success_output: bool = False,
     ) -> RunnerStatus:
         """Launch all continuous integration runners on the project."""
         return asyncio.run(
@@ -359,6 +360,7 @@ class PythonProject:
                 quick=quick,
                 parallel=parallel,
                 github=github,
+                show_success_output=show_success_output,
             )
         )
 

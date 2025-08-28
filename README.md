@@ -177,6 +177,7 @@ Options:
 - `--extra <extra>`: Install the specified extra(s) for this run (can be repeated)
 - `--all-extras`: Install all extras for this run
 - `--no-extras`: Don't install any extras for this run
+- `--show-success-output`: Display output from successful checks (automatically enabled in GitHub Actions)
 
 ### `stew build`
 

@@ -80,18 +80,15 @@ class AnyRunner(ContinuousIntegrationRunner):
         if self.working_directory is WorkingDirectoryKind.Repository:
             working_directory = find_repo_root(working_directory)
 
-        self._last_output.extend(
-            (
-                await async_check_output(
-                    *command,
-                    *extra_args,
-                    working_directory=working_directory,
-                    verbose=self._pyproject.verbose,
-                    remove_ansi=False,
-                    **kwargs,
-                )
-            ).split("\n")
+        output = await async_check_output(
+            *command,
+            *extra_args,
+            working_directory=working_directory,
+            verbose=self._pyproject.verbose,
+            remove_ansi=False,
+            **kwargs,
         )
+        self.store_output(output)
 
         return RunnerStatus.Success
 

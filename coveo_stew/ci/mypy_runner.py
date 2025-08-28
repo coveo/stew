@@ -209,16 +209,18 @@ class MypyRunner(ContinuousIntegrationRunner):
         if self._pyproject.verbose:
             echo.normal(command)
 
-        await async_check_output(
+        output = await async_check_output(
             *command,
             working_directory=self._pyproject.project_path,
             verbose=self._pyproject.verbose,
             remove_ansi=False,
             **kwargs,
         )
+        self.store_output(output)
+
         return RunnerStatus.Success
 
-    def echo_last_failures(self) -> None:
+    def echo_output(self) -> None:
         if not self._last_output:
             return
 

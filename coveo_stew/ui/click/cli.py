@@ -276,6 +276,13 @@ def refresh(
     help="Generate GitHub step report output.",
 )
 @click.option(
+    "--show-success-output",
+    is_flag=True,
+    default=False,
+    envvar="GITHUB_ACTIONS",
+    help="Show the output of successful steps.",
+)
+@click.option(
     "--extra", multiple=True, default=(), help="Additional extras to include when testing."
 )
 @click.option("--no-extras", is_flag=True, help="Don't use any extras when testing.")
@@ -296,6 +303,7 @@ def ci(
     no_extras: bool = False,
     all_extras: bool = False,
     no_cache: bool = False,
+    show_success_output: bool = False,
 ) -> None:
     """Run continuous integration steps on Python projects."""
 
@@ -323,6 +331,7 @@ def ci(
         no_extras=no_extras,
         all_extras=all_extras,
         disable_cache=no_cache,
+        show_success_output=show_success_output,
     )
 
 

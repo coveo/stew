@@ -183,6 +183,11 @@ stew ci --skip pytest --skip black
 
 # Enable auto-fixing
 stew ci --fix
+
+# Show output from successful checks (automatically enabled in GitHub Actions)
+stew ci --show-success-output
 ```
 
 The `--check` and `--skip` options can be repeated to specify multiple runners.
+
+The `--show-success-output` flag displays the output of checks that pass successfully. This is automatically enabled when running in GitHub Actions (when the `GITHUB_ACTIONS` environment variable is set to "true").
