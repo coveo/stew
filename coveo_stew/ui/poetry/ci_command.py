@@ -63,11 +63,11 @@ class CiCommand(StewBaseCommand):
 
         show_success_output = self.option("show-success-output")
         if not show_success_output:
-            show_success_output = os.environ.get("GITHUB_ACTIONS", "false") == 'true'
+            show_success_output = os.environ.get("GITHUB_ACTIONS", "false") == "true"
 
         github_step_report = self.option("github-step-report")
         if not github_step_report:
-            github_step_report = os.environ.get("GITHUB_ACTIONS", "false") == 'true'
+            github_step_report = os.environ.get("GITHUB_ACTIONS", "false") == "true"
 
         extra = self.option("extra")
         no_extras = self.option("no-extras")
