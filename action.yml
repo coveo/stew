@@ -51,7 +51,7 @@ runs:
 
   steps:
     - uses: actions/checkout@v5
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       if: inputs.install-python == 'true'
       with:
         python-version: ${{ inputs.python-version }}
