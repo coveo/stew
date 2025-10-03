@@ -17,7 +17,7 @@ Note: Stew only has one verbosity level (-v). Using `-vv` or `-vvv` will only in
 
 ### Can I use coveo-stew with older Python versions?
 
-coveo-stew requires Python 3.9+ to run, but it can manage projects that target older Python versions. Poetry must be installed with Python 3.9+, but your projects can specify older versions in their dependencies.
+coveo-stew requires Python 3.10+ to run, but it can manage projects that target older Python versions. Poetry must be installed with Python 3.10+, but your projects can specify older versions in their dependencies.
 
 ### How do I know which version of coveo-stew I'm using?
 

@@ -41,7 +41,7 @@ Similar to: nothing! it's unique! 😎
 ## Prerequisites
 
 - Poetry 2.0 or higher
-- Poetry must be installed with Python 3.9 or higher
+- Poetry must be installed with Python 3.10 or higher
 
 ## Installation
 
