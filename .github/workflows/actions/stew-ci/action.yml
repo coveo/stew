@@ -14,18 +14,6 @@ runs:
   using: 'composite'
 
   steps:
-    - uses: actions/setup-python@v6
-      with:
-        python-version: ${{ inputs.python-version }}
-
-    - name: Install poetry
-      shell: bash
-      run: pipx install "poetry${{ inputs.poetry-version }}" --python python
-
-    - name: poetry-export
-      shell: bash
-      run: pipx inject poetry poetry-plugin-export
-
     - name: stew-plugin
       shell: bash
       run: pipx inject poetry .
