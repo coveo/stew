@@ -24,8 +24,8 @@ poetry-plugin-export = ">=1"
 
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4"
-click = ">=8.1"
+python = ">=3.10,<4"
+click = ">=8.2"
 coveo-functools = ">=2"
 coveo-itertools = ">=2"
 coveo-systools = ">=2"

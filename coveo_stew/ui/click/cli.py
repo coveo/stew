@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Final, Optional, Tuple, Union
+from typing import Final, Optional, Tuple, Union
 
 import click
 from cleo.io.inputs.argv_input import ArgvInput
@@ -10,13 +10,8 @@ from cleo.io.io import IO
 from cleo.io.outputs.output import Verbosity
 from cleo.io.outputs.stream_output import StreamOutput
 from coveo_styles.styles import ExitWithFailure, echo, install_pretty_exception_hook
-from packaging.version import Version
 
 from coveo_stew import commands
-
-# The `deprecated` parameter for click.option was introduced in Click 8.2.0
-CLICK_LEGACY = Version(click.__version__) < Version("8.2.0")
-CLICK_DEPRECATED: dict[str, Any] = {} if CLICK_LEGACY else {"deprecated": True}
 
 _COMMANDS_THAT_SKIP_INTRO_EMOJIS = ["locate", "version"]
 
@@ -126,7 +121,10 @@ def fix_outdated(
 @click.option("--exact-match/--no-exact-match", default=True)
 @VERBOSE_ARG
 @click.option(
-    "--directory", default=None, help="Deprecated: use --target instead.", **CLICK_DEPRECATED
+    "--directory",
+    default=None,
+    help="Deprecated: use --target instead.",
+    deprecated=True,
 )
 @click.option("--target", default=None, help="Directory where the built wheels should be stored.")
 @click.option("--python", default=None, help="The python executable to use.")
@@ -265,7 +263,7 @@ def refresh(
     "--parallel",
     is_flag=True,
     help="Deprecated: Use --sequential to disable parallel checks.",
-    **CLICK_DEPRECATED,
+    deprecated=True,
 )
 @click.option("--sequential", is_flag=True, help="Run checks sequentially instead of in parallel.")
 @click.option(
