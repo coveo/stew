@@ -49,8 +49,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: compatibility
 
+    environment:
+      name: pypi
+      url: https://pypi.org/project/coveo-stew/
     permissions:
       contents: write
+      id-token: write
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -73,7 +77,6 @@ jobs:
       - name: Publish to pypi
         uses: ./.github/workflows/actions/publish-to-pypi
         with:
-          pypi-token: ${{ secrets.PYPI_TOKEN }}
           pre-release: ${{ github.ref != 'refs/heads/main' }}
           dry-run: ${{ github.ref != 'refs/heads/main' && github.event.inputs.publish != 'true' }}
 
