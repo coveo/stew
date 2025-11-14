@@ -2,9 +2,6 @@ name: publish-to-pypi
 description: Publish a project to pypi.org
 
 inputs:
-  pypi-token:
-    description: The pypi token to use for authentication
-    required: true
   pre-release:
     description: Set to true if a pre-release version should be published.
     required: false
@@ -47,16 +44,10 @@ runs:
       run: |
         poetry version ${{ steps.get-next-version.outputs.version }}
         poetry build
-        poetry config pypi-token.pypi ${{ inputs.pypi-token }}
 
     - name: Publish to pypi.org
-      shell: bash
-      run: |
-        if [[ ${{ inputs.dry-run }} == false ]]; then
-          poetry publish --no-interaction
-        else
-          echo "Just a dry run; we're not actually publishing"
-        fi
+      if: inputs.dry-run == false
+      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
 
     - name: Tag repository
       shell: bash
