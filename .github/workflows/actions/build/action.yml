@@ -1,0 +1,53 @@
+
+name: Build
+description: Build project
+
+inputs:
+  pre-release:
+    description: Set to true if a pre-release version should be published.
+    required: false
+    default: 'false'
+  dry-run:
+    description: Set to true for a test run that doesn't publish or tag.
+    default: 'false'
+
+outputs:
+  next-version:
+    description: Next version
+    value: ${{ steps.get-next-version.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine the minimum version for this release (the one in the pyproject.toml file)
+      shell: bash
+      id: get-minimum-version
+      run: echo "minimum-version=$(${{ github.action_path }}/get-minimum-version.sh)" >> $GITHUB_OUTPUT
+
+    - name: Compute the release and prerelease versions
+      id: get-versions
+      shell: bash
+      run: |
+        RELEASE="$(pypi next-version coveo-stew --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
+        PRERELEASE="$(pypi next-version coveo-stew --prerelease --minimum-version ${{ steps.get-minimum-version.outputs.minimum-version }})"
+        echo "release=$RELEASE" >> $GITHUB_OUTPUT
+        echo "Next release: $RELEASE"
+        echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+        echo "Next prerelease: $PRERELEASE"
+
+    - name: Determine the version to publish.
+      shell: bash
+      id: get-next-version
+      run: |
+        if [[ ${{ inputs.pre-release }} == true ]]; then
+          echo "version=${{ steps.get-versions.outputs.prerelease }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${{ steps.get-versions.outputs.release }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Setup poetry for publish
+      shell: bash
+      run: |
+        poetry version ${{ steps.get-next-version.outputs.version }}
+        poetry build
+
