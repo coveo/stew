@@ -5,10 +5,10 @@ inputs:
   pre-release:
     description: Set to true if a pre-release version should be published.
     required: false
-    default: false
+    default: 'false'
   dry-run:
     description: Set to true for a test run that doesn't publish or tag.
-    default: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -46,13 +46,13 @@ runs:
         poetry build
 
     - name: Publish to pypi.org
-      if: inputs.dry-run == "false"
+      if: inputs.dry-run == 'false'
       uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
       with:
         verbose: true
 
     - name: Skipped Publish to pypi.org
-      if: inputs.dry-run != "false"
+      if: inputs.dry-run != 'false'
       shell: bash
       run: echo "Skipped publishing to pypi.org because inputs.dry-run = ${{ inputs.dry-run }}"
 
