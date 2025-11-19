@@ -75,10 +75,20 @@ jobs:
         shell: bash
         run: pipx install "coveo-pypi-cli>=2.1.2"
 
-      - name: Publish to pypi
-        uses: ./.github/workflows/actions/publish-to-pypi
+      - name: Build
+        uses: ./.github/workflows/actions/build
+        id: build
         with:
           pre-release: ${{ github.ref != 'refs/heads/main' }}
+          dry-run: ${{ github.ref != 'refs/heads/main' && github.event.inputs.publish != 'true' }}
+
+      - name: Publish to pypi
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+
+      - name: Create tag
+        uses: ./.github/workflows/actions/post-publish
+        with:
+          next-version: ${{ steps.build.outputs.next-version }}
           dry-run: ${{ github.ref != 'refs/heads/main' && github.event.inputs.publish != 'true' }}
 
   test-action:

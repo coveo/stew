@@ -1,5 +1,5 @@
-name: publish-to-pypi
-description: Publish a project to pypi.org
+name: Build
+description: Build project
 
 inputs:
   pre-release:
@@ -9,6 +9,11 @@ inputs:
   dry-run:
     description: Set to true for a test run that doesn't publish or tag.
     default: 'false'
+
+outputs:
+  next-version:
+    description: Next version
+    value: ${{ steps.get-next-version.outputs.version }}
 
 runs:
   using: 'composite'
@@ -45,35 +50,3 @@ runs:
         poetry version ${{ steps.get-next-version.outputs.version }}
         poetry build
 
-    - name: Publish to pypi.org
-      if: inputs.dry-run == 'false'
-      uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
-      with:
-        verbose: true
-
-    - name: Skipped Publish to pypi.org
-      if: inputs.dry-run != 'false'
-      shell: bash
-      run: echo "Skipped publishing to pypi.org because inputs.dry-run = ${{ inputs.dry-run }}"
-
-    - name: Tag repository
-      shell: bash
-      id: get-next-tag
-      run: |
-        TAG_NAME=${{ steps.get-next-version.outputs.version }}
-        echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
-        echo "This release will be tagged as $TAG_NAME"
-        git config user.name "github-actions"
-        git config user.email "actions@users.noreply.github.com"
-        git tag --annotate --message="Automated tagging system" $TAG_NAME ${{ github.sha }}
-
-    - name: Push the tag
-      shell: bash
-      env:
-        TAG_NAME: ${{ steps.get-next-tag.outputs.tag-name }}
-      run: |
-        if [[ ${{ inputs.dry-run }} == false ]]; then
-          git push origin $TAG_NAME
-        else
-          echo "If this wasn't a dry run, I would push this new tag named $TAG_NAME"
-        fi

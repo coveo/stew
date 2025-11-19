@@ -1,0 +1,35 @@
+name: Post publish
+description: Create tag in repository
+
+inputs:
+  next-version:
+    description: Next version
+    required: true
+  dry-run:
+    description: Set to true for a test run that doesn't publish or tag.
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Tag repository
+      shell: bash
+      id: get-next-tag
+      run: |
+        TAG_NAME=${{ inputs.next-version }}
+        echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "This release will be tagged as $TAG_NAME"
+        git config user.name "github-actions"
+        git config user.email "actions@users.noreply.github.com"
+        git tag --annotate --message="Automated tagging system" $TAG_NAME ${{ github.sha }}
+
+    - name: Push the tag
+      shell: bash
+      env:
+        TAG_NAME: ${{ steps.get-next-tag.outputs.tag-name }}
+      run: |
+        if [[ ${{ inputs.dry-run }} == false ]]; then
+          git push origin $TAG_NAME
+        else
+          echo "If this wasn't a dry run, I would push this new tag named $TAG_NAME"
+        fi
