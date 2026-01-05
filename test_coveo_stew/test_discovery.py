@@ -5,6 +5,7 @@ from textwrap import dedent
 import pytest
 from cleo.io.null_io import NullIO
 from coveo_testing.parametrize import parametrize
+from poetry.poetry import Poetry
 
 from coveo_stew.discovery import discover_pyprojects, find_pyproject
 from coveo_stew.exceptions import PythonProjectNotFound
@@ -221,7 +222,9 @@ def test_discover_pyprojects_with_predicate_filter(tmpdir: PathLike) -> None:
     create_mock_pyproject(tmp_path, "project-v1-another", version="1.5.0")
 
     # Filter only version 2.x projects
-    predicate = lambda p: p.package.version.text.startswith("2.")
+    def predicate(p: Poetry) -> bool:
+        return p.package.version.text.startswith("2.")
+
     projects = list(discover_pyprojects(NullIO(), tmp_path, predicate=predicate))
 
     assert len(projects) == 1
@@ -237,7 +240,9 @@ def test_discover_pyprojects_with_predicate_and_query(tmpdir: PathLike) -> None:
     create_mock_pyproject(tmp_path, "different-lib", version="1.0.0")
 
     # Filter by version and name
-    predicate = lambda p: p.package.version.text.startswith("1.")
+    def predicate(p: Poetry) -> bool:
+        return p.package.version.text.startswith("1.")
+
     projects = list(discover_pyprojects(NullIO(), tmp_path, query="my", predicate=predicate))
 
     assert len(projects) == 1
@@ -250,7 +255,8 @@ def test_discover_pyprojects_predicate_excludes_all_raises(tmpdir: PathLike) -> 
     create_mock_pyproject(tmp_path, "project-v1", version="1.0.0")
 
     # Predicate that excludes everything
-    predicate = lambda p: False
+    def predicate(_p: Poetry) -> bool:
+        return False
 
     with pytest.raises(PythonProjectNotFound, match="No python projects were found"):
         list(discover_pyprojects(NullIO(), tmp_path, predicate=predicate))
