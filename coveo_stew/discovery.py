@@ -49,6 +49,7 @@ def discover_pyprojects(
           - case-insensitive
           - Substring match if exact_match is false.
           - '-' and '_' are equivalent.
+          No query returns all projects in path
         exact_match: turns query into an exact match. Recommended use: CI scripts
         verbose: output more details to command line
         predicate: optional inclusion filter
@@ -86,13 +87,30 @@ def discover_pyprojects(
         if verbose:
             echo.noise("PyProject found: ", poetry)
 
-        if predicate(poetry) and (
-            not query
-            or (exact_match and poetry.package.pretty_name == query)
-            or (not exact_match and query.replace("-", "_").lower() in poetry.package.name.lower())
-        ):
+        if not predicate(poetry):
+            continue
+
+        found = False
+        if not query:
+            found = True
+            echo.noise("PyProject found without a query filter: ", poetry)
+        elif exact_match:
+            if poetry.package.pretty_name == query:
+                found = True
+                echo.noise("PyProject found with an exact match: ", poetry)
+            else:
+                echo.noise("PyProject skipped (exact match failed): ", poetry)
+        elif query.replace("-", "_").lower() in poetry.package.name.replace("-", "_").lower():
+            found = True
+            echo.noise("PyProject found with a substring match: ", poetry)
+        else:
+            echo.noise("PyProject skipped (substring match failed): ", poetry)
+
+        if found:
             count_projects += 1
             yield PythonProject(io, poetry, verbose=verbose, disable_cache=disable_cache)
+        else:
+            echo.noise("PyProject skipped: ", poetry)
 
     if count_projects == 0:
         raise PythonProjectNotFound(
