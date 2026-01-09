@@ -85,7 +85,7 @@ def discover_pyprojects(
             continue
 
         if verbose:
-            echo.noise("PyProject found: ", poetry)
+            echo.noise("PyProject found: ", file)
 
         if not predicate(poetry):
             continue
@@ -93,24 +93,30 @@ def discover_pyprojects(
         found = False
         if not query:
             found = True
-            echo.noise("PyProject found without a query filter: ", poetry)
+            if verbose:
+                echo.noise("PyProject found without a query filter: ", file)
         elif exact_match:
             if poetry.package.pretty_name == query:
                 found = True
-                echo.noise("PyProject found with an exact match: ", poetry)
+                if verbose:
+                    echo.noise("PyProject found with an exact match: ", file)
             else:
-                echo.noise("PyProject skipped (exact match failed): ", poetry)
+                if verbose:
+                    echo.noise("PyProject skipped (exact match failed): ", file)
         elif query.replace("-", "_").lower() in poetry.package.name.replace("-", "_").lower():
             found = True
-            echo.noise("PyProject found with a substring match: ", poetry)
+            if verbose:
+                echo.noise("PyProject found with a substring match: ", file)
         else:
-            echo.noise("PyProject skipped (substring match failed): ", poetry)
+            if verbose:
+                echo.noise("PyProject skipped (substring match failed): ", file)
 
         if found:
             count_projects += 1
             yield PythonProject(io, poetry, verbose=verbose, disable_cache=disable_cache)
         else:
-            echo.noise("PyProject skipped: ", poetry)
+            if verbose:
+                echo.noise("PyProject skipped: ", file)
 
     if count_projects == 0:
         raise PythonProjectNotFound(
