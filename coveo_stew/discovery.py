@@ -5,7 +5,6 @@ from cleo.io.io import IO
 from cleo.io.outputs.output import Verbosity
 from coveo_styles.styles import echo
 from coveo_systools.filesystem import find_paths, find_repo_root
-from poetry.core.pyproject.exceptions import PyProjectError
 from poetry.factory import Factory
 from poetry.poetry import Poetry
 
@@ -78,7 +77,7 @@ def discover_pyprojects(
                 disable_plugins=False,
                 disable_cache=disable_cache,
             )
-        except PyProjectError as ex:
+        except Exception as ex:
             # this will inform the user which pyproject.toml files were found and skipped
             if verbose:
                 echo.noise("Skipping: ", ex, emoji="information")
