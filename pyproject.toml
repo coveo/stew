@@ -40,7 +40,7 @@ stew = "coveo_stew.poetry_plugin:StewPlugin"
 packages = [{ include = "coveo_stew/**/*" }]
 
 [tool.poetry.group.test.dependencies]
-autoflake = "2.3.1"
+autoflake = "2.3.3"
 black = "24.10"
 coveo-testing = "^2.0.0"
 flake8 = "7.2"
