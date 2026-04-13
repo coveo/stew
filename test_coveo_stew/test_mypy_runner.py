@@ -17,9 +17,7 @@ from coveo_stew.stew import PythonProject
 def create_mock_project(tmp_path_factory: TempPathFactory) -> PythonProject:
     """Create a mock Python project for testing."""
     project_dir = tmp_path_factory.mktemp("mock_project")
-    (project_dir / "pyproject.toml").write_text(
-        dedent(
-            """
+    (project_dir / "pyproject.toml").write_text(dedent("""
         [project]
         name = "mock-project"
         version = "0.1.0"
@@ -32,9 +30,7 @@ def create_mock_project(tmp_path_factory: TempPathFactory) -> PythonProject:
         [build-system]
         requires = ["setuptools >= 61.0.0"]
         build-backend = "setuptools.build_meta"
-        """
-        )
-    )
+        """))
     return PythonProject(NullIO(), project_dir)
 
 

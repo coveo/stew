@@ -81,16 +81,12 @@ def test_pyproject_publish(pyproject_mock: PythonProject, tmpdir: PathLike) -> N
 def test_toml_not_a_poetry_project(tmp_path: Path) -> None:
     assert tmp_path.exists()
     pyproject = tmp_path / "pyproject.toml"
-    pyproject.write_text(
-        dedent(
-            """\
+    pyproject.write_text(dedent("""\
     [tool.flit]
     foo = "bar"
 
     [tool.stew.ci]
     mypy = false
-    """
-        )
-    )
+    """))
     with pytest.raises(NotAPoetryProject):
         _ = PythonProject(NullIO(), pyproject)

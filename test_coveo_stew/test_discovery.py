@@ -16,8 +16,7 @@ def create_mock_pyproject(parent_dir: Path, project_name: str, version: str = "0
     project_dir = parent_dir / project_name
     project_dir.mkdir(parents=True, exist_ok=True)
 
-    pyproject_content = dedent(
-        f"""\
+    pyproject_content = dedent(f"""\
         [project]
         name = "{project_name}"
         version = "{version}"
@@ -26,8 +25,7 @@ def create_mock_pyproject(parent_dir: Path, project_name: str, version: str = "0
             {{name = "Test", email = "test@example.com"}}
         ]
         requires-python = ">=3.9,<4"
-        """
-    )
+        """)
 
     (project_dir / "pyproject.toml").write_text(pyproject_content)
     return project_dir
@@ -188,9 +186,7 @@ def test_discover_pyprojects_find_nested_false(tmpdir: PathLike) -> None:
     tmp_path = Path(tmpdir)
 
     # Create root project directly in search path (not in a subdirectory)
-    (tmp_path / "pyproject.toml").write_text(
-        dedent(
-            """\
+    (tmp_path / "pyproject.toml").write_text(dedent("""\
         [project]
         name = "root-project"
         version = "0.1.0"
@@ -199,9 +195,7 @@ def test_discover_pyprojects_find_nested_false(tmpdir: PathLike) -> None:
             {name = "Test", email = "test@example.com"}
         ]
         requires-python = ">=3.9,<4"
-        """
-        )
-    )
+        """))
 
     # Create nested project in subdirectory
     nested_dir = tmp_path / "subdir"
