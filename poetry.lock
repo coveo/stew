@@ -1371,21 +1371,21 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "poetry"
-version = "2.3.1"
+version = "2.3.4"
 description = "Python dependency management and packaging made easy."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "poetry-2.3.1-py3-none-any.whl", hash = "sha256:1067f3a500b57b348a7b7a2ec0ee8e09dce65164a21926b1f6713481d94e8ee4"},
-    {file = "poetry-2.3.1.tar.gz", hash = "sha256:423cbccfe3533155ce9f49e929780a1386e564b2d97d2380664ea388cfe1191c"},
+    {file = "poetry-2.3.4-py3-none-any.whl", hash = "sha256:2755806ed8a9f31340ea1b5f0e507da54c96437647ebf2873b6ca349be04e231"},
+    {file = "poetry-2.3.4.tar.gz", hash = "sha256:b293572d366569360c79d7caa6980c9b404d2b89530ed451a5b4570d248de3af"},
 ]
 
 [package.dependencies]
 build = ">=1.2.1,<2.0.0"
 cachecontrol = {version = ">=0.14.0,<0.15.0", extras = ["filecache"]}
 cleo = ">=2.1.0,<3.0.0"
-dulwich = ">=0.25.0,<0.26.0"
+dulwich = ">=0.25.0,<2"
 fastjsonschema = ">=2.18.0,<3.0.0"
 findpython = ">=0.6.2,<0.8.0"
 installer = ">=0.7.0,<0.8.0"
@@ -1394,7 +1394,7 @@ packaging = ">=24.2"
 pbs-installer = {version = ">=2025.6.10", extras = ["download", "install"]}
 pkginfo = ">=1.12,<2.0"
 platformdirs = ">=3.0.0,<5"
-poetry-core = "2.3.0"
+poetry-core = "2.3.2"
 pyproject-hooks = ">=1.0.0,<2.0.0"
 requests = ">=2.26,<3.0"
 requests-toolbelt = ">=1.0.0,<2.0.0"
@@ -1407,14 +1407,14 @@ xattr = {version = ">=1.0.0,<2.0.0", markers = "sys_platform == \"darwin\""}
 
 [[package]]
 name = "poetry-core"
-version = "2.3.0"
+version = "2.3.2"
 description = "Poetry PEP 517 Build Backend"
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "poetry_core-2.3.0-py3-none-any.whl", hash = "sha256:fc42f3854e346e4b96fb2b38d29e6873ec2ed25fbd7b8f1afba06613a966eaef"},
-    {file = "poetry_core-2.3.0.tar.gz", hash = "sha256:f6da8f021fe380d8c9716085f4dcc5d26a5120a2452e077196333892af5de307"},
+    {file = "poetry_core-2.3.2-py3-none-any.whl", hash = "sha256:23df641b64f87fbb4ce1873c1915a4d4bb1b7d808c596e4307edc073e68d7234"},
+    {file = "poetry_core-2.3.2.tar.gz", hash = "sha256:20cb71be27b774628da9f384effd9183dfceb53bcef84063248a8672aa47031f"},
 ]
 
 [[package]]
