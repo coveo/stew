@@ -4,4 +4,7 @@
     "github>coveo/renovate-presets",
     "group:allNonMajor"
   ],
+  "poetry": {
+    "fileMatch": ["(^|/)pyproject\\.toml$", "backward-compat-pyproject\\.toml"]
+  },
 }

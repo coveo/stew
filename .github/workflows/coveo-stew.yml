@@ -93,6 +93,13 @@ jobs:
 
   test-action:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - coveo-stew-version: '>=4'
+            run_stew: "true"
+          - coveo-stew-version: '>=3,<4'
+            run_stew: "false"  # Don't run stew directly in the action for 3.x
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
@@ -106,7 +113,19 @@ jobs:
         with:
           python-version: "3.12"
           project-name: coveo-stew
-          coveo-stew-version: '>=4'
+          coveo-stew-version: ${{ matrix.coveo-stew-version }}
           poetry-version: '>=2'
-          run-stew: "true"
+          run-stew: ${{ matrix.run_stew }}
+
+      - name: Swap pyproject.toml for a coveo-stew 3.x compatible version
+        if: matrix.coveo-stew-version == '>=3,<4'
+        shell: bash
+        run: |
+          # Install required dependency for the conversion script and run it
+          rm -f ./pyproject.toml
+          rm -f ./poetry.lock
+          mv ./backward-compat-pyproject.toml ./pyproject.toml
+
+          # run stew ci
+          stew ci coveo-stew --exact-match
 
