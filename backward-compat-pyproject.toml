@@ -10,7 +10,7 @@ readme = "README.md"
 repository = "https://github.com/coveo/stew"
 
 [tool.poetry.group.test.dependencies]
-black = "24.10"
+black = "26.3.1"
 coveo-testing = "^2.0.0"
 flake8 = "^7.0.0"
 isort = "*"
@@ -44,6 +44,7 @@ stew = "coveo_stew.ui.click.cli:stew"
 
 [tool.poetry.plugins."\"poetry.application.plugin\""]
 stew = "coveo_stew.poetry_plugin:StewPlugin"
+
 [tool.stew]
 build-without-hashes = true
 
