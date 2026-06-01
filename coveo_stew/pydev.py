@@ -28,7 +28,7 @@ class NotPyDevProject(StewException): ...
 def is_pydev_project(poetry: Poetry) -> bool:
     """Returns true when a project is a pydev project. Typically used as a predicate for `discover_pyprojects`."""
     try:
-        return poetry.pyproject.data["tool"]["stew"]["pydev"] is True  # type: ignore[index]
+        return poetry.pyproject.data["tool"]["stew"]["pydev"] is True
     except KeyError:
         return False
     except TypeError as ex:
