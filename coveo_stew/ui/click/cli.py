@@ -285,6 +285,7 @@ def refresh(
 )
 @click.option("--no-extras", is_flag=True, help="Don't use any extras when testing.")
 @click.option("--all-extras", is_flag=True, help="Use all extras when testing.")
+@click.option("--color/--no-color", default=None, help="Force enable or disable terminal color.")
 @NO_CACHE_ARG
 def ci(
     project_name: str = None,
@@ -302,6 +303,7 @@ def ci(
     all_extras: bool = False,
     no_cache: bool = False,
     show_success_output: bool = False,
+    color: Optional[bool] = None,
 ) -> None:
     """Run continuous integration steps on Python projects."""
 
@@ -330,6 +332,7 @@ def ci(
         all_extras=all_extras,
         disable_cache=no_cache,
         show_success_output=show_success_output,
+        color=color,
     )
 
 

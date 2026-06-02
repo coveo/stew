@@ -1,7 +1,7 @@
 import asyncio
 import os
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Coroutine, Iterable, List, Optional, Protocol, Sequence, Tuple
@@ -52,6 +52,7 @@ class ContinuousIntegrationRunner:
         environment: PythonEnvironment = None,
         *extra_args: str,
         auto_fix: bool = False,
+        color: Optional[bool] = None,
     ) -> "ContinuousIntegrationRunner":
         """
         Launch the runner's checks.
@@ -63,6 +64,25 @@ class ContinuousIntegrationRunner:
 
         # without this, some tools like black will not display emojis correctly
         environment_variables["PYTHONIOENCODING"] = "utf-8"
+
+        # resolve color: explicit True/False wins; None falls back to TTY + env detection
+        wants_color = color if color is not None else bool(
+            os.isatty(1)
+            or os.environ.get("FORCE_COLOR")
+            or os.environ.get("PY_COLORS")
+            or os.environ.get("CLICOLOR_FORCE")
+        )
+        if wants_color:
+            environment_variables["FORCE_COLOR"] = "1"
+            environment_variables["PY_COLORS"] = "1"
+            environment_variables["CLICOLOR_FORCE"] = "1"
+            environment_variables["MYPY_FORCE_COLOR"] = "1"
+            environment_variables.pop("NO_COLOR", None)
+        else:
+            environment_variables["NO_COLOR"] = "1"
+            environment_variables["FORCE_COLOR"] = "0"
+            environment_variables["PY_COLORS"] = "0"
+            environment_variables.pop("CLICOLOR_FORCE", None)
 
         # try to set the terminal width if available
         if os.isatty(0):
@@ -88,7 +108,7 @@ class ContinuousIntegrationRunner:
             await self._auto_fix_routine(environment, env=environment_variables)
 
             # it should pass now!
-            await self.launch(environment, *extra_args)
+            await self.launch(environment, *extra_args, color=color)
             if self.status == RunnerStatus.CheckFailed:
                 echo.error("The auto fix routine was launched but the check is still failing.")
             else:
@@ -180,6 +200,7 @@ class CIPlan:
     environment: PythonEnvironment
     checks: Sequence[ContinuousIntegrationRunner]
     parallel: bool
+    color: Optional[bool] = field(default=None)
 
     @cached_property
     def autofix_checks(self) -> List[ContinuousIntegrationRunner]:
@@ -202,7 +223,7 @@ class CIPlan:
 
         if auto_fix:
             # run autofix first, in parallel
-            runs.append(run := Run(self.environment, self.autofix_checks))
+            runs.append(run := Run(self.environment, self.autofix_checks, color=self.color))
             await run.run_and_report(
                 parallel=self.parallel, show_success_output=show_success_output
             )
@@ -214,13 +235,13 @@ class CIPlan:
                 )  # verify that autofix worked
 
             # run all other runners
-            runs.append(run := Run(self.environment, self.non_autofix_checks))
+            runs.append(run := Run(self.environment, self.non_autofix_checks, color=self.color))
             await run.run_and_report(
                 parallel=self.parallel, show_success_output=show_success_output
             )
 
         else:
-            runs.append(run := Run(self.environment, self.checks))
+            runs.append(run := Run(self.environment, self.checks, color=self.color))
             await run.run_and_report(
                 parallel=self.parallel, show_success_output=show_success_output
             )
@@ -245,6 +266,7 @@ class Run:
 
     environment: PythonEnvironment
     checks: Sequence[ContinuousIntegrationRunner]
+    color: Optional[bool] = field(default=None)
 
     @cached_property
     def exceptions(
@@ -274,7 +296,7 @@ class Run:
 
         if parallel:
             for next_result in asyncio.as_completed(
-                [runner.launch(self.environment, auto_fix=False) for runner in self.checks]
+                [runner.launch(self.environment, auto_fix=False, color=self.color) for runner in self.checks]
             ):
                 try:
                     result = await next_result
@@ -287,7 +309,7 @@ class Run:
         else:
             for runner in self.checks:
                 self._report(
-                    await runner.launch(self.environment, auto_fix=auto_fix),
+                    await runner.launch(self.environment, auto_fix=auto_fix, color=self.color),
                     feedback=feedback,
                 )
 

@@ -47,3 +47,4 @@ def test_toml_repeated_section() -> None:
     assert isinstance(exception.__cause__, TomlDecodeError)
     assert f"{DUMMY_TEST_PATH}:{error_line}:{error_col}" in str(exception)
     assert "already exists" in str(exception)  # may change with new toml parser versions
+
