@@ -139,7 +139,9 @@ class ContinuousIntegrationConfig:
         if self.disabled:
             return RunnerStatus.NotRan
 
-        ci_plans = list(self._generate_ci_plans(checks=checks, skips=skips, parallel=parallel, color=color))
+        ci_plans = list(
+            self._generate_ci_plans(checks=checks, skips=skips, parallel=parallel, color=color)
+        )
         for plan in ci_plans:
             if not quick:
                 self._pyproject.install(environment=plan.environment, sync=True)

@@ -240,4 +240,3 @@ class MypyRunner(ContinuousIntegrationRunner):
                 )
             else:
                 echo.noise(line)
-

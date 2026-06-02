@@ -66,11 +66,15 @@ class ContinuousIntegrationRunner:
         environment_variables["PYTHONIOENCODING"] = "utf-8"
 
         # resolve color: explicit True/False wins; None falls back to TTY + env detection
-        wants_color = color if color is not None else bool(
-            os.isatty(1)
-            or os.environ.get("FORCE_COLOR")
-            or os.environ.get("PY_COLORS")
-            or os.environ.get("CLICOLOR_FORCE")
+        wants_color = (
+            color
+            if color is not None
+            else bool(
+                os.isatty(1)
+                or os.environ.get("FORCE_COLOR")
+                or os.environ.get("PY_COLORS")
+                or os.environ.get("CLICOLOR_FORCE")
+            )
         )
         if wants_color:
             environment_variables["FORCE_COLOR"] = "1"
@@ -296,7 +300,10 @@ class Run:
 
         if parallel:
             for next_result in asyncio.as_completed(
-                [runner.launch(self.environment, auto_fix=False, color=self.color) for runner in self.checks]
+                [
+                    runner.launch(self.environment, auto_fix=False, color=self.color)
+                    for runner in self.checks
+                ]
             ):
                 try:
                     result = await next_result

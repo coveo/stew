@@ -419,12 +419,11 @@ def _check_result(
     assert outcome is expected_outcome
     check_instance = project.ci.get_runner(check_name)
     assert isinstance(check_instance, ContinuousIntegrationRunner)
-    
+
     last_output = strip_ansi(check_instance.last_output())
-    
+
     if expected_outcome is RunnerStatus.Success:
         assert failure_text not in last_output
     else:
         assert failure_text in last_output
     return check_instance
-
