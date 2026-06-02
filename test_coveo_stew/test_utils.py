@@ -1,4 +1,3 @@
-import pytest
 from coveo_testing.parametrize import parametrize
 
 from coveo_stew.utils import strip_ansi
