@@ -13,9 +13,9 @@ from coveo_systools.subprocess import async_check_output
 from coveo_stew.ci.runner import ContinuousIntegrationRunner
 from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
-from coveo_stew.utils import strip_ansi
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.stew import PythonProject
+from coveo_stew.utils import strip_ansi
 
 
 class MypyRunner(ContinuousIntegrationRunner):

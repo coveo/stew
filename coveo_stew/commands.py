@@ -5,8 +5,8 @@ from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Generator, Optional, Set, Tuple, Union
 
-from cleo.io.io import IO
 import click
+from cleo.io.io import IO
 from coveo_functools.finalizer import finalizer
 from coveo_styles.styles import ExitWithFailure, echo
 from coveo_systools.filesystem import find_repo_root
