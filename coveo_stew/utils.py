@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any, MutableMapping
 
@@ -17,3 +18,11 @@ def _load_toml_from_content(toml_content: str, toml_path: Path) -> MutableMappin
     except TomlDecodeError as ex:
         lineno, colno = ex.lineno, ex.colno
         raise ExitWithFailure(suggestions=f"{toml_path}:{lineno}:{colno} parse error") from ex
+
+
+_ANSI_ESCAPE = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\([A-Z0-9])")
+
+
+def strip_ansi(text: str) -> str:
+    """Strips ANSI and VT100 character set escape sequences from a string."""
+    return _ANSI_ESCAPE.sub("", text)

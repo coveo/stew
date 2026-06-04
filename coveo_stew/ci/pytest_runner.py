@@ -29,9 +29,11 @@ class PytestRunner(ContinuousIntegrationRunner):
     async def _launch(
         self, environment: PythonEnvironment, *extra_args: str, **kwargs: Any
     ) -> RunnerStatus:
+        env = kwargs.get("env", {})
+        pytest_color = "no" if env.get("NO_COLOR") == "1" else "yes"
         command = environment.build_command(
             PythonTool.Pytest,
-            "--color=yes",
+            f"--color={pytest_color}",
             "--durations=5",
             "--tb=short",
             f"--junitxml={self.report_path(environment)}",

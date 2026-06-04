@@ -15,6 +15,7 @@ from coveo_stew.ci.runner_status import RunnerStatus
 from coveo_stew.environment import PythonEnvironment, PythonTool
 from coveo_stew.metadata.python_api import PythonFile
 from coveo_stew.stew import PythonProject
+from coveo_stew.utils import strip_ansi
 
 
 class MypyRunner(ContinuousIntegrationRunner):
@@ -230,7 +231,8 @@ class MypyRunner(ContinuousIntegrationRunner):
         )
 
         for line in self._last_output:
-            match = pattern.fullmatch(line)
+            clean_line = strip_ansi(line)
+            match = pattern.fullmatch(clean_line)
             if match:
                 adjusted_path = (self._pyproject.project_path / Path(match["path"])).resolve()
                 echo.error_details(

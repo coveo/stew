@@ -5,6 +5,7 @@ from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Generator, Optional, Set, Tuple, Union
 
+import click
 from cleo.io.io import IO
 from coveo_functools.finalizer import finalizer
 from coveo_styles.styles import ExitWithFailure, echo
@@ -372,8 +373,13 @@ def ci(
     all_extras: bool = False,
     disable_cache: bool = False,
     show_success_output: bool = False,
+    color: Optional[bool] = None,
 ) -> None:
     """Run continuous integration steps on Python projects."""
+    ctx = click.get_current_context(silent=True)
+    if ctx is not None and color is not None:
+        ctx.color = color
+
     failures = defaultdict(list)
     try:
         for project in _discover_pyprojects(
@@ -400,6 +406,7 @@ def ci(
                     parallel=parallel,
                     github=github_step_report,
                     show_success_output=show_success_output,
+                    color=color,
                 )
             ) not in (RunnerStatus.Success, RunnerStatus.NotRan):
                 failures[overall_result].append(project)
