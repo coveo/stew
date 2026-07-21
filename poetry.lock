@@ -443,14 +443,14 @@ markers = {main = "platform_system == \"Windows\" or os_name == \"nt\"", test = 
 
 [[package]]
 name = "coveo-functools"
-version = "3.0"
+version = "4.0"
 description = "Generic function tooling helpers"
 optional = false
-python-versions = "<4,>=3.9"
+python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "coveo_functools-3.0-py3-none-any.whl", hash = "sha256:a9505c5d501aaa407e16b03d96e22bc902a11823027ab42796fcc6d157d2ade1"},
-    {file = "coveo_functools-3.0.tar.gz", hash = "sha256:aa82bf2559ab7c342da134b146cba2efe68ea93a781e9f4d1327475d053d1c56"},
+    {file = "coveo_functools-4.0-py3-none-any.whl", hash = "sha256:5aab3e24073588475ba6fc85d8ebe5e6e844fe35787879d5c6e40897917d3eb3"},
+    {file = "coveo_functools-4.0.tar.gz", hash = "sha256:3e494b38acd2ef474a68574f70cdd4b1b7366ef853fecfe818fa2a86eaa873d0"},
 ]
 
 [package.dependencies]
