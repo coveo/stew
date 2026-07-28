@@ -483,14 +483,14 @@ files = [
 
 [[package]]
 name = "coveo-styles"
-version = "3.0"
+version = "4.0"
 description = "Styles, colors and emojis for the command line."
 optional = false
-python-versions = "<4,>=3.9"
+python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "coveo_styles-3.0-py3-none-any.whl", hash = "sha256:d9e503464abfd20255864769a9671018c5c038ffdbdd22928036dd619b60c3f8"},
-    {file = "coveo_styles-3.0.tar.gz", hash = "sha256:6dae058802673068d75b1345cd83ec2179b591315a1f81720b2d49fe05d0016a"},
+    {file = "coveo_styles-4.0-py3-none-any.whl", hash = "sha256:85779469d55c7d8d2e35f9963f469f81b12a06070cdb571c1f1dcf64186621ef"},
+    {file = "coveo_styles-4.0.tar.gz", hash = "sha256:4db3b8e0b07794cd21d842d71450b1f94fff49cde798095635ce5f7cbcec3875"},
 ]
 
 [package.dependencies]
