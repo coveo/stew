@@ -459,14 +459,14 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-itertools"
-version = "3.0"
+version = "4.0"
 description = "Collection-related helpers."
 optional = false
-python-versions = "<4,>=3.9"
+python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "coveo_itertools-3.0-py3-none-any.whl", hash = "sha256:2f3fc2b6bd9047036fbbb096643a308ef7818d04bab68a670c7deb80ae26cef4"},
-    {file = "coveo_itertools-3.0.tar.gz", hash = "sha256:2da8d8f12d3c413df94ed646c5162829807c793e244e37dec7647264e2e92231"},
+    {file = "coveo_itertools-4.0-py3-none-any.whl", hash = "sha256:e6bd511e4625855048f0c8d108ae30516e938d5c312b516e71965ed33cb5923b"},
+    {file = "coveo_itertools-4.0.tar.gz", hash = "sha256:4354557776265a5e7b7d8d0ef660aa1b2ac0958142735373ce9bb6564ae0a9cc"},
 ]
 
 [[package]]
