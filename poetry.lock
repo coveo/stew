@@ -500,14 +500,14 @@ typing_extensions = "*"
 
 [[package]]
 name = "coveo-systools"
-version = "3.0.1"
+version = "4.0"
 description = "Filesystem, language and OS related tools."
 optional = false
-python-versions = "<4,>=3.9"
+python-versions = "<4,>=3.10"
 groups = ["main"]
 files = [
-    {file = "coveo_systools-3.0.1-py3-none-any.whl", hash = "sha256:a23420ad79368af86cf2ba56c2d0e1333490584e8a39376f0003a1bacc461871"},
-    {file = "coveo_systools-3.0.1.tar.gz", hash = "sha256:8812b27088109d06f2c12abc16abcae2954cd623dd8201b8c1dddbea026c1732"},
+    {file = "coveo_systools-4.0-py3-none-any.whl", hash = "sha256:17cd04279ffe88ddd01f4ca6e772c67bd3d98fbd57197e504d78a021844fc48d"},
+    {file = "coveo_systools-4.0.tar.gz", hash = "sha256:1fbeea6168fec0859d02c21512af15fcb3e31d8756120fcf9856b02462dddb7e"},
 ]
 
 [package.dependencies]
