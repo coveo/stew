@@ -40,12 +40,12 @@ stew = "coveo_stew.poetry_plugin:StewPlugin"
 packages = [{ include = "coveo_stew/**/*" }]
 
 [tool.poetry.group.test.dependencies]
-autoflake = "2.3.3"
+autoflake = "2.4.0"
 black = "26.5.1"
 coveo-testing = "^2.0.0"
 flake8 = "7.3.0"
 isort = "*"
-mypy = "2.3.0"
+mypy = "2.3.1"
 pytest = "*"
 types-setuptools = "*"
 types-toml = "*"
