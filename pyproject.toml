@@ -41,7 +41,7 @@ packages = [{ include = "coveo_stew/**/*" }]
 
 [tool.poetry.group.test.dependencies]
 autoflake = "2.4.0"
-black = "26.5.1"
+black = "26.10.1"
 coveo-testing = "^2.0.0"
 flake8 = "7.3.0"
 isort = "*"
