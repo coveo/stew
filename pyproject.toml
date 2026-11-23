@@ -1,8 +1,8 @@
 [project]
 name = "coveo-stew"
-version = "4.1.0"
+version = "5.0.0"
 description = "Opinionated python packaging and development utilities"
-requires-python = ">=3.10,<4"
+requires-python = ">=3.11,<4"
 license = { text = "Apache-2.0" }
 readme = "README.md"
 authors = [
@@ -43,7 +43,7 @@ packages = [{ include = "coveo_stew/**/*" }]
 autoflake = "2.4.0"
 black = "26.10.1"
 coveo-testing = "^2.0.0"
-flake8 = "7.3.0"
+flake8 = "7.5.0"
 isort = "*"
 mypy = "2.4.1"
 pytest = "*"
@@ -72,7 +72,7 @@ check-args = "--ignore=E203,E501,E701,E704,W503"
 
 [tool.black]
 line-length = 100
-target-version = ["py39"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"

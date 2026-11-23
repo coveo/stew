@@ -1,3 +1,21 @@
+# Upgrading from 4.x to 5.x
+
+## BREAKING CHANGES
+
+1. Python 3.10 is no longer supported (it reached end of life in October 2026).
+   - coveo-stew and the Poetry that runs it must be installed with Python 3.11 or higher.
+   - Projects managed by stew can still target older Python versions.
+   - The `coveo/stew` GitHub action still installs stew 4 by default (`coveo-stew-version: "<5"`, `poetry-version: "<2.0.0"`).
+     To use stew 5, override all three inputs:
+
+     ```yml
+     - uses: coveo/stew@main
+       with:
+         python-version: "3.13"  # 3.11 or higher
+         coveo-stew-version: ">=5,<6"
+         poetry-version: ">=2"
+     ```
+
 # Upgrading from 3.x to 4.x
 
 ## BREAKING CHANGES

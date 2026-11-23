@@ -17,7 +17,7 @@ inputs:
     default: '.'
 
   python-version:
-    description: The python version number, such as "3.10". See `actions/setup-python` for documentation.
+    description: The python version number, such as "3.13". See `actions/setup-python` for documentation.
     required: true
 
   poetry-version:

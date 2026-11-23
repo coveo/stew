@@ -41,7 +41,7 @@ Similar to: nothing! it's unique! 😎
 ## Prerequisites
 
 - Poetry 2.0 or higher
-- Poetry must be installed with Python 3.10 or higher
+- Poetry must be installed with Python 3.11 or higher
 
 ## Installation
 
@@ -90,7 +90,7 @@ jobs:
     steps:
       - uses: coveo/stew@main
         with:
-          python-version: "3.10"
+          python-version: "3.13"
           project-name: your-project-name
 ```
 
