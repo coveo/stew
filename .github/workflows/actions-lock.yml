@@ -27,17 +27,10 @@ jobs:
 
       - name: Detect workflow and action changes
         id: changes
-        shell: bash
-        run: |
-          changed_files="$(git diff --name-only HEAD^1 HEAD)"
-          if grep -qE '^\.github/|(^|/)action\.ya?ml$' <<< "$changed_files"; then
-            echo "workflows=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "No workflow or action changes, skipping lockfile verification."
-          fi
+        uses: $/.github/workflows/actions/detect-workflow-changes
 
       - name: Verify actions.lock
-        if: steps.changes.outputs.workflows == 'true'
+        if: steps.changes.outputs.changed == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
