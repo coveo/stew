@@ -1,0 +1,26 @@
+name: Detect workflow changes
+description: Tells whether the pull request changes a workflow or an action. Needs a checkout with fetch-depth 2.
+
+outputs:
+  changed:
+    description: "'true' when a file under .github/ or an action.yml changed."
+    value: ${{ steps.detect.outputs.changed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect workflow and action changes
+      id: detect
+      shell: bash
+      run: |
+        if ! git rev-parse --verify --quiet HEAD^2 > /dev/null; then
+          echo "::error::HEAD must be the pull request merge commit with both parents fetched. Check out the repository with actions/checkout and fetch-depth: 2."
+          exit 1
+        fi
+        changed_files="$(git diff --name-only HEAD^1 HEAD)"
+        if grep -qE '^\.github/|(^|/)action\.ya?ml$' <<< "$changed_files"; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+          echo "No workflow or action changes."
+        fi
