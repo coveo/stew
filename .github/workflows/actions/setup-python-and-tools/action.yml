@@ -13,7 +13,7 @@ runs:
   using: 'composite'
 
   steps:
-    - uses: actions/setup-python@v7
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: ${{ inputs.python-version }}
 
@@ -27,7 +27,9 @@ runs:
 
     - name: Install poetry
       shell: bash
-      run: pipx install "poetry${{ inputs.poetry-version }}"
+      run: pipx install "poetry$POETRY_VERSION"
+      env:
+        POETRY_VERSION: ${{ inputs.poetry-version }}
 
     - name: poetry-export
       shell: bash

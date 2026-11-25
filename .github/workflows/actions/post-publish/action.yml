@@ -16,20 +16,23 @@ runs:
       shell: bash
       id: get-next-tag
       run: |
-        TAG_NAME=${{ inputs.next-version }}
+        TAG_NAME="$NEXT_VERSION"
         echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
         echo "This release will be tagged as $TAG_NAME"
         git config user.name "github-actions"
         git config user.email "actions@users.noreply.github.com"
-        git tag --annotate --message="Automated tagging system" $TAG_NAME ${{ github.sha }}
+        git tag --annotate --message="Automated tagging system" "$TAG_NAME" "$GITHUB_SHA"
+      env:
+        NEXT_VERSION: ${{ inputs.next-version }}
 
     - name: Push the tag
       shell: bash
       env:
         TAG_NAME: ${{ steps.get-next-tag.outputs.tag-name }}
+        DRY_RUN: ${{ inputs.dry-run }}
       run: |
-        if [[ ${{ inputs.dry-run }} == false ]]; then
-          git push origin $TAG_NAME
+        if [[ "$DRY_RUN" == false ]]; then
+          git push origin "$TAG_NAME"
         else
           echo "If this wasn't a dry run, I would push this new tag named $TAG_NAME"
         fi
