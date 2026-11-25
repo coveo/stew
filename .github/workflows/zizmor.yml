@@ -40,7 +40,6 @@ jobs:
         if: steps.changes.outputs.workflows == 'true'
         uses: zizmorcore/zizmor-action@v0.9.2
         with:
-          version: 1.33.1
           advanced-security: false
           annotations: true
 
