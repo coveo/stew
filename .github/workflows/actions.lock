@@ -3,6 +3,9 @@
 # Docs: https://gh.io/actions-lockfile
 version: 'v0.0.3'
 workflows:
+    '.github/workflows/actions-lock.yml':
+        - 'actions/checkout@v7.0.1'
+        - 'step-security/harden-runner@v2.22.4'
     '.github/workflows/coveo-stew.yml':
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         - 'actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0'

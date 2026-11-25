@@ -1,0 +1,55 @@
+name: actions-lock
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/**"
+      - "**/action.yml"
+      - "**/action.yaml"
+
+permissions: {}
+
+jobs:
+  actions-lock:
+    name: actions-lock
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.22.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: Detect workflow and action changes
+        id: changes
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          changed_files="$(git diff --name-only HEAD^1 HEAD)"
+          if grep -qE '^\.github/|(^|/)action\.ya?ml$' <<< "$changed_files"; then
+            echo "workflows=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No workflow or action changes, skipping lockfile verification."
+          fi
+
+      - name: Verify actions.lock
+        if: github.event_name != 'pull_request' || steps.changes.outputs.workflows == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install github/gh-actions-lock --pin v0.5.1
+          gh actions-lock --verify --no-interactive
